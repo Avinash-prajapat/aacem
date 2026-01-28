@@ -848,6 +848,52 @@
         .student-avatar i {
             font-size: 1.5rem;
         }
+
+        /* ADD ये CSS rules: */
+        .class-header-row {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #2d6b6b !important;
+        }
+        
+        .class-header-row:hover {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5) !important;
+            transform: translateX(5px);
+        }
+        
+        .fee-row {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .fee-row:hover {
+            background-color: #f8fdfd;
+            transform: scale(1.01);
+        }
+        
+        .total-summary-row {
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        /* Payment mode badges */
+        .badge.bg-success { background: linear-gradient(135deg, #28a745, #20c997) !important; }
+        .badge.bg-primary { background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important; }
+        .badge.bg-info { background: linear-gradient(135deg, #17a2b8, #2dc3e8) !important; }
+        .badge.bg-warning { 
+            background: linear-gradient(135deg, #ffc107, #fd7e14) !important; 
+            color: #000 !important;
+        }
     </style>
 </head>
 <body>
@@ -1191,11 +1237,11 @@
                                             <thead>
                                                 <tr>
                                                     <th>Receipt No</th>
-                                                    <th>Student</th>
-                                                    <th>Course</th>
+                                                    <th>Student (with UID)</th>
+                                                    <th>Class</th>
                                                     <th>Amount</th>
-                                                    <th>Payment Date</th>
-                                                    <th>Payment Mode</th>
+                                                    <th>Date</th>
+                                                    <th>Mode</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
                                                 </tr>
@@ -1857,6 +1903,7 @@
 </body>
 
 </html>
+
 
 
 
