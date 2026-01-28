@@ -1759,6 +1759,286 @@ function getFeeStatusBadge(status) {
     }
 }
 
+// ADD ये functions file के अंत में:
+function toggleClassFees(className) {
+    const rows = document.querySelectorAll(`.class-${className.replace(/\s+/g, '-')}`);
+    const isVisible = rows[0] && rows[0].style.display !== 'none';
+    
+    rows.forEach(row => {
+        row.style.display = isVisible ? 'none' : '';
+    });
+    
+    // Update toggle button icon
+    const button = event.target.closest('button');
+    if (button) {
+        const icon = button.querySelector('i');
+        if (icon) {
+            icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        }
+    }
+}
+
+function viewStudentDetails(studentId) {
+    const student = studentsData.find(s => s.student_id === studentId);
+    if (!student) {
+        showError('Student not found!');
+        return;
+    }
+    
+    // Get student's fee history
+    const studentFees = feesData.filter(fee => fee.student_id === studentId);
+    const totalPaid = studentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    const dueAmount = (student.fee_amount || 0) - totalPaid;
+    
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="studentDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d);">
+                        <h5 class="modal-title text-white">
+                            <i class="fas fa-user-graduate me-2"></i>Student Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Student Info -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">UID:</div>
+                                            <div class="col-8">
+                                                <span class="badge bg-primary">${student.student_id}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Name:</div>
+                                            <div class="col-8">${student.name}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Class:</div>
+                                            <div class="col-8">
+                                                <span class="badge bg-info">${student.course || 'Not Assigned'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Parent:</div>
+                                            <div class="col-8">${student.parent_name || 'N/A'}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Join Date:</div>
+                                            <div class="col-8">${formatDate(student.join_date)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Contact Info -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Phone:</div>
+                                            <div class="col-8">
+                                                <i class="fas fa-phone text-success me-1"></i>
+                                                ${student.phone || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Email:</div>
+                                            <div class="col-8">
+                                                <i class="fas fa-envelope text-primary me-1"></i>
+                                                ${student.email || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-4 fw-bold">Address:</div>
+                                            <div class="col-8">${student.address || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fee Summary -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Fee Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="p-3 rounded" style="background: #e8f5e9;">
+                                            <div class="text-muted small">Total Fee</div>
+                                            <div class="h4 text-success">₹${(student.fee_amount || 0).toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="p-3 rounded" style="background: #e3f2fd;">
+                                            <div class="text-muted small">Total Paid</div>
+                                            <div class="h4 text-primary">₹${totalPaid.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="p-3 rounded" style="background: ${dueAmount > 0 ? '#ffebee' : '#f3e5f5'};">
+                                            <div class="text-muted small">Due Amount</div>
+                                            <div class="h4 ${dueAmount > 0 ? 'text-danger' : 'text-success'}">
+                                                ₹${dueAmount.toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="p-3 rounded" style="background: #fff8e1;">
+                                            <div class="text-muted small">Status</div>
+                                            <div class="h4">
+                                                <span class="badge ${getFeeStatusClass(student.fee_status)}">
+                                                    ${student.fee_status || 'Unknown'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Payment Progress</small>
+                                        <small>${Math.round((totalPaid / (student.fee_amount || 1)) * 100)}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Payments -->
+                        <div class="card">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Payments</h6>
+                                <button class="btn btn-sm btn-primary" onclick="viewStudentFeeHistory('${studentId}')">
+                                    <i class="fas fa-list me-1"></i> View All
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                ${studentFees.length > 0 ? `
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Receipt No</th>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Mode</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${studentFees.slice(0, 3).map(fee => `
+                                                    <tr>
+                                                        <td><strong>${fee.receipt_no}</strong></td>
+                                                        <td>${formatDate(fee.payment_date)}</td>
+                                                        <td class="text-success fw-bold">₹${(fee.amount || 0).toLocaleString()}</td>
+                                                        <td><span class="badge ${getPaymentModeBadge(fee.payment_mode)}">${fee.payment_mode}</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="printReceipt('${fee.receipt_no}')">
+                                                                <i class="fas fa-print"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    ${studentFees.length > 3 ? 
+                                        `<p class="text-center text-muted mt-2">+ ${studentFees.length - 3} more payments</p>` : ''
+                                    }
+                                ` : `
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-money-bill-wave fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted">No payment records found</p>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="editStudent('${studentId}')">
+                            <i class="fas fa-edit me-1"></i> Edit Student
+                        </button>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#feeModal" onclick="setStudentForFee('${studentId}')">
+                            <i class="fas fa-plus me-1"></i> Add Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('studentDetailsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    modal.show();
+}
+
+// Helper function to set student for fee payment
+function setStudentForFee(studentId) {
+    // Close student details modal first
+    const studentModal = bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal'));
+    if (studentModal) {
+        studentModal.hide();
+    }
+    
+    // Set student in fee modal
+    setTimeout(() => {
+        const feeModal = new bootstrap.Modal(document.getElementById('feeModal'));
+        const studentSelect = document.querySelector('#feeForm select[name="studentId"]');
+        if (studentSelect) {
+            studentSelect.value = studentId;
+            updateFeeDetails(studentId);
+        }
+        feeModal.show();
+    }, 300);
+}
+
+function printClassReceipts(className) {
+    const classFees = feesData.filter(fee => {
+        const student = studentsData.find(s => s.student_id === fee.student_id);
+        return student && student.course === className;
+    });
+    
+    if (classFees.length === 0) {
+        alert(`No fee records found for ${className}`);
+        return;
+    }
+    
+    if (confirm(`Do you want to print all ${classFees.length} receipts for ${className}?`)) {
+        classFees.forEach((fee, index) => {
+            setTimeout(() => {
+                printReceipt(fee.receipt_no);
+            }, index * 500); // Stagger prints
+        });
+    }
+}
 // Update marks table
 function updateMarksTable() {
     const tbody = document.getElementById('marksTableBody');
@@ -5146,6 +5426,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
