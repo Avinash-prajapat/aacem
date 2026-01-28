@@ -1256,6 +1256,7 @@ function markClassAttendance(className) {
 }
 
 // Update students table
+// Update students table - MODIFIED VERSION
 function updateStudentsTable() {
     const tbody = document.getElementById('studentsTableBody');
     if (!tbody) return;
@@ -1265,7 +1266,7 @@ function updateStudentsTable() {
     if (studentsData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <div class="empty-state">
                         <i class="fas fa-user-graduate"></i>
                         <p>No students found</p>
@@ -1279,37 +1280,194 @@ function updateStudentsTable() {
         return;
     }
     
+    // Group students by class
+    const studentsByClass = {};
     studentsData.forEach(student => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${student.student_id || 'N/A'}</td>
-            <td>${student.name || 'Unknown'}</td>
-            <td>${student.course || 'No Course'}</td>
-            <td>${formatDate(student.join_date)}</td>
-            <td>${student.phone || 'N/A'}</td>
-            <td>
-                <span class="status-badge ${getFeeStatusClass(student.fee_status)}">
-                    ${student.fee_status || 'Unknown'}
-                </span>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-info btn-action" onclick="viewStudent('${student.student_id}')" title="View">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-warning btn-action" onclick="editStudent('${student.student_id}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-action" onclick="deleteStudent('${student.student_id}')" title="Delete">
-                        <i class="fas fa-trash"></i>
+        const className = student.course || 'No Class';
+        if (!studentsByClass[className]) {
+            studentsByClass[className] = [];
+        }
+        studentsByClass[className].push(student);
+    });
+    
+    // Display students grouped by class
+    Object.entries(studentsByClass).forEach(([className, classStudents]) => {
+        // Add class header row
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'class-header-row bg-light';
+        headerRow.innerHTML = `
+            <td colspan="8" class="py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="fas fa-users me-2"></i>${className}</strong>
+                        <span class="badge bg-primary ms-2">${classStudents.length} students</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleClassStudents('${className}')">
+                        <i class="fas fa-chevron-down"></i> Toggle
                     </button>
                 </div>
             </td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(headerRow);
+        
+        // Add students for this class
+        classStudents.forEach(student => {
+            const row = document.createElement('tr');
+            row.className = `class-student-row class-${className.replace(/\s+/g, '-')}`;
+            row.innerHTML = `
+                <td>${student.student_id || 'N/A'}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="student-avatar me-2">
+                            <i class="fas fa-user-circle text-primary"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">${student.name || 'Unknown'}</div>
+                            <small class="text-muted">Class: ${student.course || 'No Course'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>${student.course || 'No Course'}</td>
+                <td>${formatDate(student.join_date)}</td>
+                <td>${student.phone || 'N/A'}</td>
+                <td>
+                    <span class="status-badge ${getFeeStatusClass(student.fee_status)}">
+                        ${student.fee_status || 'Unknown'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-info btn-action" onclick="viewStudent('${student.student_id}')" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning btn-action" onclick="editStudent('${student.student_id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-action" onclick="deleteStudent('${student.student_id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     });
 }
 
+// Toggle class students visibility
+function toggleClassStudents(className) {
+    const rows = document.querySelectorAll(`.class-${className.replace(/\s+/g, '-')}`);
+    const isVisible = rows[0] && rows[0].style.display !== 'none';
+    
+    rows.forEach(row => {
+        row.style.display = isVisible ? 'none' : '';
+    });
+    
+    // Update toggle button icon
+    const button = event.target.closest('button');
+    if (button) {
+        const icon = button.querySelector('i');
+        if (icon) {
+            icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        }
+        button.textContent = isVisible ? 'Show Students' : 'Hide Students';
+    }
+}
+// Filter students by class when class is clicked
+function filterStudentsByClass(className) {
+    const searchInput = document.getElementById('studentSearch');
+    if (searchInput) {
+        // Set search input value to the class name
+        searchInput.value = className;
+        
+        // Trigger the search
+        const event = new Event('input', {
+            bubbles: true,
+            cancelable: true,
+        });
+        searchInput.dispatchEvent(event);
+    }
+}
+// Setup search functionality - UPDATED VERSION
+function setupSearchFunctionality() {
+    const studentSearch = document.getElementById('studentSearch');
+    const teacherSearch = document.getElementById('teacherSearch');
+    
+    if (studentSearch) {
+        studentSearch.addEventListener('input', function(e) {
+            filterStudentsTable(e.target.value.toLowerCase());
+        });
+    }
+    
+    if (teacherSearch) {
+        teacherSearch.addEventListener('input', function(e) {
+            filterTable('teachersTableBody', e.target.value.toLowerCase());
+        });
+    }
+}
+
+// Enhanced student table filter with class support
+function filterStudentsTable(searchTerm) {
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    
+    const rows = tbody.getElementsByTagName('tr');
+    let visibleRowCount = 0;
+    
+    for (let row of rows) {
+        // Skip header rows
+        if (row.classList.contains('class-header-row')) {
+            continue;
+        }
+        
+        const text = row.textContent.toLowerCase();
+        const shouldShow = text.includes(searchTerm) || searchTerm === '';
+        
+        row.style.display = shouldShow ? '' : 'none';
+        
+        if (shouldShow) {
+            visibleRowCount++;
+            
+            // Highlight search term in student name
+            if (searchTerm && row.querySelector('.fw-bold')) {
+                const nameElement = row.querySelector('.fw-bold');
+                const nameText = nameElement.textContent;
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                nameElement.innerHTML = nameText.replace(regex, '<span class="bg-warning px-1 rounded">$1</span>');
+            }
+        }
+    }
+    
+    // Show/hide class headers based on visible students
+    updateClassHeadersVisibility();
+}
+
+// Update class headers based on visible students
+function updateClassHeadersVisibility() {
+    const classHeaders = document.querySelectorAll('.class-header-row');
+    
+    classHeaders.forEach(header => {
+        const className = header.querySelector('strong').textContent;
+        const sanitizedClassName = className.replace(/\s+/g, '-');
+        const studentRows = document.querySelectorAll(`.class-${sanitizedClassName}`);
+        
+        let visibleCount = 0;
+        studentRows.forEach(row => {
+            if (row.style.display !== 'none') {
+                visibleCount++;
+            }
+        });
+        
+        // Show/hide header based on visible students
+        header.style.display = visibleCount > 0 ? '' : 'none';
+        
+        // Update student count badge
+        const badge = header.querySelector('.badge');
+        if (badge) {
+            badge.textContent = `${visibleCount} students`;
+        }
+    });
+}
 // Get fee status class
 function getFeeStatusClass(status) {
     if (!status) return 'bg-secondary';
@@ -4053,6 +4211,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
