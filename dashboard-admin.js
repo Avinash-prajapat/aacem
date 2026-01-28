@@ -2727,41 +2727,782 @@ async function deleteStudent(studentId) {
         }
     }
 }
-// View functions
+// REPLACE ये सारे functions:
+
+// 1. Student View
 function viewStudent(studentId) {
     const student = studentsData.find(s => s.student_id === studentId);
-    if (student) {
-        alert(`Student Details:\n\nName: ${student.name}\nParent: ${student.parent_name}\nCourse: ${student.course}\nPhone: ${student.phone}\nEmail: ${student.email || 'N/A'}\nFee Status: ${student.fee_status}\nPaid: ₹${student.paid_amount || 0}\nDue: ₹${student.due_amount || 0}\nAddress: ${student.address || 'N/A'}`);
+    if (!student) {
+        showError('Student not found!');
+        return;
     }
+
+    const studentFees = feesData.filter(f => f.student_id === studentId);
+    const totalPaid = studentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    const dueAmount = (student.fee_amount || 0) - totalPaid;
+    
+    const modalHTML = `
+        <div class="modal fade" id="viewModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-graduate me-2"></i>
+                            ${student.name} - Student Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary border-bottom pb-2">
+                                            <i class="fas fa-info-circle me-2"></i>Basic Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Student ID:</div>
+                                            <div class="col-7 fw-bold">${student.student_id}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Full Name:</div>
+                                            <div class="col-7">${student.name}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Parent Name:</div>
+                                            <div class="col-7">${student.parent_name || 'N/A'}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Class:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-primary">${student.course || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Join Date:</div>
+                                            <div class="col-7">${formatDate(student.join_date)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary border-bottom pb-2">
+                                            <i class="fas fa-address-card me-2"></i>Contact Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Phone:</div>
+                                            <div class="col-7">
+                                                <i class="fas fa-phone text-success me-1"></i>
+                                                ${student.phone || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Email:</div>
+                                            <div class="col-7">
+                                                <i class="fas fa-envelope text-primary me-1"></i>
+                                                ${student.email || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Address:</div>
+                                            <div class="col-7">${student.address || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary border-bottom pb-2">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Fee Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Total Fee:</div>
+                                            <div class="col-6 text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Paid Amount:</div>
+                                            <div class="col-6 text-end text-success fw-bold">
+                                                ₹${totalPaid.toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-6 text-muted">Due Amount:</div>
+                                            <div class="col-6 text-end">
+                                                <span class="fw-bold ${dueAmount > 0 ? 'text-danger' : 'text-success'}">
+                                                    ₹${dueAmount.toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6 text-muted">Status:</div>
+                                            <div class="col-6 text-end">
+                                                <span class="badge ${getFeeStatusClass(student.fee_status)}">
+                                                    ${student.fee_status || 'Unknown'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary border-bottom pb-2">
+                                            <i class="fas fa-chart-line me-2"></i>Quick Stats
+                                        </h6>
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="text-primary fw-bold fs-5">${studentFees.length}</div>
+                                                <small class="text-muted">Payments</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-success fw-bold fs-5">₹${totalPaid.toLocaleString()}</div>
+                                                <small class="text-muted">Total Paid</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="${dueAmount > 0 ? 'text-danger' : 'text-success'} fw-bold fs-5">
+                                                    ₹${dueAmount.toLocaleString()}
+                                                </div>
+                                                <small class="text-muted">Pending</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="editStudent('${studentId}')">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="viewStudentFeeHistory('${studentId}')">
+                            <i class="fas fa-history me-1"></i> Fee History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalHTML);
 }
 
+// 2. Teacher View
 function viewTeacher(teacherId) {
     const teacher = teachersData.find(t => t.teacher_id === teacherId);
-    if (teacher) {
-        alert(`Teacher Details:\n\nName: ${teacher.name}\nSubject: ${teacher.subject}\nPhone: ${teacher.phone}\nEmail: ${teacher.email || 'N/A'}\nSalary: ₹${teacher.salary}\nJoining Date: ${formatDate(teacher.joining_date)}\nAddress: ${teacher.address || 'N/A'}`);
+    if (!teacher) {
+        showError('Teacher not found!');
+        return;
     }
+
+    const modalHTML = `
+        <div class="modal fade" id="viewModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>
+                            ${teacher.name} - Teacher Details
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning border-bottom pb-2">
+                                            <i class="fas fa-user-tie me-2"></i>Basic Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Teacher ID:</div>
+                                            <div class="col-7 fw-bold">${teacher.teacher_id}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Full Name:</div>
+                                            <div class="col-7">${teacher.name}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Subject:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-info">${teacher.subject || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Joining Date:</div>
+                                            <div class="col-7">${formatDate(teacher.joining_date)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning border-bottom pb-2">
+                                            <i class="fas fa-money-check-alt me-2"></i>Salary Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Monthly Salary:</div>
+                                            <div class="col-6 text-end fw-bold text-success">
+                                                ₹${(teacher.salary || 0).toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Annual Salary:</div>
+                                            <div class="col-6 text-end fw-bold">
+                                                ₹${((teacher.salary || 0) * 12).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning border-bottom pb-2">
+                                            <i class="fas fa-address-card me-2"></i>Contact Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Phone:</div>
+                                            <div class="col-7">
+                                                <i class="fas fa-phone text-success me-1"></i>
+                                                ${teacher.phone || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Email:</div>
+                                            <div class="col-7">
+                                                <i class="fas fa-envelope text-primary me-1"></i>
+                                                ${teacher.email || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Address:</div>
+                                            <div class="col-7">${teacher.address || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning border-bottom pb-2">
+                                            <i class="fas fa-chart-pie me-2"></i>Employment Details
+                                        </h6>
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="text-warning fw-bold fs-5">
+                                                    ${calculateExperience(teacher.joining_date)}
+                                                </div>
+                                                <small class="text-muted">Experience</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-success fw-bold fs-5">
+                                                    ₹${(teacher.salary || 0).toLocaleString()}
+                                                </div>
+                                                <small class="text-muted">Monthly</small>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-primary fw-bold fs-5">
+                                                    ₹${((teacher.salary || 0) * 12).toLocaleString()}
+                                                </div>
+                                                <small class="text-muted">Annual</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-warning" onclick="editTeacher('${teacherId}')">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalHTML);
 }
 
+// 3. Course View
 function viewCourse(courseCode) {
     const course = coursesData.find(c => c.course_code === courseCode);
-    if (course) {
-        alert(`Course Details:\n\nCode: ${course.course_code}\nName: ${course.course_name}\nDuration: ${course.duration} months\nFee: ₹${course.fee_amount}\nCategory: ${course.category}\nStatus: ${course.is_active ? 'Active' : 'Inactive'}\nStudents: ${course.student_count || 0}\nDescription: ${course.description || 'N/A'}`);
+    if (!course) {
+        showError('Course not found!');
+        return;
     }
+
+    const courseStudents = studentsData.filter(s => s.course === courseCode);
+    const courseFees = feesData.filter(f => {
+        const student = studentsData.find(s => s.student_id === f.student_id);
+        return student && student.course === courseCode;
+    });
+    const totalRevenue = courseFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    
+    const modalHTML = `
+        <div class="modal fade" id="viewModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-book me-2"></i>
+                            ${course.course_name} - Course Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info border-bottom pb-2">
+                                            <i class="fas fa-info-circle me-2"></i>Course Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Course Code:</div>
+                                            <div class="col-7 fw-bold">${course.course_code}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Course Name:</div>
+                                            <div class="col-7">${course.course_name}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Duration:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-primary">${course.duration} months</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Category:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-secondary">${course.category || 'General'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Status:</div>
+                                            <div class="col-7">
+                                                <span class="badge ${course.is_active ? 'bg-success' : 'bg-danger'}">
+                                                    ${course.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info border-bottom pb-2">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Fee Structure
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Course Fee:</div>
+                                            <div class="col-6 text-end fw-bold text-success">
+                                                ₹${(course.fee_amount || 0).toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-6 text-muted">Total Revenue:</div>
+                                            <div class="col-6 text-end fw-bold">
+                                                ₹${totalRevenue.toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6 text-muted">Potential Revenue:</div>
+                                            <div class="col-6 text-end text-muted">
+                                                ₹${((course.fee_amount || 0) * courseStudents.length).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info border-bottom pb-2">
+                                            <i class="fas fa-chart-bar me-2"></i>Course Statistics
+                                        </h6>
+                                        <div class="row text-center mb-3">
+                                            <div class="col-6">
+                                                <div class="text-primary fw-bold fs-4">${courseStudents.length}</div>
+                                                <small class="text-muted">Total Students</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-success fw-bold fs-4">${courseFees.length}</div>
+                                                <small class="text-muted">Fee Payments</small>
+                                            </div>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 10px;">
+                                            <div class="progress-bar bg-success" style="width: ${(courseFees.length / Math.max(courseStudents.length, 1)) * 100}%"></div>
+                                        </div>
+                                        <small class="text-muted">Payment Completion Rate</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info border-bottom pb-2">
+                                            <i class="fas fa-file-alt me-2"></i>Description
+                                        </h6>
+                                        <div class="bg-light p-3 rounded">
+                                            ${course.description || 'No description available.'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-info" onclick="editCourse('${courseCode}')">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="viewCourseStudents('${courseCode}')">
+                            <i class="fas fa-users me-1"></i> View Students
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalHTML);
 }
 
+// 4. Receipt View
 function viewReceipt(receiptNo) {
     const fee = feesData.find(f => f.receipt_no === receiptNo);
-    if (fee) {
-        alert(`Receipt Details:\n\nReceipt No: ${fee.receipt_no}\nStudent: ${fee.student_name}\nCourse: ${fee.course}\nAmount: ₹${fee.amount}\nPayment Date: ${formatDate(fee.payment_date)}\nPayment Mode: ${fee.payment_mode}\nStatus: ${fee.status}`);
+    if (!fee) {
+        showError('Receipt not found!');
+        return;
+    }
+
+    const student = studentsData.find(s => s.student_id === fee.student_id);
+    const modalHTML = `
+        <div class="modal fade" id="viewModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                            Fee Receipt - ${receiptNo}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success border-bottom pb-2">
+                                    <i class="fas fa-receipt me-2"></i>Receipt Details
+                                </h6>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Receipt No:</div>
+                                    <div class="col-7 fw-bold">${receiptNo}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Payment Date:</div>
+                                    <div class="col-7">${formatDate(fee.payment_date)}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Amount:</div>
+                                    <div class="col-7 fw-bold text-success fs-5">
+                                        ₹${(fee.amount || 0).toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Payment Mode:</div>
+                                    <div class="col-7">
+                                        <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
+                                            ${fee.payment_mode || 'Unknown'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-5 text-muted">Status:</div>
+                                    <div class="col-7">
+                                        <span class="badge bg-success">${fee.status || 'Paid'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title text-success border-bottom pb-2">
+                                    <i class="fas fa-user-graduate me-2"></i>Student Information
+                                </h6>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Student Name:</div>
+                                    <div class="col-7 fw-bold">${fee.student_name}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Student ID:</div>
+                                    <div class="col-7">${fee.student_id}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Class:</div>
+                                    <div class="col-7">
+                                        <span class="badge bg-primary">${student ? student.course : 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-5 text-muted">Course Fee:</div>
+                                    <div class="col-7">
+                                        ₹${(student ? student.fee_amount : 0).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="printReceipt('${receiptNo}')">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalHTML);
+}
+
+// 5. Marks View
+function viewMarks(marksId) {
+    const mark = marksData.find(m => m.id == marksId);
+    if (!mark) {
+        showError('Marks record not found!');
+        return;
+    }
+
+    const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+    let grade = 'F';
+    let gradeClass = 'bg-danger';
+    
+    if (percentage >= 90) { grade = 'A+'; gradeClass = 'bg-success'; }
+    else if (percentage >= 80) { grade = 'A'; gradeClass = 'bg-success'; }
+    else if (percentage >= 70) { grade = 'B'; gradeClass = 'bg-info'; }
+    else if (percentage >= 60) { grade = 'C'; gradeClass = 'bg-info'; }
+    else if (percentage >= 50) { grade = 'D'; gradeClass = 'bg-warning'; }
+    else if (percentage >= 40) { grade = 'E'; gradeClass = 'bg-warning'; }
+    
+    const modalHTML = `
+        <div class="modal fade" id="viewModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-purple text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Exam Result Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-purple border-bottom pb-2">
+                                    <i class="fas fa-info-circle me-2"></i>Exam Information
+                                </h6>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Exam Type:</div>
+                                    <div class="col-7 fw-bold">${mark.exam_type}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Subject:</div>
+                                    <div class="col-7">
+                                        <span class="badge bg-info">${mark.subject}</span>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Exam Date:</div>
+                                    <div class="col-7">${formatDate(mark.exam_date)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-purple border-bottom pb-2">
+                                    <i class="fas fa-chart-bar me-2"></i>Result Details
+                                </h6>
+                                <div class="row mb-2">
+                                    <div class="col-6 text-muted">Marks Obtained:</div>
+                                    <div class="col-6 text-end fw-bold fs-4">
+                                        ${mark.marks_obtained}/${mark.total_marks}
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6 text-muted">Percentage:</div>
+                                    <div class="col-6 text-end fw-bold fs-5 ${percentage >= 40 ? 'text-success' : 'text-danger'}">
+                                        ${percentage.toFixed(2)}%
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 text-muted">Grade:</div>
+                                    <div class="col-6 text-end">
+                                        <span class="badge ${gradeClass} fs-6">${grade}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title text-purple border-bottom pb-2">
+                                    <i class="fas fa-user-graduate me-2"></i>Student Information
+                                </h6>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-muted">Student Name:</div>
+                                    <div class="col-7 fw-bold">${mark.student_name}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-5 text-muted">Class:</div>
+                                    <div class="col-7">
+                                        <span class="badge bg-primary">${mark.course || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-purple" onclick="editMarks('${marksId}')">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalHTML);
+}
+
+
+// ADD ये helper functions file के अंत में:
+
+// Show modal function
+function showModal(modalHTML) {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('viewModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+    modal.show();
+}
+
+// Calculate experience in years
+function calculateExperience(joiningDate) {
+    if (!joiningDate) return 'N/A';
+    
+    try {
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
+        const months = (today.getFullYear() - joinDate.getFullYear()) * 12 + 
+                      (today.getMonth() - joinDate.getMonth());
+        
+        if (months < 12) {
+            return `${months} months`;
+        } else {
+            const years = Math.floor(months / 12);
+            const remainingMonths = months % 12;
+            return remainingMonths > 0 ? 
+                `${years}.${remainingMonths} years` : 
+                `${years} years`;
+        }
+    } catch (e) {
+        return 'N/A';
     }
 }
 
-function viewMarks(marksId) {
-    const mark = marksData.find(m => m.id == marksId);
-    if (mark) {
-        const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
-        alert(`Marks Details:\n\nStudent: ${mark.student_name}\nExam: ${mark.exam_type}\nSubject: ${mark.subject}\nMarks: ${mark.marks_obtained}/${mark.total_marks}\nPercentage: ${percentage.toFixed(2)}%\nGrade: ${mark.grade}\nExam Date: ${formatDate(mark.exam_date)}`);
+// Payment mode badge
+function getPaymentModeBadge(mode) {
+    switch((mode || '').toLowerCase()) {
+        case 'cash': return 'bg-success';
+        case 'online': return 'bg-primary';
+        case 'bank': return 'bg-info';
+        case 'cheque': return 'bg-warning';
+        default: return 'bg-secondary';
     }
+}
+
+// View course students
+function viewCourseStudents(courseCode) {
+    const courseStudents = studentsData.filter(s => s.course === courseCode);
+    const course = coursesData.find(c => c.course_code === courseCode);
+    
+    if (courseStudents.length === 0) {
+        showInfo(`No students found in ${course ? course.course_name : 'this course'}`);
+        return;
+    }
+    
+    let studentsHTML = '<div class="table-responsive"><table class="table table-sm">';
+    studentsHTML += '<thead><tr><th>Student ID</th><th>Name</th><th>Phone</th><th>Fee Status</th><th>Actions</th></tr></thead><tbody>';
+    
+    courseStudents.forEach(student => {
+        studentsHTML += `
+            <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.phone || 'N/A'}</td>
+                <td>
+                    <span class="badge ${getFeeStatusClass(student.fee_status)}">
+                        ${student.fee_status || 'Unknown'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewStudent('${student.student_id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    studentsHTML += '</tbody></table></div>';
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('viewModal'));
+    if (modal) modal.hide();
+    
+    setTimeout(() => {
+        const modalHTML = `
+            <div class="modal fade" id="viewModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-users me-2"></i>
+                                ${course ? course.course_name : 'Course'} - Students List
+                                <span class="badge bg-light text-dark ms-2">${courseStudents.length} students</span>
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${studentsHTML}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        showModal(modalHTML);
+    }, 300);
 }
 
 // Delete functions
@@ -4288,6 +5029,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
