@@ -3386,42 +3386,124 @@ function viewMarks(marksId) {
 }
 
 // ADD ये functions अगर नहीं हैं तो:
-
-// Payment mode icon
-function getPaymentModeIcon(mode) {
-    switch((mode || '').toLowerCase()) {
-        case 'cash': return 'fa-money-bill-wave';
-        case 'online': return 'fa-globe';
-        case 'bank': return 'fa-university';
-        case 'cheque': return 'fa-file-invoice-dollar';
-        default: return 'fa-credit-card';
-    }
-}
-
-// Short date format
-function formatDate(dateString, format = 'full') {
-    if (!dateString) return 'N/A';
-    try {
-        const date = new Date(dateString);
-        if (format === 'short') {
-            return date.toLocaleDateString('en-IN', { 
-                day: '2-digit', 
-                month: 'short', 
-                year: 'numeric' 
-            });
-        }
-        return date.toLocaleDateString('en-IN', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (e) {
-        return 'Invalid Date';
-    }
-}
 // ADD ये helper functions file के अंत में:
+
+// Show modal function
+function showModal(modalHTML) {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('viewModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+    modal.show();
+}
+
+// Calculate experience in years
+function calculateExperience(joiningDate) {
+    if (!joiningDate) return 'N/A';
+    
+    try {
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
+        const months = (today.getFullYear() - joinDate.getFullYear()) * 12 + 
+                      (today.getMonth() - joinDate.getMonth());
+        
+        if (months < 12) {
+            return `${months} months`;
+        } else {
+            const years = Math.floor(months / 12);
+            const remainingMonths = months % 12;
+            return remainingMonths > 0 ? 
+                `${years}.${remainingMonths} years` : 
+                `${years} years`;
+        }
+    } catch (e) {
+        return 'N/A';
+    }
+}
+
+// Payment mode badge
+function getPaymentModeBadge(mode) {
+    switch((mode || '').toLowerCase()) {
+        case 'cash': return 'bg-success';
+        case 'online': return 'bg-primary';
+        case 'bank': return 'bg-info';
+        case 'cheque': return 'bg-warning';
+        default: return 'bg-secondary';
+    }
+}
+
+// View course students
+function viewCourseStudents(courseCode) {
+    const courseStudents = studentsData.filter(s => s.course === courseCode);
+    const course = coursesData.find(c => c.course_code === courseCode);
+    
+    if (courseStudents.length === 0) {
+        showInfo(`No students found in ${course ? course.course_name : 'this course'}`);
+        return;
+    }
+    
+    let studentsHTML = '<div class="table-responsive"><table class="table table-sm">';
+    studentsHTML += '<thead><tr><th>Student ID</th><th>Name</th><th>Phone</th><th>Fee Status</th><th>Actions</th></tr></thead><tbody>';
+    
+    courseStudents.forEach(student => {
+        studentsHTML += `
+            <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.phone || 'N/A'}</td>
+                <td>
+                    <span class="badge ${getFeeStatusClass(student.fee_status)}">
+                        ${student.fee_status || 'Unknown'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewStudent('${student.student_id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    studentsHTML += '</tbody></table></div>';
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('viewModal'));
+    if (modal) modal.hide();
+    
+    setTimeout(() => {
+        const modalHTML = `
+            <div class="modal fade" id="viewModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-users me-2"></i>
+                                ${course ? course.course_name : 'Course'} - Students List
+                                <span class="badge bg-light text-dark ms-2">${courseStudents.length} students</span>
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${studentsHTML}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        showModal(modalHTML);
+    }, 300);
+}
 
 // Show modal function
 function showModal(modalHTML) {
@@ -5064,6 +5146,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
