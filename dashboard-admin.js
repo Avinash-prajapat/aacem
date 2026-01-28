@@ -1587,7 +1587,7 @@ function updateCoursesTable() {
     });
 }
 
-// Update fees table
+// REPLACE पूरा updateFeesTable() function ये नए code से:
 function updateFeesTable() {
     const tbody = document.getElementById('feesTableBody');
     if (!tbody) return;
@@ -1597,7 +1597,7 @@ function updateFeesTable() {
     if (feesData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="10" class="text-center py-4">
                     <div class="empty-state">
                         <i class="fas fa-money-bill-wave"></i>
                         <p>No fee records found</p>
@@ -1608,29 +1608,155 @@ function updateFeesTable() {
         return;
     }
     
+    // Group fees by student's class
+    const feesByClass = {};
+    let totalAmount = 0;
+    
     feesData.forEach(fee => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${fee.receipt_no || 'N/A'}</td>
-            <td>${fee.student_name || 'Unknown'}</td>
-            <td>${fee.course || 'No Course'}</td>
-            <td>₹${(fee.amount || 0).toLocaleString()}</td>
-            <td>${formatDate(fee.payment_date)}</td>
-            <td>${fee.payment_mode || 'Unknown'}</td>
-            <td><span class="status-badge bg-success">${fee.status || 'Unknown'}</span></td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-info btn-action" onclick="viewReceipt('${fee.receipt_no}')" title="View">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-danger btn-action" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
+        // Find student to get class and UID
+        const student = studentsData.find(s => s.student_id === fee.student_id);
+        const className = student ? student.course : 'No Class';
+        
+        if (!feesByClass[className]) {
+            feesByClass[className] = {
+                fees: [],
+                total: 0
+            };
+        }
+        feesByClass[className].fees.push(fee);
+        feesByClass[className].total += fee.amount || 0;
+        totalAmount += fee.amount || 0;
+    });
+    
+    // Display grouped by class
+    Object.keys(feesByClass).forEach(className => {
+        const classData = feesByClass[className];
+        const classFees = classData.fees;
+        
+        // Class Header Row
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'class-header-row';
+        headerRow.innerHTML = `
+            <td colspan="10" class="py-2" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="fas fa-users me-2"></i>${className}</strong>
+                        <span class="badge bg-primary ms-2">${classFees.length} payments</span>
+                        <span class="badge bg-success ms-1">Total: ₹${classData.total.toLocaleString()}</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleClassFees('${className}')">
+                            <i class="fas fa-chevron-down"></i> Toggle
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="printClassReceipts('${className}')">
+                            <i class="fas fa-print"></i> Print All
+                        </button>
+                    </div>
                 </div>
             </td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(headerRow);
+        
+        // Fee rows for this class
+        classFees.forEach(fee => {
+            const student = studentsData.find(s => s.student_id === fee.student_id);
+            const row = document.createElement('tr');
+            row.className = `fee-row class-${className.replace(/\s+/g, '-')}`;
+            row.innerHTML = `
+                <td>
+                    <strong class="text-primary">${fee.receipt_no || 'N/A'}</strong>
+                </td>
+                <td>
+                    <div>
+                        <div class="fw-bold">${fee.student_name || 'Unknown'}</div>
+                        <small class="text-muted">UID: ${fee.student_id}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-info">${student ? student.course : 'No Course'}</span>
+                </td>
+                <td>
+                    <div class="text-success fw-bold">₹${(fee.amount || 0).toLocaleString()}</div>
+                </td>
+                <td>${formatDate(fee.payment_date)}</td>
+                <td>
+                    <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
+                        <i class="fas ${getPaymentModeIcon(fee.payment_mode)} me-1"></i>
+                        ${fee.payment_mode || 'Unknown'}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge ${getFeeStatusBadge(fee.status)}">
+                        ${fee.status || 'Paid'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-success btn-sm" onclick="printReceipt('${fee.receipt_no}')" title="Print Receipt">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="viewStudentDetails('${fee.student_id}')" title="View Student">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     });
+    
+    // Add total summary row
+    const summaryRow = document.createElement('tr');
+    summaryRow.className = 'total-summary-row';
+    summaryRow.innerHTML = `
+        <td colspan="10" class="py-3" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d); color: white;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-chart-line me-2"></i>
+                    <strong>GRAND TOTAL</strong>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark me-3">${feesData.length} Payments</span>
+                    <span class="fs-5 fw-bold">₹${totalAmount.toLocaleString()}</span>
+                </div>
+            </div>
+        </td>
+    `;
+    tbody.appendChild(summaryRow);
+}
+
+// Helper functions
+function getPaymentModeBadge(mode) {
+    switch((mode || '').toLowerCase()) {
+        case 'cash': return 'bg-success';
+        case 'online': return 'bg-primary';
+        case 'bank': return 'bg-info';
+        case 'cheque': return 'bg-warning';
+        default: return 'bg-secondary';
+    }
+}
+
+function getPaymentModeIcon(mode) {
+    switch((mode || '').toLowerCase()) {
+        case 'cash': return 'fa-money-bill-wave';
+        case 'online': return 'fa-globe';
+        case 'bank': return 'fa-university';
+        case 'cheque': return 'fa-file-invoice-dollar';
+        default: return 'fa-credit-card';
+    }
+}
+
+function getFeeStatusBadge(status) {
+    switch((status || '').toLowerCase()) {
+        case 'paid': return 'bg-success';
+        case 'pending': return 'bg-warning';
+        case 'partial': return 'bg-info';
+        case 'failed': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
 }
 
 // Update marks table
@@ -3577,56 +3703,7 @@ async function exportStudentFeeHistory(studentId) {
     }
 }
 
-// Update the fees table to include print buttons
-function updateFeesTable() {
-    const tbody = document.getElementById('feesTableBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    if (feesData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center py-4">
-                    <div class="empty-state">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <p>No fee records found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
 
-
-    
-    feesData.forEach(fee => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${fee.receipt_no || 'N/A'}</td>
-            <td>${fee.student_name || 'Unknown'}</td>
-            <td>${fee.course || 'No Course'}</td>
-            <td>₹${(fee.amount || 0).toLocaleString()}</td>
-            <td>${formatDate(fee.payment_date)}</td>
-            <td>${fee.payment_mode || 'Unknown'}</td>
-            <td><span class="status-badge bg-success">${fee.status || 'Unknown'}</span></td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-success btn-action" onclick="printReceipt('${fee.receipt_no}')" title="Print Receipt">
-                        <i class="fas fa-print"></i>
-                    </button>
-                    <button class="btn btn-info btn-action" onclick="viewStudentFeeHistory('${fee.student_id}')" title="View History">
-                        <i class="fas fa-history"></i>
-                    </button>
-                    <button class="btn btn-danger btn-action" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
 
 // Also update the viewReceipt function to include print option
 function viewReceipt(receiptNo) {
@@ -4211,6 +4288,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
