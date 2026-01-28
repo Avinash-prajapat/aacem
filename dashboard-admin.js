@@ -3385,7 +3385,42 @@ function viewMarks(marksId) {
     showModal(modalHTML);
 }
 
+// ADD ये functions अगर नहीं हैं तो:
 
+// Payment mode icon
+function getPaymentModeIcon(mode) {
+    switch((mode || '').toLowerCase()) {
+        case 'cash': return 'fa-money-bill-wave';
+        case 'online': return 'fa-globe';
+        case 'bank': return 'fa-university';
+        case 'cheque': return 'fa-file-invoice-dollar';
+        default: return 'fa-credit-card';
+    }
+}
+
+// Short date format
+function formatDate(dateString, format = 'full') {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        if (format === 'short') {
+            return date.toLocaleDateString('en-IN', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+        }
+        return date.toLocaleDateString('en-IN', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
 // ADD ये helper functions file के अंत में:
 
 // Show modal function
@@ -5029,6 +5064,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
