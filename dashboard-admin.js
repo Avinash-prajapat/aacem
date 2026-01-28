@@ -1648,9 +1648,7 @@ function updateFeesTable() {
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleClassFees('${className}')">
                             <i class="fas fa-chevron-down"></i> Toggle
                         </button>
-                        <button class="btn btn-sm btn-outline-info" onclick="printClassReceipts('${className}')">
-                            <i class="fas fa-print"></i> Print All
-                        </button>
+                       
                     </div>
                 </div>
             </td>
@@ -5426,7 +5424,6 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
-
 
 
 
