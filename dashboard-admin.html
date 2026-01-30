@@ -923,6 +923,123 @@
         .modal-body .card-body {
             padding: 1.25rem;
         }
+
+        /* Attendance specific styles */
+.class-header-row {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+.class-header-row:hover {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5) !important;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.attendance-record-row {
+    transition: all 0.3s ease;
+    border-left: 2px solid #e9ecef;
+}
+
+.attendance-record-row:hover {
+    background-color: #f8fdfd;
+    border-left-color: var(--secondary-color);
+}
+
+.attendance-badge {
+    min-width: 80px;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+}
+
+.attendance-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.attendance-checkbox:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+/* Marks/Results Specific Styles */
+.course-header-row {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
+    border-left: 4px solid var(--info-color) !important;
+}
+
+.course-header-row:hover {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5) !important;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.marks-record-row {
+    transition: all 0.3s ease;
+    border-left: 2px solid #e9ecef;
+}
+
+.marks-record-row:hover {
+    background-color: #f8fdfd;
+    border-left-color: var(--info-color);
+}
+
+.bg-purple {
+    background: linear-gradient(135deg, #6f42c1, #8a63d2) !important;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #6f42c1, #8a63d2) !important;
+    border: none;
+    color: white !important;
+}
+
+.btn-purple:hover {
+    background: linear-gradient(135deg, #5a32a3, #7a52c7) !important;
+}
+
+
+/* Fee Records Specific Styles */
+.class-header-row {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
+    border-left: 4px solid var(--success-color) !important;
+}
+
+.class-header-row:hover {
+    background: linear-gradient(135deg, #e8f5e9, #f1f8e9) !important;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.fee-record-row {
+    transition: all 0.3s ease;
+    border-left: 2px solid #e9ecef;
+}
+
+.fee-record-row:hover {
+    background-color: #f8fdfd;
+    border-left-color: var(--success-color);
+}
+
+.grand-total-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+
     </style>
 </head>
 <body>
@@ -1303,12 +1420,11 @@
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr>
-                                                    <th>Date</th>
-                                                    <th>Class</th>
-                                                    <th>attendance_data</th>
+                                                    <th>Date / Class</th>
                                                     <th>Present</th>
                                                     <th>Absent</th>
                                                     <th>Percentage</th>
+                                                    <th>Details</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -1932,10 +2048,6 @@
 </body>
 
 </html>
-
-
-
-
 
 
 
