@@ -464,122 +464,6 @@ function updateNotificationBadge() {
     }
 }
 
-// Load students for marks based on course selection - FINAL WORKING VERSION
-async function loadStudentsForMarks(courseCode) {
-    const studentSelect = document.getElementById('marksStudentSelect');
-    const searchInput = document.getElementById('studentSearchMarks');
-    
-    if (!studentSelect) {
-        console.error('Marks student select not found');
-        return;
-    }
-    
-    if (!courseCode) {
-        studentSelect.innerHTML = '<option value="">Select Course First</option>';
-        return;
-    }
-    
-    studentSelect.innerHTML = '<option value="">Loading students...</option>';
-    
-    try {
-        console.log(`Loading students for course: ${courseCode}`);
-        
-        // Use the new API endpoint
-        const response = await fetch(`https://aacem-backend.onrender.com/api/students/course/${courseCode}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-        
-        if (result.success && result.students && result.students.length > 0) {
-            console.log(`API Success: Loaded ${result.students.length} students for course: ${courseCode}`);
-            
-            result.students.forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.student_id;
-                option.textContent = `${student.name} (${student.student_id})`;
-                option.setAttribute('data-student-name', student.name);
-                studentSelect.appendChild(option);
-            });
-            
-            // Clear search when course changes
-            if (searchInput) {
-                searchInput.value = '';
-            }
-            
-        } else {
-            console.log(`No students found for course: ${courseCode}`);
-            studentSelect.innerHTML = '<option value="">No students found for this course</option>';
-        }
-        
-    } catch (error) {
-        console.error('Error loading students for marks:', error);
-        
-        // Fallback: Use local data if API fails
-        console.log('Trying fallback with local data...');
-        const courseStudents = studentsData.filter(student => student.course === courseCode);
-        
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-        
-        if (courseStudents.length > 0) {
-            console.log(`Fallback: Loaded ${courseStudents.length} students from local data`);
-            
-            courseStudents.forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.student_id;
-                option.textContent = `${student.name} (${student.student_id})`;
-                option.setAttribute('data-student-name', student.name);
-                studentSelect.appendChild(option);
-            });
-        } else {
-            studentSelect.innerHTML = '<option value="">No students found for this course</option>';
-        }
-    }
-}
-
-// Search student by UID for marks - OPTIMIZED VERSION
-function searchStudentForMarks(searchTerm) {
-    const studentSelect = document.getElementById('marksStudentSelect');
-    const courseSelect = document.querySelector('#marksForm select[name="course"]');
-    
-    if (!studentSelect || !courseSelect) return;
-    
-    const currentCourse = courseSelect.value;
-    
-    if (!searchTerm.trim()) {
-        // If search is cleared, reload students for current course
-        if (currentCourse) {
-            loadStudentsForMarks(currentCourse);
-        } else {
-            studentSelect.innerHTML = '<option value="">Select Course First</option>';
-        }
-        return;
-    }
-    
-    // Filter students based on search term
-    let filteredStudents = [];
-    
-    if (currentCourse) {
-        // Search within current course students
-        filteredStudents = studentsData.filter(student => 
-            student.course === currentCourse && 
-            (student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             student.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    } else {
-        // Search in all students if no course selected
-        filteredStudents = studentsData.filter(student => 
-            student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }
-    
-    updateMarksStudentDropdown(filteredStudents, searchTerm);
-}
 
 // Update marks student dropdown
 function updateMarksStudentDropdown(students, searchTerm = '') {
@@ -607,61 +491,7 @@ function updateMarksStudentDropdown(students, searchTerm = '') {
     });
 }
 
-// Clear student search
-function clearStudentSearch() {
-    const searchInput = document.getElementById('studentSearchMarks');
-    const courseSelect = document.querySelector('#marksForm select[name="course"]');
-    
-    if (searchInput) {
-        searchInput.value = '';
-    }
-    
-    if (courseSelect && courseSelect.value) {
-        loadStudentsForMarks(courseSelect.value);
-    } else {
-        const studentSelect = document.getElementById('marksStudentSelect');
-        if (studentSelect) {
-            studentSelect.innerHTML = '<option value="">Select Course First</option>';
-        }
-    }
-}
 
-// Ensure course dropdown is populated when marks modal opens
-document.getElementById('marksModal').addEventListener('show.bs.modal', function() {
-    console.log('Marks modal opened - initializing...');
-    
-    // Populate course dropdown
-    populateCourseDropdown('marksForm', 'course');
-    
-    // Set current date
-    const dateInput = this.querySelector('input[type="date"]');
-    if (dateInput) {
-        dateInput.value = new Date().toISOString().split('T')[0];
-    }
-    
-    // Clear previous selections
-    const studentSelect = document.getElementById('marksStudentSelect');
-    const searchInput = document.getElementById('studentSearchMarks');
-    
-    if (studentSelect) {
-        studentSelect.innerHTML = '<option value="">Select Course First</option>';
-    }
-    
-    if (searchInput) {
-        searchInput.value = '';
-    }
-});
-
-// Add event listener for course change
-document.addEventListener('DOMContentLoaded', function() {
-    const courseSelect = document.querySelector('#marksForm select[name="course"]');
-    if (courseSelect) {
-        courseSelect.addEventListener('change', function() {
-            console.log('Course changed to:', this.value);
-            loadStudentsForMarks(this.value);
-        });
-    }
-});
 // Update notifications in the panel
 function updateNotifications() {
     const notificationList = document.getElementById('notificationList');
@@ -803,368 +633,15 @@ function populateCourseDropdown(formId, fieldName = 'course') {
     }
 }
 
-// Update fee details when student is selected
-function updateFeeDetails(studentId) {
-    const student = studentsData.find(s => s.student_id === studentId);
-    if (student) {
-        const totalFeeInput = document.querySelector('#feeForm input[name="totalFee"]');
-        const paidAmountInput = document.querySelector('#feeForm input[name="paidAmount"]');
-        const dueAmountInput = document.querySelector('#feeForm input[name="dueAmount"]');
-        const payingInput = document.querySelector('#feeForm input[name="payingNow"]');
-        
-        if (totalFeeInput) totalFeeInput.value = student.fee_amount || 0;
-        if (paidAmountInput) paidAmountInput.value = student.paid_amount || 0;
-        if (dueAmountInput) dueAmountInput.value = student.due_amount || 0;
-        
-        // Set maximum paying amount
-        if (payingInput) {
-            payingInput.max = student.due_amount || 0;
-            payingInput.placeholder = `Max: ${student.due_amount || 0}`;
-        }
-    }
-}
 
-// FIXED: Load students for attendance marking
-async function loadClassStudents(className) {
-    const container = document.getElementById('attendanceStudentsList');
-    const dateInput = document.querySelector('#attendanceForm input[name="date"]');
-    
-    if (!container) {
-        console.error('Attendance students container not found');
-        return;
-    }
-    
-    if (!dateInput || !dateInput.value) {
-        container.innerHTML = '<p class="text-warning text-center p-3">Please select a date first</p>';
-        return;
-    }
-    
-    const selectedDate = dateInput.value;
-    
-    if (!className) {
-        container.innerHTML = '<p class="text-warning text-center p-3">Please select a class first</p>';
-        return;
-    }
-    
-    console.log(`Loading students for class: ${className} on date: ${selectedDate}`);
-    
-    container.innerHTML = '<div class="text-center p-3"><div class="loading-spinner"></div> Loading students...</div>';
-    
-    try {
-        // Check if attendance already exists for this date and class
-        const checkResponse = await fetch(`https://aacem-backend.onrender.com/api/attendance/check-existing?date=${selectedDate}&class=${className}`);
-        const checkResult = await checkResponse.json();
-        
-        let existingAttendance = null;
-        if (checkResult.success && checkResult.exists) {
-            existingAttendance = checkResult.attendance;
-            console.log('Found existing attendance:', existingAttendance);
-        }
-        
-        // Load students for the class
-        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/students/${className}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        container.innerHTML = '';
-        
-        if (!result.success || !result.students || result.students.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center p-3">No students found for this class</p>';
-            return;
-        }
-        
-        console.log(`Loaded ${result.students.length} students for attendance`);
-        
-        // Show warning if attendance already exists
-        if (existingAttendance) {
-            const warningDiv = document.createElement('div');
-            warningDiv.className = 'alert alert-warning mb-3';
-            warningDiv.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Attendance already marked for ${selectedDate}</strong>
-                        <p class="mb-0 mt-1">Present: ${existingAttendance.present_count} | Absent: ${existingAttendance.absent_count} | Percentage: ${existingAttendance.percentage}%</p>
-                    </div>
-                    <button class="btn btn-sm btn-outline-warning" onclick="loadExistingAttendance('${existingAttendance.id}')">
-                        <i class="fas fa-edit me-1"></i> Edit
-                    </button>
-                </div>
-            `;
-            container.appendChild(warningDiv);
-        }
-        
-        result.students.forEach(student => {
-            const studentDiv = document.createElement('div');
-            studentDiv.className = 'form-check mb-3 p-3 border rounded bg-light';
-            
-            // Check if student was present in existing attendance
-            let isChecked = true; // Default to present
-            let badgeClass = 'bg-success';
-            let badgeText = 'Present';
-            
-            if (existingAttendance && existingAttendance.attendance_data) {
-                const existingStatus = existingAttendance.attendance_data[student.student_id];
-                isChecked = existingStatus === 'present';
-                badgeClass = isChecked ? 'bg-success' : 'bg-danger';
-                badgeText = isChecked ? 'Present' : 'Absent';
-            }
-            
-            studentDiv.innerHTML = `
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <input class="form-check-input attendance-checkbox" type="checkbox" 
-                               data-student-id="${student.student_id}" 
-                               id="attendance_${student.student_id}" 
-                               ${isChecked ? 'checked' : ''}>
-                        <label class="form-check-label ms-3" for="attendance_${student.student_id}">
-                            <div>
-                                <strong class="d-block">${student.name || 'Unknown Student'}</strong>
-                                <small class="text-muted">ID: ${student.student_id} | Course: ${student.course || 'N/A'}</small>
-                            </div>
-                        </label>
-                    </div>
-                    <span class="badge ${badgeClass} present-badge">${badgeText}</span>
-                </div>
-            `;
-            container.appendChild(studentDiv);
-        });
 
-        // Add event listeners for checkboxes
-        const checkboxes = document.querySelectorAll('.attendance-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const badge = this.closest('.d-flex').querySelector('.present-badge');
-                if (this.checked) {
-                    badge.textContent = 'Present';
-                    badge.className = 'badge bg-success present-badge';
-                } else {
-                    badge.textContent = 'Absent';
-                    badge.className = 'badge bg-danger present-badge';
-                }
-            });
-        });
-        
-    } catch (error) {
-        console.error('Error loading students:', error);
-        container.innerHTML = '<p class="text-danger text-center p-3">Failed to load students: ' + error.message + '</p>';
-    }
-}
 
-// Load existing attendance for editing
-async function loadExistingAttendance(attendanceId) {
-    try {
-        console.log(`Loading existing attendance for editing: ${attendanceId}`);
-        
-        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/${attendanceId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            const attendance = result.attendance;
-            const classSelect = document.querySelector('#attendanceForm select[name="class"]');
-            const dateInput = document.querySelector('#attendanceForm input[name="date"]');
-            
-            // Set the form values
-            if (classSelect) classSelect.value = attendance.class;
-            if (dateInput) dateInput.value = attendance.date;
-            
-            // Reload students with existing attendance data
-            await loadClassStudents(attendance.class);
-            
-            showSuccess('Loaded existing attendance for editing');
-        } else {
-            showError('Failed to load attendance data: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error loading existing attendance:', error);
-        showError('Failed to load attendance data: ' + error.message);
-    }
-}
 
-// FIXED: Save attendance function
-async function saveAttendance() {
-    const form = document.getElementById('attendanceForm');
-    if (!form) {
-        alert('Attendance form not found');
-        return;
-    }
-    
-    const formData = new FormData(form);
-    const className = formData.get('class');
-    const date = formData.get('date');
-    
-    if (!className) {
-        alert('Please select a class');
-        return;
-    }
-    
-    if (!date) {
-        alert('Please select a date');
-        return;
-    }
-    
-    const attendanceStatus = {};
-    const checkboxes = document.querySelectorAll('.attendance-checkbox');
-    
-    if (checkboxes.length === 0) {
-        alert('No students found for this class');
-        return;
-    }
-    
-    checkboxes.forEach(checkbox => {
-        attendanceStatus[checkbox.dataset.studentId] = checkbox.checked ? 'present' : 'absent';
-    });
-    
-    console.log('Saving attendance:', { class: className, date: date, attendance: attendanceStatus });
-    
-    try {
-        const response = await fetch('https://aacem-backend.onrender.com/api/mark-attendance', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                class: className,
-                date: date,
-                attendance: attendanceStatus
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            await loadDashboardData();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
-            if (modal) modal.hide();
-            showSuccess('Attendance marked successfully!');
-        } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
-        }
-        
-    } catch (error) {
-        console.error('Error saving attendance:', error);
-        alert('Failed to save attendance. Please try again. Error: ' + error.message);
-    }
-}
+// =====================================================
+// ATTENDANCE MANAGEMENT FUNCTIONS - COMPLETE & FIXED
+// =====================================================
 
-// View individual class attendance
-async function viewClassAttendance(className) {
-    try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/class/${className}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            // Create a modal to show class attendance
-            const modalHtml = `
-                <div class="modal fade" id="classAttendanceModal" tabindex="-1">
-                    <div class="modal-dialog modal-xl">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Attendance for ${className}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Present</th>
-                                                <th>Absent</th>
-                                                <th>Percentage</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${result.attendance.map(record => `
-                                                <tr>
-                                                    <td>${formatDate(record.date)}</td>
-                                                    <td><span class="badge bg-success">${record.present_count}</span></td>
-                                                    <td><span class="badge bg-danger">${record.absent_count}</span></td>
-                                                    <td>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                                <div class="progress-bar" style="width: ${record.percentage}%"></div>
-                                                            </div>
-                                                            <span>${record.percentage}%</span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <button class="btn btn-info btn-sm" onclick="viewAttendanceDetails(${record.id})">
-                                                            <i class="fas fa-eye"></i> Details
-                                                        </button>
-                                                        <button class="btn btn-danger btn-sm" onclick="deleteAttendance(${record.id})">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if any
-            const existingModal = document.getElementById('classAttendanceModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Add modal to body
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('classAttendanceModal'));
-            modal.show();
-        } else {
-            showError('Failed to load class attendance: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error viewing class attendance:', error);
-        showError('Failed to load class attendance: ' + error.message);
-    }
-}
-
-// View detailed attendance
-async function viewAttendanceDetails(attendanceId) {
-    try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/${attendanceId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            const attendance = result.attendance;
-            let details = `Attendance Details for ${attendance.date} - ${attendance.class}\n\n`;
-            details += `Present: ${attendance.present_count} | Absent: ${attendance.absent_count} | Percentage: ${attendance.percentage}%\n\n`;
-            details += 'Student-wise Attendance:\n';
-            
-            if (attendance.attendance_data) {
-                Object.entries(attendance.attendance_data).forEach(([studentId, status]) => {
-                    // Find student name
-                    const student = studentsData.find(s => s.student_id === studentId);
-                    const studentName = student ? student.name : studentId;
-                    const statusIcon = status === 'present' ? '✅' : '❌';
-                    details += `\n${statusIcon} ${studentName}: ${status}`;
-                });
-            }
-            
-            alert(details);
-        } else {
-            alert('Error loading attendance details: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error viewing attendance details:', error);
-        alert('Failed to load attendance details. Please try again. Error: ' + error.message);
-    }
-}
-
-// Update attendance table to show class-wise actions
+// Update attendance table - Class-wise display
 function updateAttendanceTable() {
     const tbody = document.getElementById('attendanceTableBody');
     if (!tbody) return;
@@ -1176,8 +653,11 @@ function updateAttendanceTable() {
             <tr>
                 <td colspan="6" class="text-center py-4">
                     <div class="empty-state">
-                        <i class="fas fa-clipboard-list"></i>
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
                         <p>No attendance records found</p>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+                            <i class="fas fa-plus me-1"></i> Mark First Attendance
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -1194,68 +674,2029 @@ function updateAttendanceTable() {
         attendanceByClass[record.class].push(record);
     });
     
-    // Display classes with their latest attendance
+    // Display classes with their records
     Object.entries(attendanceByClass).forEach(([className, records]) => {
-        const latestRecord = records[0]; // Most recent record
+        // Sort records by date (newest first)
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        const latestRecord = records[0];
         const totalRecords = records.length;
         
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <strong>${className || 'Unknown Class'}</strong>
-                <br><small class="text-muted">${totalRecords} record(s)</small>
-            </td>
-            <td>${latestRecord.present_count || 0}</td>
-            <td>${latestRecord.absent_count || 0}</td>
-            <td>
-                <div class="d-flex align-items-center">
-                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                        <div class="progress-bar ${(latestRecord.percentage || 0) >= 80 ? 'bg-success' : (latestRecord.percentage || 0) >= 60 ? 'bg-warning' : 'bg-danger'}" 
-                             style="width: ${latestRecord.percentage || 0}%"></div>
+        // Calculate average attendance
+        const avgPercentage = records.reduce((sum, r) => sum + (r.percentage || 0), 0) / records.length;
+        
+        // Class header row
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'class-header-row bg-light';
+        headerRow.style.cursor = 'pointer';
+        headerRow.innerHTML = `
+            <td colspan="6" class="py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            <strong>${className}</strong>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> ${totalRecords} Records
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-chart-line me-1"></i> Avg: ${avgPercentage.toFixed(1)}%
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-clock me-1"></i> Last: ${formatDate(latestRecord.date)}
+                        </small>
                     </div>
-                    <span>${latestRecord.percentage || 0}%</span>
-                </div>
-            </td>
-            <td>${formatDate(latestRecord.date)}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-info btn-action" onclick="viewClassAttendance('${className}')" title="View Class Attendance">
-                        <i class="fas fa-list"></i>
-                    </button>
-                    <button class="btn btn-primary btn-action" onclick="markClassAttendance('${className}')" title="Mark Attendance">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="viewClassAttendance('${className}')" title="View All Records">
+                            <i class="fas fa-list me-1"></i> View All (${totalRecords})
+                        </button>
+                        <button class="btn btn-outline-success" onclick="markNewAttendance('${className}')" title="Mark New Attendance">
+                            <i class="fas fa-plus me-1"></i> Mark New
+                        </button>
+                        <button class="btn btn-outline-info" onclick="toggleClassRecords('${className.replace(/\s+/g, '-')}')" title="Toggle Records">
+                            <i class="fas fa-chevron-down" id="toggle-icon-${className.replace(/\s+/g, '-')}"></i>
+                        </button>
+                    </div>
                 </div>
             </td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(headerRow);
+        
+        // Show latest 3 records for each class
+        records.slice(0, 3).forEach((record, index) => {
+            const row = document.createElement('tr');
+            row.className = `attendance-record-row class-record-${className.replace(/\s+/g, '-')}`;
+            row.style.display = 'none'; // Hidden by default
+            
+            const percentageClass = record.percentage >= 80 ? 'bg-success' : 
+                                  record.percentage >= 60 ? 'bg-warning' : 'bg-danger';
+            
+            row.innerHTML = `
+                <td style="padding-left: 40px;">
+                    <i class="fas fa-calendar text-muted me-2"></i>
+                    ${formatDate(record.date)}
+                </td>
+                <td>
+                    <span class="badge bg-success">${record.present_count || 0}</span>
+                </td>
+                <td>
+                    <span class="badge bg-danger">${record.absent_count || 0}</span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1 me-2" style="height: 8px; min-width: 100px;">
+                            <div class="progress-bar ${percentageClass}" 
+                                 style="width: ${record.percentage || 0}%"></div>
+                        </div>
+                        <strong>${record.percentage || 0}%</strong>
+                    </div>
+                </td>
+                <td>
+                    <small class="text-muted">
+                        ${record.present_count || 0}/${(record.present_count || 0) + (record.absent_count || 0)} students
+                    </small>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info btn-sm" onclick="viewAttendanceDetails(${record.id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="editAttendance(${record.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAttendance(${record.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Show "view more" if more than 3 records
+        if (records.length > 3) {
+            const moreRow = document.createElement('tr');
+            moreRow.className = `attendance-record-row class-record-${className.replace(/\s+/g, '-')}`;
+            moreRow.style.display = 'none';
+            moreRow.innerHTML = `
+                <td colspan="6" class="text-center py-2" style="background: #f8f9fa;">
+                    <button class="btn btn-sm btn-link" onclick="viewClassAttendance('${className}')">
+                        <i class="fas fa-plus-circle me-1"></i> View ${records.length - 3} more records
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(moreRow);
+        }
     });
 }
 
-// Mark attendance for specific class
-function markClassAttendance(className) {
-    const modalElement = document.getElementById('attendanceModal');
-    if (!modalElement) {
-        console.error('Attendance modal not found');
-        return;
+// Toggle class records visibility
+function toggleClassRecords(className) {
+    const records = document.querySelectorAll(`.class-record-${className}`);
+    const icon = document.getElementById(`toggle-icon-${className}`);
+    const isVisible = records[0] && records[0].style.display !== 'none';
+    
+    records.forEach(row => {
+        row.style.display = isVisible ? 'none' : '';
+    });
+    
+    if (icon) {
+        icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    }
+}
+
+// Mark new attendance for a class
+function markNewAttendance(className) {
+    const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+    const form = document.getElementById('attendanceForm');
+    
+    // Reset form
+    form.reset();
+    
+    // Set class
+    const classSelect = form.querySelector('select[name="class"]');
+    if (classSelect) {
+        classSelect.value = className;
     }
     
-    const modal = new bootstrap.Modal(modalElement);
-    const classSelect = document.querySelector('#attendanceForm select[name="class"]');
-    const dateInput = document.querySelector('#attendanceForm input[name="date"]');
+    // Set today's date
+    const dateInput = form.querySelector('input[name="date"]');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
     
-    // Set the class and current date
-    if (classSelect) classSelect.value = className;
-    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-    
-    // Load students for the class
+    // Load students
     loadClassStudents(className);
     
     // Show modal
     modal.show();
 }
 
-// Update students table
+// Load students for attendance marking
+async function loadClassStudents(className) {
+    const container = document.getElementById('attendanceStudentsList');
+    const dateInput = document.querySelector('#attendanceForm input[name="date"]');
+    
+    if (!container) {
+        console.error('Attendance students container not found');
+        return;
+    }
+    
+    if (!dateInput || !dateInput.value) {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Please select a date first
+            </div>
+        `;
+        return;
+    }
+    
+    if (!className) {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Please select a class first
+            </div>
+        `;
+        return;
+    }
+    
+    const selectedDate = dateInput.value;
+    
+    container.innerHTML = `
+        <div class="text-center p-3">
+            <div class="loading-spinner mb-2"></div>
+            <p class="text-muted mb-0">Loading students...</p>
+        </div>
+    `;
+    
+    try {
+        // Check if attendance already exists
+        const checkResponse = await fetch(
+            `https://aacem-backend.onrender.com/api/attendance/check-existing?date=${selectedDate}&class=${encodeURIComponent(className)}`
+        );
+        const checkResult = await checkResponse.json();
+        
+        let existingAttendance = null;
+        if (checkResult.success && checkResult.exists) {
+            existingAttendance = checkResult.attendance;
+        }
+        
+        // Load students
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/attendance/students/${encodeURIComponent(className)}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.students || result.students.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No students found in this class. Please add students first.
+                </div>
+            `;
+            return;
+        }
+        
+        // Show warning if attendance exists
+        let html = '';
+        if (existingAttendance) {
+            html += `
+                <div class="alert alert-warning mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Attendance already exists for ${selectedDate}</strong>
+                            <div class="mt-1">
+                                <small>
+                                    Present: ${existingAttendance.present_count} | 
+                                    Absent: ${existingAttendance.absent_count} | 
+                                    Percentage: ${existingAttendance.percentage}%
+                                </small>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-warning" onclick="loadExistingAttendance(${existingAttendance.id})">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add students list
+        html += `
+            <div class="mb-3 text-end">
+                <button type="button" class="btn btn-success btn-sm me-2" onclick="markAllPresent()">
+                    <i class="fas fa-check-double me-1"></i> Mark All Present
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="markAllAbsent()">
+                    <i class="fas fa-times me-1"></i> Mark All Absent
+                </button>
+            </div>
+        `;
+        
+        result.students.forEach(student => {
+            let isChecked = true; // Default to present
+            let badgeClass = 'bg-success';
+            let badgeText = 'Present';
+            
+            if (existingAttendance && existingAttendance.attendance_data) {
+                const status = existingAttendance.attendance_data[student.student_id];
+                isChecked = status === 'present';
+                badgeClass = isChecked ? 'bg-success' : 'bg-danger';
+                badgeText = isChecked ? 'Present' : 'Absent';
+            }
+            
+            html += `
+                <div class="form-check mb-3 p-3 border rounded" style="background: ${isChecked ? '#e8f5e9' : '#ffebee'};">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <input class="form-check-input attendance-checkbox" 
+                                   type="checkbox" 
+                                   data-student-id="${student.student_id}"
+                                   data-student-name="${student.name}"
+                                   id="attendance_${student.student_id}" 
+                                   ${isChecked ? 'checked' : ''}>
+                            <label class="form-check-label ms-3 flex-grow-1" for="attendance_${student.student_id}">
+                                <div>
+                                    <strong class="d-block">${student.name || 'Unknown'}</strong>
+                                    <small class="text-muted">
+                                        UID: ${student.student_id} | 
+                                        Course: ${student.course || 'N/A'}
+                                    </small>
+                                </div>
+                            </label>
+                        </div>
+                        <span class="badge ${badgeClass} ms-3 attendance-badge" style="min-width: 80px;">
+                            ${badgeText}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Add change event listeners
+        document.querySelectorAll('.attendance-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const parent = this.closest('.form-check');
+                const badge = parent.querySelector('.attendance-badge');
+                
+                if (this.checked) {
+                    badge.textContent = 'Present';
+                    badge.className = 'badge bg-success ms-3 attendance-badge';
+                    parent.style.background = '#e8f5e9';
+                } else {
+                    badge.textContent = 'Absent';
+                    badge.className = 'badge bg-danger ms-3 attendance-badge';
+                    parent.style.background = '#ffebee';
+                }
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error loading students:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Failed to load students: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Mark all present
+function markAllPresent() {
+    document.querySelectorAll('.attendance-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event('change'));
+    });
+}
+
+// Mark all absent
+function markAllAbsent() {
+    document.querySelectorAll('.attendance-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event('change'));
+    });
+}
+
+// Load existing attendance for editing
+async function loadExistingAttendance(attendanceId) {
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/${attendanceId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const attendance = result.attendance;
+            const form = document.getElementById('attendanceForm');
+            
+            // Set form values
+            form.querySelector('select[name="class"]').value = attendance.class;
+            form.querySelector('input[name="date"]').value = attendance.date;
+            
+            // Store attendance ID for update
+            form.setAttribute('data-attendance-id', attendanceId);
+            
+            // Load students with existing data
+            await loadClassStudents(attendance.class);
+            
+            showSuccess('Loaded existing attendance for editing');
+        }
+    } catch (error) {
+        console.error('Error loading attendance:', error);
+        showError('Failed to load attendance: ' + error.message);
+    }
+}
+
+// Save attendance - FIXED VERSION (Works without update endpoint)
+async function saveAttendance() {
+    const form = document.getElementById('attendanceForm');
+    if (!form) {
+        showError('Attendance form not found');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const className = formData.get('class');
+    const date = formData.get('date');
+    const attendanceId = form.getAttribute('data-attendance-id');
+    
+    if (!className || !date) {
+        showError('Please select class and date');
+        return;
+    }
+    
+    const checkboxes = document.querySelectorAll('.attendance-checkbox');
+    if (checkboxes.length === 0) {
+        showError('No students found. Please select a class first.');
+        return;
+    }
+    
+    // Collect attendance data
+    const attendanceStatus = {};
+    checkboxes.forEach(checkbox => {
+        attendanceStatus[checkbox.dataset.studentId] = checkbox.checked ? 'present' : 'absent';
+    });
+    
+    try {
+        const button = document.querySelector('#attendanceModal .btn-primary');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="loading-spinner"></span> Saving...';
+        button.disabled = true;
+        
+        // STRATEGY: Delete old record and create new one (works without update endpoint)
+        if (attendanceId) {
+            // First delete the old record
+            const deleteResponse = await fetch(
+                `https://aacem-backend.onrender.com/api/delete-attendance/${attendanceId}`,
+                { method: 'DELETE' }
+            );
+            
+            const deleteResult = await deleteResponse.json();
+            
+            if (!deleteResult.success) {
+                throw new Error('Failed to delete old attendance record');
+            }
+        }
+        
+        // Create new attendance record (or create if not editing)
+        const response = await fetch('https://aacem-backend.onrender.com/api/mark-attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                class: className,
+                date: date,
+                attendance: attendanceStatus
+            })
+        });
+        
+        const result = await response.json();
+        
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
+            if (modal) modal.hide();
+            
+            form.reset();
+            form.removeAttribute('data-attendance-id');
+            
+            showSuccess(attendanceId ? 'Attendance updated successfully!' : 'Attendance marked successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving attendance:', error);
+        
+        // Restore button state
+        const button = document.querySelector('#attendanceModal .btn-primary');
+        if (button) {
+            button.innerHTML = '<i class="fas fa-save me-1"></i> Save Attendance';
+            button.disabled = false;
+        }
+        
+        showError('Failed to save attendance: ' + error.message);
+    }
+}
+
+// View class attendance history
+async function viewClassAttendance(className) {
+    try {
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/attendance/class/${encodeURIComponent(className)}`
+        );
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                showInfo(`No attendance records found for ${className}`);
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.attendance || result.attendance.length === 0) {
+            showInfo(`No attendance records found for ${className}`);
+            return;
+        }
+        
+        // Sort by date (newest first)
+        const records = result.attendance.sort((a, b) => 
+            new Date(b.date) - new Date(a.date)
+        );
+        
+        // Calculate statistics
+        const totalRecords = records.length;
+        const avgPercentage = records.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalRecords;
+        const highestAttendance = Math.max(...records.map(r => r.percentage || 0));
+        const lowestAttendance = Math.min(...records.map(r => r.percentage || 0));
+        
+        const modalHtml = `
+            <div class="modal fade" id="classAttendanceModal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-calendar-check me-2"></i>
+                                Attendance History - ${className}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Statistics Cards -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card text-center border-primary">
+                                        <div class="card-body">
+                                            <h3 class="text-primary mb-0">${totalRecords}</h3>
+                                            <small class="text-muted">Total Records</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center border-info">
+                                        <div class="card-body">
+                                            <h3 class="text-info mb-0">${avgPercentage.toFixed(1)}%</h3>
+                                            <small class="text-muted">Average Attendance</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center border-success">
+                                        <div class="card-body">
+                                            <h3 class="text-success mb-0">${highestAttendance}%</h3>
+                                            <small class="text-muted">Highest</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center border-danger">
+                                        <div class="card-body">
+                                            <h3 class="text-danger mb-0">${lowestAttendance}%</h3>
+                                            <small class="text-muted">Lowest</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Records Table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Present</th>
+                                            <th>Absent</th>
+                                            <th>Total</th>
+                                            <th>Percentage</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${records.map(record => {
+                                            const total = (record.present_count || 0) + (record.absent_count || 0);
+                                            const percentageClass = record.percentage >= 80 ? 'success' : 
+                                                                  record.percentage >= 60 ? 'warning' : 'danger';
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted me-2"></i>
+                                                        ${formatDate(record.date)}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success">${record.present_count || 0}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-danger">${record.absent_count || 0}</span>
+                                                    </td>
+                                                    <td>
+                                                        <strong>${total}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="progress flex-grow-1 me-2" style="height: 8px; min-width: 100px;">
+                                                                <div class="progress-bar bg-${percentageClass}" 
+                                                                     style="width: ${record.percentage}%"></div>
+                                                            </div>
+                                                            <strong class="text-${percentageClass}">${record.percentage}%</strong>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button class="btn btn-info" onclick="viewAttendanceDetails(${record.id})" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-warning" onclick="editAttendance(${record.id})" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-danger" onclick="deleteAttendance(${record.id})" title="Delete">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success" onclick="exportClassAttendance('${className}')">
+                                <i class="fas fa-download me-1"></i> Export to Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal
+        const existingModal = document.getElementById('classAttendanceModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add and show modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('classAttendanceModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error viewing class attendance:', error);
+        showError('Failed to load class attendance: ' + error.message);
+    }
+}
+
+// View detailed attendance for a specific date
+async function viewAttendanceDetails(attendanceId) {
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/attendance/${attendanceId}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            showError('Failed to load attendance details');
+            return;
+        }
+        
+        const attendance = result.attendance;
+        
+        // Prepare students list
+        let studentsHtml = '';
+        if (attendance.attendance_data) {
+            Object.entries(attendance.attendance_data).forEach(([studentId, status]) => {
+                const student = studentsData.find(s => s.student_id === studentId);
+                const statusClass = status === 'present' ? 'success' : 'danger';
+                const statusIcon = status === 'present' ? 'check-circle' : 'times-circle';
+                
+                studentsHtml += `
+                    <tr>
+                        <td>${student ? student.name : studentId}</td>
+                        <td>${studentId}</td>
+                        <td>
+                            <span class="badge bg-${statusClass}">
+                                <i class="fas fa-${statusIcon} me-1"></i>
+                                ${status.toUpperCase()}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        const modalHtml = `
+            <div class="modal fade" id="attendanceDetailsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Attendance Details
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Summary -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <h6 class="text-primary">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Attendance Information
+                                            </h6>
+                                            <hr>
+                                            <p class="mb-2">
+                                                <strong>Class:</strong> ${attendance.class}
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong>Date:</strong> ${formatDate(attendance.date)}
+                                            </p>
+                                            <p class="mb-0">
+                                                <strong>Total Students:</strong> 
+                                                ${(attendance.present_count || 0) + (attendance.absent_count || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-success">
+                                        <div class="card-body">
+                                            <h6 class="text-success">
+                                                <i class="fas fa-chart-pie me-2"></i>
+                                                Statistics
+                                            </h6>
+                                            <hr>
+                                            <p class="mb-2">
+                                                <span class="badge bg-success me-2">${attendance.present_count || 0}</span>
+                                                Present
+                                            </p>
+                                            <p class="mb-2">
+                                                <span class="badge bg-danger me-2">${attendance.absent_count || 0}</span>
+                                                Absent
+                                            </p>
+                                            <p class="mb-0">
+                                                <strong>Percentage:</strong> 
+                                                <span class="text-${attendance.percentage >= 80 ? 'success' : attendance.percentage >= 60 ? 'warning' : 'danger'}">
+                                                    ${attendance.percentage}%
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Students List -->
+                            <h6 class="mb-3">
+                                <i class="fas fa-users me-2"></i>
+                                Student-wise Attendance
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Student Name</th>
+                                            <th>Student ID</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${studentsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-warning" onclick="editAttendance(${attendanceId})">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportAttendanceRecord(${attendanceId})">
+                                <i class="fas fa-download me-1"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal
+        const existingModal = document.getElementById('attendanceDetailsModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add and show modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('attendanceDetailsModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error viewing attendance details:', error);
+        showError('Failed to load attendance details: ' + error.message);
+    }
+}
+
+// Edit attendance
+function editAttendance(attendanceId) {
+    // Close any open modals
+    document.querySelectorAll('.modal.show').forEach(modal => {
+        const instance = bootstrap.Modal.getInstance(modal);
+        if (instance) instance.hide();
+    });
+    
+    // Load attendance for editing
+    setTimeout(() => {
+        loadExistingAttendance(attendanceId);
+        const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+        modal.show();
+    }, 300);
+}
+
+// Delete attendance
+async function deleteAttendance(attendanceId) {
+    if (!confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/delete-attendance/${attendanceId}`,
+            { method: 'DELETE' }
+        );
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            // Close any open detail modals
+            ['classAttendanceModal', 'attendanceDetailsModal'].forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    const instance = bootstrap.Modal.getInstance(modal);
+                    if (instance) instance.hide();
+                }
+            });
+            
+            showSuccess('Attendance record deleted successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting attendance:', error);
+        showError('Failed to delete attendance: ' + error.message);
+    }
+}
+
+// Export class attendance to Excel
+function exportClassAttendance(className) {
+    const records = attendanceData.filter(r => r.class === className);
+    
+    if (records.length === 0) {
+        showError('No records to export');
+        return;
+    }
+    
+    let csvContent = `Attendance Report - ${className}\n`;
+    csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    csvContent += `Date,Present,Absent,Total,Percentage\n`;
+    
+    records.forEach(record => {
+        const total = (record.present_count || 0) + (record.absent_count || 0);
+        csvContent += `${formatDate(record.date)},${record.present_count || 0},${record.absent_count || 0},${total},${record.percentage}%\n`;
+    });
+    
+    // Calculate summary
+    const avgPercentage = records.reduce((sum, r) => sum + (r.percentage || 0), 0) / records.length;
+    csvContent += `\nSummary\n`;
+    csvContent += `Total Records,${records.length}\n`;
+    csvContent += `Average Attendance,${avgPercentage.toFixed(2)}%\n`;
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_${className}_${new Date().getTime()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Attendance exported successfully!');
+}
+
+// Export single attendance record
+function exportAttendanceRecord(attendanceId) {
+    const record = attendanceData.find(r => r.id === attendanceId);
+    
+    if (!record) {
+        showError('Record not found');
+        return;
+    }
+    
+    let csvContent = `Attendance Record\n`;
+    csvContent += `Class: ${record.class}\n`;
+    csvContent += `Date: ${formatDate(record.date)}\n`;
+    csvContent += `Present: ${record.present_count}\n`;
+    csvContent += `Absent: ${record.absent_count}\n`;
+    csvContent += `Percentage: ${record.percentage}%\n\n`;
+    csvContent += `Student Name,Student ID,Status\n`;
+    
+    if (record.attendance_data) {
+        Object.entries(record.attendance_data).forEach(([studentId, status]) => {
+            const student = studentsData.find(s => s.student_id === studentId);
+            csvContent += `${student ? student.name : studentId},${studentId},${status}\n`;
+        });
+    }
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_${record.class}_${record.date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Record exported successfully!');
+}
+
+// Initialize attendance when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+    const attendanceModal = document.getElementById('attendanceModal');
+    if (attendanceModal) {
+        attendanceModal.addEventListener('show.bs.modal', function() {
+            // Reset form
+            const form = document.getElementById('attendanceForm');
+            form.reset();
+            form.removeAttribute('data-attendance-id');
+            
+            // Set today's date
+            const dateInput = form.querySelector('input[name="date"]');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Clear students list
+            const container = document.getElementById('attendanceStudentsList');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-arrow-up me-2"></i>
+                        Select a class and date to load students
+                    </div>
+                `;
+            }
+            
+            // Populate course dropdown
+            populateCourseDropdown('attendanceForm', 'class');
+        });
+        
+        // Handle modal hide
+        attendanceModal.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('attendanceForm');
+            form.reset();
+            form.removeAttribute('data-attendance-id');
+        });
+    }
+});
+
+console.log('Attendance functions loaded successfully!');
+
+
+// =====================================================
+// EXAM RESULTS / MARKS MANAGEMENT - COMPLETE & FIXED
+// =====================================================
+
+// Update marks table - Course-wise display with proper grouping
+function updateMarksTable() {
+    const tbody = document.getElementById('marksTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (marksData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p>No exam results found</p>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#marksModal">
+                            <i class="fas fa-plus me-1"></i> Add First Result
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Group by course
+    const marksByCourse = {};
+    marksData.forEach(mark => {
+        const course = mark.course || 'No Course';
+        if (!marksByCourse[course]) {
+            marksByCourse[course] = [];
+        }
+        marksByCourse[course].push(mark);
+    });
+    
+    // Display course-wise
+    Object.entries(marksByCourse).forEach(([courseName, courseMarks]) => {
+        // Sort by date (newest first)
+        courseMarks.sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+        
+        // Calculate course statistics
+        const avgPercentage = courseMarks.reduce((sum, m) => {
+            const percentage = ((m.marks_obtained || 0) / (m.total_marks || 100)) * 100;
+            return sum + percentage;
+        }, 0) / courseMarks.length;
+        
+        const totalRecords = courseMarks.length;
+        
+        // Course header row
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'course-header-row bg-light';
+        headerRow.style.cursor = 'pointer';
+        headerRow.innerHTML = `
+            <td colspan="8" class="py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">
+                            <i class="fas fa-book me-2 text-info"></i>
+                            <strong>${courseName}</strong>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-clipboard-list me-1"></i> ${totalRecords} Results
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-chart-bar me-1"></i> Avg Score: ${avgPercentage.toFixed(1)}%
+                        </small>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" onclick="viewCourseResults('${courseName}')" title="View All Results">
+                            <i class="fas fa-list me-1"></i> View All (${totalRecords})
+                        </button>
+                        <button class="btn btn-outline-success" onclick="addNewResult('${courseName}')" title="Add New Result">
+                            <i class="fas fa-plus me-1"></i> Add New
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="toggleCourseResults('${courseName.replace(/\s+/g, '-')}')" title="Toggle Results">
+                            <i class="fas fa-chevron-down" id="toggle-marks-${courseName.replace(/\s+/g, '-')}"></i>
+                        </button>
+                    </div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(headerRow);
+        
+        // Show latest 5 results for each course
+        courseMarks.slice(0, 5).forEach(mark => {
+            const row = document.createElement('tr');
+            row.className = `marks-record-row course-marks-${courseName.replace(/\s+/g, '-')}`;
+            row.style.display = 'none'; // Hidden by default
+            
+            const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+            const grade = getGrade(percentage);
+            const gradeClass = getGradeClass(grade);
+            
+            row.innerHTML = `
+                <td style="padding-left: 40px;">
+                    <span class="badge bg-secondary">${mark.exam_type || 'Unknown'}</span>
+                </td>
+                <td>
+                    <div>
+                        <strong>${mark.student_name || 'Unknown'}</strong>
+                        <br>
+                        <small class="text-muted">ID: ${mark.student_id || 'N/A'}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${mark.course || 'N/A'}</span>
+                </td>
+                <td>${mark.subject || 'N/A'}</td>
+                <td>
+                    <strong>${mark.marks_obtained || 0}</strong>
+                    <span class="text-muted">/ ${mark.total_marks || 100}</span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1 me-2" style="height: 8px; min-width: 60px;">
+                            <div class="progress-bar ${getPercentageClass(percentage)}" 
+                                 style="width: ${percentage}%"></div>
+                        </div>
+                        <strong>${percentage.toFixed(1)}%</strong>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${gradeClass} px-3">${grade}</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info" onclick="viewMarkDetails(${mark.id})" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning" onclick="editMarks(${mark.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteMarks(${mark.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Show "view more" if more than 5 results
+        if (courseMarks.length > 5) {
+            const moreRow = document.createElement('tr');
+            moreRow.className = `marks-record-row course-marks-${courseName.replace(/\s+/g, '-')}`;
+            moreRow.style.display = 'none';
+            moreRow.innerHTML = `
+                <td colspan="8" class="text-center py-2" style="background: #f8f9fa;">
+                    <button class="btn btn-sm btn-link" onclick="viewCourseResults('${courseName}')">
+                        <i class="fas fa-plus-circle me-1"></i> View ${courseMarks.length - 5} more results
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(moreRow);
+        }
+    });
+}
+
+// Toggle course results visibility
+function toggleCourseResults(courseName) {
+    const records = document.querySelectorAll(`.course-marks-${courseName}`);
+    const icon = document.getElementById(`toggle-marks-${courseName}`);
+    const isVisible = records[0] && records[0].style.display !== 'none';
+    
+    records.forEach(row => {
+        row.style.display = isVisible ? 'none' : '';
+    });
+    
+    if (icon) {
+        icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    }
+}
+
+// Get grade based on percentage
+function getGrade(percentage) {
+    if (percentage >= 90) return 'A+';
+    if (percentage >= 80) return 'A';
+    if (percentage >= 70) return 'B';
+    if (percentage >= 60) return 'C';
+    if (percentage >= 50) return 'D';
+    if (percentage >= 40) return 'E';
+    return 'F';
+}
+
+// Get grade class for badge
+function getGradeClass(grade) {
+    switch (grade) {
+        case 'A+': case 'A': return 'bg-success';
+        case 'B': case 'C': return 'bg-info';
+        case 'D': case 'E': return 'bg-warning';
+        case 'F': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
+}
+
+// Get percentage class for progress bar
+function getPercentageClass(percentage) {
+    if (percentage >= 80) return 'bg-success';
+    if (percentage >= 60) return 'bg-info';
+    if (percentage >= 40) return 'bg-warning';
+    return 'bg-danger';
+}
+
+// Add new result for specific course
+function addNewResult(courseName) {
+    const modal = new bootstrap.Modal(document.getElementById('marksModal'));
+    const form = document.getElementById('marksForm');
+    
+    // Reset form
+    form.reset();
+    form.removeAttribute('data-marks-id');
+    
+    // Set course
+    const courseSelect = form.querySelector('select[name="course"]');
+    if (courseSelect) {
+        courseSelect.value = courseName;
+        courseSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Set today's date
+    const dateInput = form.querySelector('input[name="examDate"]');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Update modal title
+    const modalTitle = document.querySelector('#marksModal .modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-chart-line me-2"></i>Enter Marks - ${courseName}`;
+    }
+    
+    modal.show();
+}
+
+// Load students for marks based on course selection
+async function loadStudentsForMarks(courseCode) {
+    const studentSelect = document.getElementById('marksStudentSelect');
+    const searchInput = document.getElementById('studentSearchMarks');
+    
+    if (!studentSelect) {
+        console.error('Marks student select not found');
+        return;
+    }
+    
+    if (!courseCode) {
+        studentSelect.innerHTML = '<option value="">Select Course First</option>';
+        return;
+    }
+    
+    studentSelect.innerHTML = '<option value="">Loading students...</option>';
+    
+    try {
+        // Use API endpoint
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/students/course/${encodeURIComponent(courseCode)}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+        
+        if (result.success && result.students && result.students.length > 0) {
+            result.students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.student_id;
+                option.textContent = `${student.name} (${student.student_id})`;
+                option.setAttribute('data-student-name', student.name);
+                studentSelect.appendChild(option);
+            });
+            
+            // Clear search
+            if (searchInput) {
+                searchInput.value = '';
+            }
+        } else {
+            studentSelect.innerHTML = '<option value="">No students found for this course</option>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading students:', error);
+        
+        // Fallback to local data
+        const courseStudents = studentsData.filter(s => s.course === courseCode);
+        
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+        
+        if (courseStudents.length > 0) {
+            courseStudents.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.student_id;
+                option.textContent = `${student.name} (${student.student_id})`;
+                option.setAttribute('data-student-name', student.name);
+                studentSelect.appendChild(option);
+            });
+        } else {
+            studentSelect.innerHTML = '<option value="">No students found</option>';
+        }
+    }
+}
+
+// Search student by UID for marks
+function searchStudentForMarks(searchTerm) {
+    const studentSelect = document.getElementById('marksStudentSelect');
+    const courseSelect = document.querySelector('#marksForm select[name="course"]');
+    
+    if (!studentSelect || !courseSelect) return;
+    
+    const currentCourse = courseSelect.value;
+    
+    if (!searchTerm.trim()) {
+        // Reload students for current course
+        if (currentCourse) {
+            loadStudentsForMarks(currentCourse);
+        } else {
+            studentSelect.innerHTML = '<option value="">Select Course First</option>';
+        }
+        return;
+    }
+    
+    // Filter students
+    let filteredStudents = studentsData.filter(student => {
+        const matchesSearch = student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            student.name.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        if (currentCourse) {
+            return matchesSearch && student.course === currentCourse;
+        }
+        return matchesSearch;
+    });
+    
+    // Update dropdown
+    studentSelect.innerHTML = '<option value="">Select Student</option>';
+    
+    if (filteredStudents.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No students found';
+        option.disabled = true;
+        studentSelect.appendChild(option);
+        return;
+    }
+    
+    filteredStudents.forEach(student => {
+        const option = document.createElement('option');
+        option.value = student.student_id;
+        option.textContent = `${student.name} (${student.student_id}) - ${student.course}`;
+        option.setAttribute('data-student-name', student.name);
+        studentSelect.appendChild(option);
+    });
+}
+
+// Clear student search
+function clearStudentSearch() {
+    const searchInput = document.getElementById('studentSearchMarks');
+    const courseSelect = document.querySelector('#marksForm select[name="course"]');
+    
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    if (courseSelect && courseSelect.value) {
+        loadStudentsForMarks(courseSelect.value);
+    } else {
+        const studentSelect = document.getElementById('marksStudentSelect');
+        if (studentSelect) {
+            studentSelect.innerHTML = '<option value="">Select Course First</option>';
+        }
+    }
+}
+
+// Save marks - FIXED VERSION (No update endpoint needed)
+async function saveMarks() {
+    const form = document.getElementById('marksForm');
+    if (!form) {
+        showError('Marks form not found');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const marksId = form.getAttribute('data-marks-id');
+    
+    // Validation
+    const requiredFields = {
+        exam: 'Exam Type',
+        course: 'Course',
+        studentId: 'Student',
+        subject: 'Subject',
+        marks: 'Marks',
+        examDate: 'Exam Date'
+    };
+    
+    for (const [field, label] of Object.entries(requiredFields)) {
+        if (!formData.get(field)) {
+            showError(`Please select/enter ${label}`);
+            return;
+        }
+    }
+    
+    const marks = parseFloat(formData.get('marks'));
+    const totalMarks = parseFloat(formData.get('totalMarks')) || 100;
+    
+    if (marks < 0 || marks > totalMarks) {
+        showError(`Marks must be between 0 and ${totalMarks}`);
+        return;
+    }
+    
+    try {
+        const button = document.getElementById('marksSaveBtn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="loading-spinner"></span> Saving...';
+        button.disabled = true;
+        
+        // If editing, delete old record first
+        if (marksId) {
+            const deleteResponse = await fetch(
+                `https://aacem-backend.onrender.com/api/delete-marks/${marksId}`,
+                { method: 'DELETE' }
+            );
+            
+            const deleteResult = await deleteResponse.json();
+            if (!deleteResult.success) {
+                throw new Error('Failed to delete old marks record');
+            }
+        }
+        
+        // Create new marks record
+        const response = await fetch('https://aacem-backend.onrender.com/api/add-marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exam: formData.get('exam'),
+                studentId: formData.get('studentId'),
+                subject: formData.get('subject'),
+                marks: marks,
+                totalMarks: totalMarks,
+                examDate: formData.get('examDate')
+            })
+        });
+        
+        const result = await response.json();
+        
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('marksModal'));
+            if (modal) modal.hide();
+            
+            form.reset();
+            form.removeAttribute('data-marks-id');
+            
+            showSuccess(marksId ? 'Marks updated successfully!' : 'Marks saved successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+        
+    } catch (error) {
+        console.error('Error saving marks:', error);
+        
+        const button = document.getElementById('marksSaveBtn');
+        if (button) {
+            button.innerHTML = '<i class="fas fa-save me-1"></i> Save Marks';
+            button.disabled = false;
+        }
+        
+        showError('Failed to save marks: ' + error.message);
+    }
+}
+
+// Edit marks
+async function editMarks(marksId) {
+    const mark = marksData.find(m => m.id == marksId);
+    if (!mark) {
+        showError('Marks record not found!');
+        return;
+    }
+    
+    const form = document.getElementById('marksForm');
+    if (!form) {
+        showError('Marks form not found');
+        return;
+    }
+    
+    // Populate form
+    form.querySelector('select[name="exam"]').value = mark.exam_type || '';
+    form.querySelector('select[name="course"]').value = mark.course || '';
+    
+    // Load students for course
+    if (mark.course) {
+        await loadStudentsForMarks(mark.course);
+        
+        // Wait a bit for students to load
+        setTimeout(() => {
+            form.querySelector('select[name="studentId"]').value = mark.student_id || '';
+        }, 300);
+    }
+    
+    form.querySelector('input[name="subject"]').value = mark.subject || '';
+    form.querySelector('input[name="marks"]').value = mark.marks_obtained || '';
+    form.querySelector('input[name="totalMarks"]').value = mark.total_marks || 100;
+    form.querySelector('input[name="examDate"]').value = mark.exam_date || '';
+    
+    // Update modal
+    const modalTitle = document.querySelector('#marksModal .modal-title');
+    const saveBtn = document.getElementById('marksSaveBtn');
+    
+    if (modalTitle) {
+        modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Marks';
+    }
+    
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Update Marks';
+    }
+    
+    form.setAttribute('data-marks-id', marksId);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('marksModal'));
+    modal.show();
+}
+
+// View mark details
+function viewMarkDetails(marksId) {
+    const mark = marksData.find(m => m.id == marksId);
+    if (!mark) {
+        showError('Marks record not found!');
+        return;
+    }
+    
+    const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+    const grade = getGrade(percentage);
+    const gradeClass = getGradeClass(grade);
+    
+    const modalHtml = `
+        <div class="modal fade" id="markDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-purple text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Exam Result Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-purple border-bottom pb-2">
+                                            <i class="fas fa-user-graduate me-2"></i>Student Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Student Name:</div>
+                                            <div class="col-7 fw-bold">${mark.student_name || 'Unknown'}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Student ID:</div>
+                                            <div class="col-7">${mark.student_id || 'N/A'}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Course:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-primary">${mark.course || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-purple border-bottom pb-2">
+                                            <i class="fas fa-book me-2"></i>Exam Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Exam Type:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-secondary">${mark.exam_type || 'Unknown'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Subject:</div>
+                                            <div class="col-7 fw-bold">${mark.subject || 'N/A'}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Exam Date:</div>
+                                            <div class="col-7">${formatDate(mark.exam_date)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                                        <h6 class="text-purple mb-3">Performance Summary</h6>
+                                        
+                                        <div class="mb-4">
+                                            <div class="display-1 fw-bold text-purple mb-2">
+                                                ${mark.marks_obtained || 0}
+                                                <small class="fs-3 text-muted">/ ${mark.total_marks || 100}</small>
+                                            </div>
+                                            <p class="text-muted mb-0">Marks Obtained</p>
+                                        </div>
+                                        
+                                        <div class="row text-center mb-3">
+                                            <div class="col-6">
+                                                <div class="p-3 rounded" style="background: white;">
+                                                    <h3 class="mb-0 ${percentage >= 40 ? 'text-success' : 'text-danger'}">
+                                                        ${percentage.toFixed(1)}%
+                                                    </h3>
+                                                    <small class="text-muted">Percentage</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="p-3 rounded" style="background: white;">
+                                                    <h3 class="mb-0">
+                                                        <span class="badge ${gradeClass} fs-4">${grade}</span>
+                                                    </h3>
+                                                    <small class="text-muted">Grade</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar ${getPercentageClass(percentage)}" 
+                                                 style="width: ${percentage}%">
+                                                ${percentage.toFixed(1)}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-purple border-bottom pb-2">
+                                            <i class="fas fa-trophy me-2"></i>Result Status
+                                        </h6>
+                                        <div class="text-center py-3">
+                                            ${percentage >= 40 ? `
+                                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                                <h5 class="text-success">PASSED</h5>
+                                                <p class="text-muted mb-0">Congratulations!</p>
+                                            ` : `
+                                                <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                                                <h5 class="text-danger">FAILED</h5>
+                                                <p class="text-muted mb-0">Better luck next time</p>
+                                            `}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-purple" onclick="editMarks(${marksId})">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="printMarkSheet(${marksId})">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal
+    const existingModal = document.getElementById('markDetailsModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add and show modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('markDetailsModal'));
+    modal.show();
+}
+
+// View all results for a course
+function viewCourseResults(courseName) {
+    const courseResults = marksData.filter(m => m.course === courseName);
+    
+    if (courseResults.length === 0) {
+        showInfo(`No results found for ${courseName}`);
+        return;
+    }
+    
+    // Sort by date (newest first)
+    courseResults.sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+    
+    // Calculate statistics
+    const totalResults = courseResults.length;
+    const avgPercentage = courseResults.reduce((sum, m) => {
+        return sum + ((m.marks_obtained || 0) / (m.total_marks || 100)) * 100;
+    }, 0) / totalResults;
+    
+    const passCount = courseResults.filter(m => {
+        const percentage = ((m.marks_obtained || 0) / (m.total_marks || 100)) * 100;
+        return percentage >= 40;
+    }).length;
+    
+    const passPercentage = (passCount / totalResults) * 100;
+    
+    const modalHtml = `
+        <div class="modal fade" id="courseResultsModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Exam Results - ${courseName}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center border-primary">
+                                    <div class="card-body">
+                                        <h3 class="text-primary mb-0">${totalResults}</h3>
+                                        <small class="text-muted">Total Results</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-info">
+                                    <div class="card-body">
+                                        <h3 class="text-info mb-0">${avgPercentage.toFixed(1)}%</h3>
+                                        <small class="text-muted">Average Score</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-success">
+                                    <div class="card-body">
+                                        <h3 class="text-success mb-0">${passCount}</h3>
+                                        <small class="text-muted">Passed</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-warning">
+                                    <div class="card-body">
+                                        <h3 class="text-warning mb-0">${passPercentage.toFixed(1)}%</h3>
+                                        <small class="text-muted">Pass Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Results Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Exam</th>
+                                        <th>Student</th>
+                                        <th>Subject</th>
+                                        <th>Marks</th>
+                                        <th>Percentage</th>
+                                        <th>Grade</th>
+                                        <th>Result</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${courseResults.map(mark => {
+                                        const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+                                        const grade = getGrade(percentage);
+                                        const gradeClass = getGradeClass(grade);
+                                        const passed = percentage >= 40;
+                                        
+                                        return `
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-secondary">${mark.exam_type}</span>
+                                                    <br>
+                                                    <small class="text-muted">${formatDate(mark.exam_date)}</small>
+                                                </td>
+                                                <td>
+                                                    <strong>${mark.student_name}</strong>
+                                                    <br>
+                                                    <small class="text-muted">${mark.student_id}</small>
+                                                </td>
+                                                <td>${mark.subject}</td>
+                                                <td>
+                                                    <strong>${mark.marks_obtained}</strong> / ${mark.total_marks}
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 8px; min-width: 60px;">
+                                                            <div class="progress-bar ${getPercentageClass(percentage)}" 
+                                                                 style="width: ${percentage}%"></div>
+                                                        </div>
+                                                        <strong>${percentage.toFixed(1)}%</strong>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge ${gradeClass}">${grade}</span>
+                                                </td>
+                                                <td>
+                                                    ${passed ? 
+                                                        '<span class="badge bg-success">PASS</span>' : 
+                                                        '<span class="badge bg-danger">FAIL</span>'
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-info" onclick="viewMarkDetails(${mark.id})">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-warning" onclick="editMarks(${mark.id})">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-danger" onclick="deleteMarks(${mark.id})">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="exportCourseResults('${courseName}')">
+                            <i class="fas fa-download me-1"></i> Export to Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal
+    const existingModal = document.getElementById('courseResultsModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add and show modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('courseResultsModal'));
+    modal.show();
+}
+
+// Delete marks
+async function deleteMarks(marksId) {
+    if (!confirm('Are you sure you want to delete this marks record? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/delete-marks/${marksId}`,
+            { method: 'DELETE' }
+        );
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            // Close any open modals
+            ['markDetailsModal', 'courseResultsModal'].forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    const instance = bootstrap.Modal.getInstance(modal);
+                    if (instance) instance.hide();
+                }
+            });
+            
+            showSuccess('Marks record deleted successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting marks:', error);
+        showError('Failed to delete marks: ' + error.message);
+    }
+}
+
+// Export course results to CSV
+function exportCourseResults(courseName) {
+    const results = marksData.filter(m => m.course === courseName);
+    
+    if (results.length === 0) {
+        showError('No results to export');
+        return;
+    }
+    
+    let csvContent = `Exam Results Report - ${courseName}\n`;
+    csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    csvContent += `Exam Type,Student Name,Student ID,Subject,Marks Obtained,Total Marks,Percentage,Grade,Result,Exam Date\n`;
+    
+    results.forEach(mark => {
+        const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+        const grade = getGrade(percentage);
+        const result = percentage >= 40 ? 'PASS' : 'FAIL';
+        
+        csvContent += `${mark.exam_type},${mark.student_name},${mark.student_id},${mark.subject},${mark.marks_obtained},${mark.total_marks},${percentage.toFixed(2)}%,${grade},${result},${formatDate(mark.exam_date)}\n`;
+    });
+    
+    // Summary
+    const avgPercentage = results.reduce((sum, m) => {
+        return sum + ((m.marks_obtained || 0) / (m.total_marks || 100)) * 100;
+    }, 0) / results.length;
+    
+    const passCount = results.filter(m => {
+        const percentage = ((m.marks_obtained || 0) / (m.total_marks || 100)) * 100;
+        return percentage >= 40;
+    }).length;
+    
+    csvContent += `\nSummary\n`;
+    csvContent += `Total Results,${results.length}\n`;
+    csvContent += `Average Score,${avgPercentage.toFixed(2)}%\n`;
+    csvContent += `Pass Count,${passCount}\n`;
+    csvContent += `Pass Rate,${((passCount / results.length) * 100).toFixed(2)}%\n`;
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `results_${courseName}_${new Date().getTime()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Results exported successfully!');
+}
+
+// Print mark sheet
+function printMarkSheet(marksId) {
+    const mark = marksData.find(m => m.id == marksId);
+    if (!mark) {
+        showError('Mark record not found');
+        return;
+    }
+    
+    const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
+    const grade = getGrade(percentage);
+    const passed = percentage >= 40;
+    
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Mark Sheet - ${mark.student_name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .info-table td { padding: 10px; border: 1px solid #ddd; }
+                .info-table td:first-child { font-weight: bold; width: 30%; background: #f5f5f5; }
+                .result { text-align: center; margin: 20px 0; padding: 20px; border: 2px solid ${passed ? '#28a745' : '#dc3545'}; }
+                .result h2 { color: ${passed ? '#28a745' : '#dc3545'}; margin: 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>AACEM INSTITUTE</h1>
+                <h2>MARK SHEET</h2>
+            </div>
+            
+            <table class="info-table">
+                <tr><td>Student Name</td><td>${mark.student_name}</td></tr>
+                <tr><td>Student ID</td><td>${mark.student_id}</td></tr>
+                <tr><td>Course</td><td>${mark.course}</td></tr>
+                <tr><td>Exam Type</td><td>${mark.exam_type}</td></tr>
+                <tr><td>Subject</td><td>${mark.subject}</td></tr>
+                <tr><td>Exam Date</td><td>${formatDate(mark.exam_date)}</td></tr>
+                <tr><td>Marks Obtained</td><td>${mark.marks_obtained} / ${mark.total_marks}</td></tr>
+                <tr><td>Percentage</td><td><strong>${percentage.toFixed(2)}%</strong></td></tr>
+                <tr><td>Grade</td><td><strong>${grade}</strong></td></tr>
+            </table>
+            
+            <div class="result">
+                <h2>${passed ? 'PASSED' : 'FAILED'}</h2>
+            </div>
+            
+            <p style="text-align: center; margin-top: 40px;">
+                Generated on: ${new Date().toLocaleString()}
+            </p>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+}
+
+// Initialize marks modal
+document.addEventListener('DOMContentLoaded', function() {
+    const marksModal = document.getElementById('marksModal');
+    if (marksModal) {
+        marksModal.addEventListener('show.bs.modal', function() {
+            const form = document.getElementById('marksForm');
+            
+            // Reset if not editing
+            if (!form.getAttribute('data-marks-id')) {
+                form.reset();
+                
+                // Set today's date
+                const dateInput = form.querySelector('input[name="examDate"]');
+                if (dateInput) {
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                }
+                
+                // Reset modal title
+                const modalTitle = document.querySelector('#marksModal .modal-title');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-chart-line me-2"></i>Enter Student Marks';
+                }
+                
+                const saveBtn = document.getElementById('marksSaveBtn');
+                if (saveBtn) {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Marks';
+                }
+            }
+            
+            // Populate course dropdown
+            populateCourseDropdown('marksForm', 'course');
+        });
+        
+        marksModal.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('marksForm');
+            form.reset();
+            form.removeAttribute('data-marks-id');
+        });
+    }
+    
+    // Course change listener
+    const courseSelect = document.querySelector('#marksForm select[name="course"]');
+    if (courseSelect) {
+        courseSelect.addEventListener('change', function() {
+            loadStudentsForMarks(this.value);
+        });
+    }
+});
+
+console.log('Marks/Exam Results functions loaded successfully!');
+
+
 // Update students table - MODIFIED VERSION
 function updateStudentsTable() {
     const tbody = document.getElementById('studentsTableBody');
@@ -1587,7 +3028,15 @@ function updateCoursesTable() {
     });
 }
 
-// REPLACE पूरा updateFeesTable() function ये नए code से:
+
+
+
+
+// =====================================================
+// FEE MANAGEMENT SYSTEM - COMPLETE & FIXED
+// =====================================================
+
+// Update fees table - Class-wise display with beautiful UI
 function updateFeesTable() {
     const tbody = document.getElementById('feesTableBody');
     if (!tbody) return;
@@ -1597,10 +3046,13 @@ function updateFeesTable() {
     if (feesData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <div class="empty-state">
-                        <i class="fas fa-money-bill-wave"></i>
+                        <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
                         <p>No fee records found</p>
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#feeModal">
+                            <i class="fas fa-plus me-1"></i> Record First Payment
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -1608,12 +3060,11 @@ function updateFeesTable() {
         return;
     }
     
-    // Group fees by student's class
+    // Group by class
     const feesByClass = {};
-    let totalAmount = 0;
+    let grandTotal = 0;
     
     feesData.forEach(fee => {
-        // Find student to get class and UID
         const student = studentsData.find(s => s.student_id === fee.student_id);
         const className = student ? student.course : 'No Class';
         
@@ -1623,80 +3074,108 @@ function updateFeesTable() {
                 total: 0
             };
         }
+        
         feesByClass[className].fees.push(fee);
         feesByClass[className].total += fee.amount || 0;
-        totalAmount += fee.amount || 0;
+        grandTotal += fee.amount || 0;
     });
     
-    // Display grouped by class
-    Object.keys(feesByClass).forEach(className => {
-        const classData = feesByClass[className];
+    // Display class-wise
+    Object.entries(feesByClass).forEach(([className, classData]) => {
         const classFees = classData.fees;
         
-        // Class Header Row
+        // Sort by date (newest first)
+        classFees.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+        
+        // Class header row
         const headerRow = document.createElement('tr');
-        headerRow.className = 'class-header-row';
+        headerRow.className = 'class-header-row bg-light';
+        headerRow.style.cursor = 'pointer';
         headerRow.innerHTML = `
-            <td colspan="10" class="py-2" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+            <td colspan="8" class="py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <strong><i class="fas fa-users me-2"></i>${className}</strong>
-                        <span class="badge bg-primary ms-2">${classFees.length} payments</span>
-                        <span class="badge bg-success ms-1">Total: ₹${classData.total.toLocaleString()}</span>
+                        <h6 class="mb-1">
+                            <i class="fas fa-graduation-cap me-2 text-success"></i>
+                            <strong>${className}</strong>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-receipt me-1"></i> ${classFees.length} Payments
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-rupee-sign me-1"></i> Total: ₹${classData.total.toLocaleString()}
+                        </small>
                     </div>
-                    <div>
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleClassFees('${className}')">
-                            <i class="fas fa-chevron-down"></i> Toggle
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-success" onclick="viewClassFeeReport('${className}')" title="View Report">
+                            <i class="fas fa-chart-pie me-1"></i> Report
                         </button>
-                       
+                        <button class="btn btn-outline-info" onclick="printClassReceipts('${className}')" title="Print All">
+                            <i class="fas fa-print me-1"></i> Print All
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="toggleClassFees('${className.replace(/\s+/g, '-')}')" title="Toggle">
+                            <i class="fas fa-chevron-down" id="toggle-fee-${className.replace(/\s+/g, '-')}"></i>
+                        </button>
                     </div>
                 </div>
             </td>
         `;
         tbody.appendChild(headerRow);
         
-        // Fee rows for this class
-        classFees.forEach(fee => {
+        // Show latest 5 payments for each class
+        classFees.slice(0, 5).forEach(fee => {
             const student = studentsData.find(s => s.student_id === fee.student_id);
             const row = document.createElement('tr');
-            row.className = `fee-row class-${className.replace(/\s+/g, '-')}`;
+            row.className = `fee-record-row class-fee-${className.replace(/\s+/g, '-')}`;
+            row.style.display = 'none'; // Hidden by default
+            
             row.innerHTML = `
-                <td>
+                <td style="padding-left: 40px;">
                     <strong class="text-primary">${fee.receipt_no || 'N/A'}</strong>
                 </td>
                 <td>
                     <div>
-                        <div class="fw-bold">${fee.student_name || 'Unknown'}</div>
-                        <small class="text-muted">UID: ${fee.student_id}</small>
+                        <strong>${fee.student_name || 'Unknown'}</strong>
+                        <br>
+                        <small class="text-muted">
+                            <i class="fas fa-id-card me-1"></i>UID: ${fee.student_id}
+                        </small>
                     </div>
                 </td>
                 <td>
-                    <span class="badge bg-info">${student ? student.course : 'No Course'}</span>
+                    <span class="badge bg-info">${student ? student.course : 'N/A'}</span>
                 </td>
                 <td>
-                    <div class="text-success fw-bold">₹${(fee.amount || 0).toLocaleString()}</div>
+                    <div class="text-success fw-bold fs-6">₹${(fee.amount || 0).toLocaleString()}</div>
                 </td>
-                <td>${formatDate(fee.payment_date)}</td>
+                <td>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        ${formatDate(fee.payment_date)}
+                    </small>
+                </td>
                 <td>
                     <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
                         <i class="fas ${getPaymentModeIcon(fee.payment_mode)} me-1"></i>
-                        ${fee.payment_mode || 'Unknown'}
+                        ${(fee.payment_mode || 'Unknown').toUpperCase()}
                     </span>
                 </td>
                 <td>
-                    <span class="status-badge ${getFeeStatusBadge(fee.status)}">
-                        ${fee.status || 'Paid'}
+                    <span class="badge ${getFeeStatusBadge(fee.status)}">
+                        ${(fee.status || 'Paid').toUpperCase()}
                     </span>
                 </td>
                 <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-success btn-sm" onclick="printReceipt('${fee.receipt_no}')" title="Print Receipt">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-success" onclick="printReceipt('${fee.receipt_no}')" title="Print">
                             <i class="fas fa-print"></i>
                         </button>
-                        <button class="btn btn-info btn-sm" onclick="viewStudentDetails('${fee.student_id}')" title="View Student">
+                        <button class="btn btn-info" onclick="viewFeeDetails('${fee.receipt_no}')" title="View">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
+                        <button class="btn btn-warning" onclick="viewStudentDetails('${fee.student_id}')" title="Student">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -1704,35 +3183,73 @@ function updateFeesTable() {
             `;
             tbody.appendChild(row);
         });
+        
+        // Show "view more" if more than 5 payments
+        if (classFees.length > 5) {
+            const moreRow = document.createElement('tr');
+            moreRow.className = `fee-record-row class-fee-${className.replace(/\s+/g, '-')}`;
+            moreRow.style.display = 'none';
+            moreRow.innerHTML = `
+                <td colspan="8" class="text-center py-2" style="background: #f8f9fa;">
+                    <button class="btn btn-sm btn-link" onclick="viewClassFeeReport('${className}')">
+                        <i class="fas fa-plus-circle me-1"></i> View ${classFees.length - 5} more payments
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(moreRow);
+        }
     });
     
-    // Add total summary row
-    const summaryRow = document.createElement('tr');
-    summaryRow.className = 'total-summary-row';
-    summaryRow.innerHTML = `
-        <td colspan="10" class="py-3" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d); color: white;">
+    // Grand total row
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'grand-total-row';
+    totalRow.innerHTML = `
+        <td colspan="8" class="py-3" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d); color: white;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <i class="fas fa-chart-line me-2"></i>
-                    <strong>GRAND TOTAL</strong>
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        <strong>GRAND TOTAL</strong>
+                    </h6>
                 </div>
                 <div>
-                    <span class="badge bg-light text-dark me-3">${feesData.length} Payments</span>
-                    <span class="fs-5 fw-bold">₹${totalAmount.toLocaleString()}</span>
+                    <span class="badge bg-light text-dark me-3" style="font-size: 1rem;">
+                        <i class="fas fa-receipt me-1"></i>
+                        ${feesData.length} Payments
+                    </span>
+                    <span class="fs-4 fw-bold">
+                        <i class="fas fa-rupee-sign me-1"></i>
+                        ${grandTotal.toLocaleString()}
+                    </span>
                 </div>
             </div>
         </td>
     `;
-    tbody.appendChild(summaryRow);
+    tbody.appendChild(totalRow);
 }
 
-// Helper functions
+// Toggle class fees visibility
+function toggleClassFees(className) {
+    const records = document.querySelectorAll(`.class-fee-${className}`);
+    const icon = document.getElementById(`toggle-fee-${className}`);
+    const isVisible = records[0] && records[0].style.display !== 'none';
+    
+    records.forEach(row => {
+        row.style.display = isVisible ? 'none' : '';
+    });
+    
+    if (icon) {
+        icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    }
+}
+
+// Helper functions for payment mode badges
 function getPaymentModeBadge(mode) {
     switch((mode || '').toLowerCase()) {
         case 'cash': return 'bg-success';
         case 'online': return 'bg-primary';
         case 'bank': return 'bg-info';
-        case 'cheque': return 'bg-warning';
+        case 'cheque': return 'bg-warning text-dark';
         default: return 'bg-secondary';
     }
 }
@@ -1750,220 +3267,448 @@ function getPaymentModeIcon(mode) {
 function getFeeStatusBadge(status) {
     switch((status || '').toLowerCase()) {
         case 'paid': return 'bg-success';
-        case 'pending': return 'bg-warning';
+        case 'pending': return 'bg-warning text-dark';
         case 'partial': return 'bg-info';
         case 'failed': return 'bg-danger';
         default: return 'bg-secondary';
     }
 }
 
-// ADD ये functions file के अंत में:
-function toggleClassFees(className) {
-    const rows = document.querySelectorAll(`.class-${className.replace(/\s+/g, '-')}`);
-    const isVisible = rows[0] && rows[0].style.display !== 'none';
+// Update fee details when student is selected
+function updateFeeDetails(studentId) {
+    const student = studentsData.find(s => s.student_id === studentId);
+    if (!student) {
+        console.error('Student not found:', studentId);
+        return;
+    }
     
-    rows.forEach(row => {
-        row.style.display = isVisible ? 'none' : '';
-    });
+    const totalFeeInput = document.querySelector('#feeForm input[name="totalFee"]');
+    const paidAmountInput = document.querySelector('#feeForm input[name="paidAmount"]');
+    const dueAmountInput = document.querySelector('#feeForm input[name="dueAmount"]');
+    const payingInput = document.querySelector('#feeForm input[name="payingNow"]');
     
-    // Update toggle button icon
-    const button = event.target.closest('button');
-    if (button) {
-        const icon = button.querySelector('i');
-        if (icon) {
-            icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-        }
+    if (totalFeeInput) totalFeeInput.value = student.fee_amount || 0;
+    if (paidAmountInput) paidAmountInput.value = student.paid_amount || 0;
+    if (dueAmountInput) dueAmountInput.value = student.due_amount || 0;
+    
+    if (payingInput) {
+        payingInput.max = student.due_amount || 0;
+        payingInput.placeholder = `Max: ₹${(student.due_amount || 0).toLocaleString()}`;
+        payingInput.value = ''; // Clear previous value
     }
 }
 
+// Record payment - FIXED VERSION
+async function recordPayment() {
+    const form = document.getElementById('feeForm');
+    if (!form) {
+        showError('Fee form not found');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    // Validation
+    const studentId = formData.get('studentId');
+    const payingAmount = parseFloat(formData.get('payingNow'));
+    const paymentDate = formData.get('paymentDate');
+    const paymentMode = formData.get('paymentMode');
+    const dueAmount = parseFloat(formData.get('dueAmount'));
+    
+    if (!studentId) {
+        showError('Please select a student');
+        return;
+    }
+    
+    if (!payingAmount || payingAmount <= 0) {
+        showError('Please enter a valid payment amount');
+        return;
+    }
+    
+    if (payingAmount > dueAmount) {
+        showError(`Payment amount (₹${payingAmount.toLocaleString()}) cannot exceed due amount (₹${dueAmount.toLocaleString()})`);
+        return;
+    }
+    
+    if (!paymentDate) {
+        showError('Please select payment date');
+        return;
+    }
+    
+    if (!paymentMode) {
+        showError('Please select payment mode');
+        return;
+    }
+    
+    try {
+        const button = document.querySelector('#feeModal .btn-primary');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="loading-spinner"></span> Processing...';
+        button.disabled = true;
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/record-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentId: studentId,
+                amount: payingAmount,
+                paymentDate: paymentDate,
+                paymentMode: paymentMode
+            })
+        });
+        
+        const result = await response.json();
+        
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('feeModal'));
+            if (modal) modal.hide();
+            
+            form.reset();
+            
+            // Show success with receipt option
+            if (confirm('Payment recorded successfully! Do you want to print the receipt?')) {
+                if (result.receipt_no) {
+                    printReceipt(result.receipt_no);
+                }
+            }
+            
+            showSuccess('Payment recorded successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+        
+    } catch (error) {
+        console.error('Error recording payment:', error);
+        
+        const button = document.querySelector('#feeModal .btn-primary');
+        if (button) {
+            button.innerHTML = '<i class="fas fa-receipt me-1"></i> Record Payment';
+            button.disabled = false;
+        }
+        
+        showError('Failed to record payment: ' + error.message);
+    }
+}
+
+// View fee details
+function viewFeeDetails(receiptNo) {
+    const fee = feesData.find(f => f.receipt_no === receiptNo);
+    if (!fee) {
+        showError('Fee record not found!');
+        return;
+    }
+    
+    const student = studentsData.find(s => s.student_id === fee.student_id);
+    
+    const modalHtml = `
+        <div class="modal fade" id="feeDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                            Payment Receipt - ${receiptNo}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Receipt Information -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-success border-bottom pb-2">
+                                            <i class="fas fa-receipt me-2"></i>Receipt Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Receipt No:</div>
+                                            <div class="col-7 fw-bold">${receiptNo}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Payment Date:</div>
+                                            <div class="col-7">${formatDate(fee.payment_date)}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Amount:</div>
+                                            <div class="col-7">
+                                                <span class="text-success fw-bold fs-4">₹${(fee.amount || 0).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Payment Mode:</div>
+                                            <div class="col-7">
+                                                <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
+                                                    <i class="fas ${getPaymentModeIcon(fee.payment_mode)} me-1"></i>
+                                                    ${(fee.payment_mode || 'Unknown').toUpperCase()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Status:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-success">${(fee.status || 'Paid').toUpperCase()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Student Information -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-success border-bottom pb-2">
+                                            <i class="fas fa-user-graduate me-2"></i>Student Information
+                                        </h6>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Student Name:</div>
+                                            <div class="col-7 fw-bold">${fee.student_name || 'Unknown'}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Student ID:</div>
+                                            <div class="col-7">${fee.student_id}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Course:</div>
+                                            <div class="col-7">
+                                                <span class="badge bg-primary">${student ? student.course : 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Total Fee:</div>
+                                            <div class="col-7">₹${(student ? student.fee_amount : 0).toLocaleString()}</div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-5 text-muted">Total Paid:</div>
+                                            <div class="col-7 text-success fw-bold">₹${(student ? student.paid_amount : 0).toLocaleString()}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-5 text-muted">Due Amount:</div>
+                                            <div class="col-7 ${(student && student.due_amount > 0) ? 'text-danger' : 'text-success'} fw-bold">
+                                                ₹${(student ? student.due_amount : 0).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Progress -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title text-success border-bottom pb-2">
+                                    <i class="fas fa-chart-line me-2"></i>Payment Progress
+                                </h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small>Fee Completion</small>
+                                    <small>${student ? Math.round((student.paid_amount / student.fee_amount) * 100) : 0}%</small>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: ${student ? (student.paid_amount / student.fee_amount) * 100 : 0}%">
+                                        ₹${(student ? student.paid_amount : 0).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-info" onclick="viewStudentFeeHistory('${fee.student_id}')">
+                            <i class="fas fa-history me-1"></i> Payment History
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="printReceipt('${receiptNo}')">
+                            <i class="fas fa-print me-1"></i> Print Receipt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal
+    const existingModal = document.getElementById('feeDetailsModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add and show modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('feeDetailsModal'));
+    modal.show();
+}
+
+// View student details with fee summary
 function viewStudentDetails(studentId) {
     const student = studentsData.find(s => s.student_id === studentId);
     if (!student) {
         showError('Student not found!');
         return;
     }
-    
-    // Get student's fee history
-    const studentFees = feesData.filter(fee => fee.student_id === studentId);
+
+    const studentFees = feesData.filter(f => f.student_id === studentId);
     const totalPaid = studentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
     const dueAmount = (student.fee_amount || 0) - totalPaid;
     
-    // Create modal HTML
-    const modalHtml = `
-        <div class="modal fade" id="studentDetailsModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+    const modalHTML = `
+        <div class="modal fade" id="studentFeeDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d);">
-                        <h5 class="modal-title text-white">
-                            <i class="fas fa-user-graduate me-2"></i>Student Details
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-graduate me-2"></i>
+                            ${student.name} - Complete Fee Details
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row">
-                            <!-- Student Info -->
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h6>
-                                    </div>
+                        <!-- Student Info & Fee Summary -->
+                        <div class="row mb-4">
+                            <!-- Basic Info -->
+                            <div class="col-md-4">
+                                <div class="card border-primary">
                                     <div class="card-body">
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">UID:</div>
-                                            <div class="col-8">
-                                                <span class="badge bg-primary">${student.student_id}</span>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Name:</div>
-                                            <div class="col-8">${student.name}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Class:</div>
-                                            <div class="col-8">
-                                                <span class="badge bg-info">${student.course || 'Not Assigned'}</span>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Parent:</div>
-                                            <div class="col-8">${student.parent_name || 'N/A'}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Join Date:</div>
-                                            <div class="col-8">${formatDate(student.join_date)}</div>
-                                        </div>
+                                        <h6 class="text-primary border-bottom pb-2">
+                                            <i class="fas fa-info-circle me-2"></i>Student Information
+                                        </h6>
+                                        <p class="mb-2"><strong>Name:</strong> ${student.name}</p>
+                                        <p class="mb-2"><strong>UID:</strong> <span class="badge bg-primary">${student.student_id}</span></p>
+                                        <p class="mb-2"><strong>Course:</strong> <span class="badge bg-info">${student.course || 'N/A'}</span></p>
+                                        <p class="mb-2"><strong>Parent:</strong> ${student.parent_name || 'N/A'}</p>
+                                        <p class="mb-2"><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
+                                        <p class="mb-0"><strong>Join Date:</strong> ${formatDate(student.join_date)}</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Contact Info -->
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h6>
-                                    </div>
+                            <!-- Fee Summary -->
+                            <div class="col-md-8">
+                                <div class="card border-success">
                                     <div class="card-body">
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Phone:</div>
-                                            <div class="col-8">
-                                                <i class="fas fa-phone text-success me-1"></i>
-                                                ${student.phone || 'N/A'}
+                                        <h6 class="text-success border-bottom pb-2">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Fee Summary
+                                        </h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <div class="p-3 rounded" style="background: #e8f5e9;">
+                                                    <h4 class="text-success mb-0">₹${(student.fee_amount || 0).toLocaleString()}</h4>
+                                                    <small class="text-muted">Total Fee</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3 rounded" style="background: #e3f2fd;">
+                                                    <h4 class="text-primary mb-0">₹${totalPaid.toLocaleString()}</h4>
+                                                    <small class="text-muted">Total Paid</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3 rounded" style="background: ${dueAmount > 0 ? '#ffebee' : '#f3e5f5'};">
+                                                    <h4 class="${dueAmount > 0 ? 'text-danger' : 'text-success'} mb-0">
+                                                        ₹${dueAmount.toLocaleString()}
+                                                    </h4>
+                                                    <small class="text-muted">Due Amount</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3 rounded" style="background: #fff8e1;">
+                                                    <h4 class="mb-0">
+                                                        <span class="badge ${getFeeStatusClass(student.fee_status)}">
+                                                            ${student.fee_status || 'Unknown'}
+                                                        </span>
+                                                    </h4>
+                                                    <small class="text-muted">Status</small>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Email:</div>
-                                            <div class="col-8">
-                                                <i class="fas fa-envelope text-primary me-1"></i>
-                                                ${student.email || 'N/A'}
+                                        
+                                        <!-- Progress Bar -->
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <small>Payment Progress</small>
+                                                <small>${Math.round((totalPaid / (student.fee_amount || 1)) * 100)}%</small>
                                             </div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-4 fw-bold">Address:</div>
-                                            <div class="col-8">${student.address || 'N/A'}</div>
+                                            <div class="progress" style="height: 15px;">
+                                                <div class="progress-bar bg-success" 
+                                                     style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%">
+                                                    ₹${totalPaid.toLocaleString()}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Fee Summary -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Fee Summary</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 text-center mb-3">
-                                        <div class="p-3 rounded" style="background: #e8f5e9;">
-                                            <div class="text-muted small">Total Fee</div>
-                                            <div class="h4 text-success">₹${(student.fee_amount || 0).toLocaleString()}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 text-center mb-3">
-                                        <div class="p-3 rounded" style="background: #e3f2fd;">
-                                            <div class="text-muted small">Total Paid</div>
-                                            <div class="h4 text-primary">₹${totalPaid.toLocaleString()}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 text-center mb-3">
-                                        <div class="p-3 rounded" style="background: ${dueAmount > 0 ? '#ffebee' : '#f3e5f5'};">
-                                            <div class="text-muted small">Due Amount</div>
-                                            <div class="h4 ${dueAmount > 0 ? 'text-danger' : 'text-success'}">
-                                                ₹${dueAmount.toLocaleString()}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 text-center mb-3">
-                                        <div class="p-3 rounded" style="background: #fff8e1;">
-                                            <div class="text-muted small">Status</div>
-                                            <div class="h4">
-                                                <span class="badge ${getFeeStatusClass(student.fee_status)}">
-                                                    ${student.fee_status || 'Unknown'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Progress Bar -->
-                                <div class="mt-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <small>Payment Progress</small>
-                                        <small>${Math.round((totalPaid / (student.fee_amount || 1)) * 100)}%</small>
-                                    </div>
-                                    <div class="progress" style="height: 10px;">
-                                        <div class="progress-bar bg-success" 
-                                             style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Recent Payments -->
+                        <!-- Payment History -->
                         <div class="card">
                             <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Payments</h6>
-                                <button class="btn btn-sm btn-primary" onclick="viewStudentFeeHistory('${studentId}')">
-                                    <i class="fas fa-list me-1"></i> View All
-                                </button>
+                                <h6 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>Payment History
+                                    <span class="badge bg-primary ms-2">${studentFees.length} Payments</span>
+                                </h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success" onclick="printAllReceipts('${studentId}')">
+                                        <i class="fas fa-print me-1"></i> Print All
+                                    </button>
+                                    <button class="btn btn-info" onclick="exportStudentFeeHistory('${studentId}')">
+                                        <i class="fas fa-download me-1"></i> Export
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body">
                                 ${studentFees.length > 0 ? `
                                     <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
+                                        <table class="table table-hover">
+                                            <thead class="table-dark">
                                                 <tr>
                                                     <th>Receipt No</th>
                                                     <th>Date</th>
                                                     <th>Amount</th>
                                                     <th>Mode</th>
+                                                    <th>Status</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                ${studentFees.slice(0, 3).map(fee => `
+                                                ${studentFees.map(fee => `
                                                     <tr>
                                                         <td><strong>${fee.receipt_no}</strong></td>
                                                         <td>${formatDate(fee.payment_date)}</td>
                                                         <td class="text-success fw-bold">₹${(fee.amount || 0).toLocaleString()}</td>
-                                                        <td><span class="badge ${getPaymentModeBadge(fee.payment_mode)}">${fee.payment_mode}</span></td>
                                                         <td>
-                                                            <button class="btn btn-sm btn-outline-primary" onclick="printReceipt('${fee.receipt_no}')">
-                                                                <i class="fas fa-print"></i>
-                                                            </button>
+                                                            <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
+                                                                ${fee.payment_mode || 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge ${getFeeStatusBadge(fee.status)}">
+                                                                ${fee.status || 'Paid'}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button class="btn btn-success" onclick="printReceipt('${fee.receipt_no}')">
+                                                                    <i class="fas fa-print"></i>
+                                                                </button>
+                                                                <button class="btn btn-info" onclick="viewFeeDetails('${fee.receipt_no}')">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                                <button class="btn btn-danger" onclick="deleteFeeRecord('${fee.receipt_no}')">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 `).join('')}
                                             </tbody>
                                         </table>
                                     </div>
-                                    ${studentFees.length > 3 ? 
-                                        `<p class="text-center text-muted mt-2">+ ${studentFees.length - 3} more payments</p>` : ''
-                                    }
                                 ` : `
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-money-bill-wave fa-2x text-muted mb-2"></i>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
                                         <p class="text-muted">No payment records found</p>
                                     </div>
                                 `}
@@ -1975,8 +3720,172 @@ function viewStudentDetails(studentId) {
                         <button type="button" class="btn btn-primary" onclick="editStudent('${studentId}')">
                             <i class="fas fa-edit me-1"></i> Edit Student
                         </button>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#feeModal" onclick="setStudentForFee('${studentId}')">
-                            <i class="fas fa-plus me-1"></i> Add Payment
+                        ${dueAmount > 0 ? `
+                            <button type="button" class="btn btn-success" onclick="addNewPayment('${studentId}')">
+                                <i class="fas fa-plus me-1"></i> Add Payment
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal
+    const existingModal = document.getElementById('studentFeeDetailsModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add and show modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('studentFeeDetailsModal'));
+    modal.show();
+}
+
+// Add new payment (shortcut from student details)
+function addNewPayment(studentId) {
+    // Close student details modal
+    const studentModal = bootstrap.Modal.getInstance(document.getElementById('studentFeeDetailsModal'));
+    if (studentModal) studentModal.hide();
+    
+    // Open fee modal with student pre-selected
+    setTimeout(() => {
+        const feeModal = new bootstrap.Modal(document.getElementById('feeModal'));
+        const studentSelect = document.querySelector('#feeForm select[name="studentId"]');
+        
+        if (studentSelect) {
+            studentSelect.value = studentId;
+            updateFeeDetails(studentId);
+        }
+        
+        feeModal.show();
+    }, 300);
+}
+
+// View class fee report
+function viewClassFeeReport(className) {
+    const classFees = feesData.filter(fee => {
+        const student = studentsData.find(s => s.student_id === fee.student_id);
+        return student && student.course === className;
+    });
+    
+    if (classFees.length === 0) {
+        showInfo(`No fee records found for ${className}`);
+        return;
+    }
+    
+    // Sort by date (newest first)
+    classFees.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    
+    // Calculate statistics
+    const totalCollected = classFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    const totalPayments = classFees.length;
+    
+    // Get unique students
+    const uniqueStudents = [...new Set(classFees.map(f => f.student_id))];
+    const totalStudents = uniqueStudents.length;
+    
+    // Calculate pending fees
+    const classStudents = studentsData.filter(s => s.course === className);
+    const totalExpected = classStudents.reduce((sum, s) => sum + (s.fee_amount || 0), 0);
+    const totalPending = totalExpected - totalCollected;
+    
+    const modalHtml = `
+        <div class="modal fade" id="classFeeReportModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Fee Report - ${className}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center border-success">
+                                    <div class="card-body">
+                                        <h3 class="text-success mb-0">₹${totalCollected.toLocaleString()}</h3>
+                                        <small class="text-muted">Total Collected</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-primary">
+                                    <div class="card-body">
+                                        <h3 class="text-primary mb-0">${totalPayments}</h3>
+                                        <small class="text-muted">Total Payments</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-info">
+                                    <div class="card-body">
+                                        <h3 class="text-info mb-0">${totalStudents}</h3>
+                                        <small class="text-muted">Students Paid</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center border-danger">
+                                    <div class="card-body">
+                                        <h3 class="text-danger mb-0">₹${totalPending.toLocaleString()}</h3>
+                                        <small class="text-muted">Total Pending</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment History -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Receipt No</th>
+                                        <th>Student</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Mode</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${classFees.map(fee => `
+                                        <tr>
+                                            <td><strong>${fee.receipt_no}</strong></td>
+                                            <td>
+                                                <strong>${fee.student_name}</strong>
+                                                <br>
+                                                <small class="text-muted">${fee.student_id}</small>
+                                            </td>
+                                            <td>${formatDate(fee.payment_date)}</td>
+                                            <td class="text-success fw-bold">₹${(fee.amount || 0).toLocaleString()}</td>
+                                            <td>
+                                                <span class="badge ${getPaymentModeBadge(fee.payment_mode)}">
+                                                    ${fee.payment_mode || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-success" onclick="printReceipt('${fee.receipt_no}')">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    <button class="btn btn-info" onclick="viewFeeDetails('${fee.receipt_no}')">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="exportClassFeeReport('${className}')">
+                            <i class="fas fa-download me-1"></i> Export Report
                         </button>
                     </div>
                 </div>
@@ -1984,40 +3893,169 @@ function viewStudentDetails(studentId) {
         </div>
     `;
     
-    // Remove existing modal if any
-    const existingModal = document.getElementById('studentDetailsModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
+    // Remove existing modal
+    const existingModal = document.getElementById('classFeeReportModal');
+    if (existingModal) existingModal.remove();
     
-    // Add modal to body
+    // Add and show modal
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    const modal = new bootstrap.Modal(document.getElementById('classFeeReportModal'));
     modal.show();
 }
 
-// Helper function to set student for fee payment
-function setStudentForFee(studentId) {
-    // Close student details modal first
-    const studentModal = bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal'));
-    if (studentModal) {
-        studentModal.hide();
-    }
-    
-    // Set student in fee modal
-    setTimeout(() => {
-        const feeModal = new bootstrap.Modal(document.getElementById('feeModal'));
-        const studentSelect = document.querySelector('#feeForm select[name="studentId"]');
-        if (studentSelect) {
-            studentSelect.value = studentId;
-            updateFeeDetails(studentId);
+// Print receipt (A4 format)
+async function printReceipt(receiptNo) {
+    try {
+        const feeRecord = feesData.find(f => f.receipt_no === receiptNo);
+        if (!feeRecord) {
+            showError('Fee record not found!');
+            return;
         }
-        feeModal.show();
-    }, 300);
+
+        const student = studentsData.find(s => s.student_id === feeRecord.student_id);
+        if (!student) {
+            showError('Student details not found!');
+            return;
+        }
+
+        const receiptHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Fee Receipt - ${receiptNo}</title>
+                <style>
+                    @page { size: A4; margin: 15mm; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
+                    .container { max-width: 100%; padding: 10px; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; }
+                    .institute-name { font-size: 20px; font-weight: bold; color: #2d6b6b; margin-bottom: 3px; }
+                    .institute-address { font-size: 10px; color: #666; margin-bottom: 5px; }
+                    .receipt-title { font-size: 16px; font-weight: bold; color: #333; margin-top: 8px; }
+                    .info-table { width: 100%; margin-bottom: 12px; border-collapse: collapse; }
+                    .info-table td { padding: 4px 8px; border: 1px solid #ddd; font-size: 11px; }
+                    .info-table td:first-child { font-weight: bold; background: #f5f5f5; width: 35%; }
+                    .amount-table { width: 100%; margin: 12px 0; border-collapse: collapse; }
+                    .amount-table th { background: #2d6b6b; color: white; padding: 6px; text-align: left; font-size: 11px; border: 1px solid #2d6b6b; }
+                    .amount-table td { padding: 5px 8px; border: 1px solid #ddd; font-size: 11px; }
+                    .amount-table .text-right { text-align: right; }
+                    .amount-table .highlight { background: #fff3cd; font-weight: bold; }
+                    .signature-section { display: flex; justify-content: space-between; margin-top: 30px; }
+                    .signature { text-align: center; width: 40%; }
+                    .signature-line { border-top: 1px solid #333; margin-top: 35px; margin-bottom: 5px; }
+                    .signature-label { font-size: 10px; color: #666; }
+                    .footer { text-align: center; margin-top: 15px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 9px; color: #666; }
+                    @media print {
+                        .no-print { display: none !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="institute-name">AACEM INSTITUTE</div>
+                        <div class="institute-address">
+                            Ludhiana, Punjab, India | Phone: +91-XXXXXXXXXX | Email: info@aacem.edu.in
+                        </div>
+                        <div class="receipt-title">FEE PAYMENT RECEIPT</div>
+                    </div>
+
+                    <table class="info-table">
+                        <tr>
+                            <td>Receipt Number</td>
+                            <td><strong>${receiptNo}</strong></td>
+                            <td>Student ID</td>
+                            <td><strong>${student.student_id}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Payment Date</td>
+                            <td>${formatDate(feeRecord.payment_date)}</td>
+                            <td>Student Name</td>
+                            <td>${student.name}</td>
+                        </tr>
+                        <tr>
+                            <td>Payment Mode</td>
+                            <td>${feeRecord.payment_mode.toUpperCase()}</td>
+                            <td>Course</td>
+                            <td>${student.course}</td>
+                        </tr>
+                    </table>
+
+                    <table class="amount-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Course Fee</td>
+                                <td class="text-right">${(student.fee_amount || 0).toLocaleString()}</td>
+                            </tr>
+                            <tr>
+                                <td>Previously Paid</td>
+                                <td class="text-right">${((student.paid_amount || 0) - (feeRecord.amount || 0)).toLocaleString()}</td>
+                            </tr>
+                            <tr class="highlight">
+                                <td><strong>Current Payment</strong></td>
+                                <td class="text-right"><strong>${(feeRecord.amount || 0).toLocaleString()}</strong></td>
+                            </tr>
+                            <tr style="background: #e8f5e9;">
+                                <td><strong>Total Paid Amount</strong></td>
+                                <td class="text-right"><strong>${(student.paid_amount || 0).toLocaleString()}</strong></td>
+                            </tr>
+                            <tr style="background: ${(student.due_amount || 0) > 0 ? '#ffebee' : '#f3e5f5'};">
+                                <td><strong>Remaining Due Amount</strong></td>
+                                <td class="text-right" style="color: ${(student.due_amount || 0) > 0 ? '#dc3545' : '#28a745'};">
+                                    <strong>${(student.due_amount || 0).toLocaleString()}</strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="signature-section">
+                        <div class="signature">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">Student/Parent Signature</div>
+                        </div>
+                        <div class="signature">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">Authorized Signature</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <p>This is a computer generated receipt. No signature required.</p>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                    </div>
+
+                    <div class="no-print" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" style="background: #2d6b6b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                            🖨️ Print Receipt
+                        </button>
+                        <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; margin-left: 10px;">
+                            ❌ Close
+                        </button>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const receiptWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+        receiptWindow.document.write(receiptHtml);
+        receiptWindow.document.close();
+        receiptWindow.focus();
+
+    } catch (error) {
+        console.error('Error generating receipt:', error);
+        showError('Failed to generate receipt: ' + error.message);
+    }
 }
 
+// Print all receipts for a class
 function printClassReceipts(className) {
     const classFees = feesData.filter(fee => {
         const student = studentsData.find(s => s.student_id === fee.student_id);
@@ -2025,7 +4063,7 @@ function printClassReceipts(className) {
     });
     
     if (classFees.length === 0) {
-        alert(`No fee records found for ${className}`);
+        showError(`No fee records found for ${className}`);
         return;
     }
     
@@ -2033,70 +4071,190 @@ function printClassReceipts(className) {
         classFees.forEach((fee, index) => {
             setTimeout(() => {
                 printReceipt(fee.receipt_no);
-            }, index * 500); // Stagger prints
+            }, index * 500);
         });
     }
 }
-// Update marks table
-function updateMarksTable() {
-    const tbody = document.getElementById('marksTableBody');
-    if (!tbody) return;
+
+// Print all receipts for a student
+function printAllReceipts(studentId) {
+    const studentFees = feesData.filter(f => f.student_id === studentId);
     
-    tbody.innerHTML = '';
-    
-    if (marksData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-4">
-                    <div class="empty-state">
-                        <i class="fas fa-chart-line"></i>
-                        <p>No marks records found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
+    if (studentFees.length === 0) {
+        showError('No fee records found');
         return;
     }
     
-    marksData.forEach(mark => {
-        const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
-        let grade = 'F';
-        
-        if (percentage >= 90) grade = 'A+';
-        else if (percentage >= 80) grade = 'A';
-        else if (percentage >= 70) grade = 'B';
-        else if (percentage >= 60) grade = 'C';
-        else if (percentage >= 50) grade = 'D';
-        else if (percentage >= 40) grade = 'E';
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${mark.exam_type || 'Unknown'}</td>
-            <td>${mark.student_name || 'Unknown'}</td>
-            <td>${mark.course || 'No Course'}</td>
-            <td>${mark.subject || 'No Subject'}</td>
-            <td>${mark.marks_obtained || 0}/${mark.total_marks || 100}</td>
-            <td>${percentage.toFixed(2)}%</td>
-            <td>
-                <span class="status-badge ${getGradeClass(grade)}">${grade}</span>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-info btn-action" onclick="viewMarks('${mark.id}')" title="View">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-warning btn-action" onclick="editMarks('${mark.id}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-action" onclick="deleteMarks('${mark.id}')" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
+    if (confirm(`Print all ${studentFees.length} receipts?`)) {
+        studentFees.forEach((fee, index) => {
+            setTimeout(() => {
+                printReceipt(fee.receipt_no);
+            }, index * 500);
+        });
+    }
 }
+
+// Export student fee history
+function exportStudentFeeHistory(studentId) {
+    const student = studentsData.find(s => s.student_id === studentId);
+    const studentFees = feesData.filter(f => f.student_id === studentId);
+    
+    if (studentFees.length === 0) {
+        showError('No fee records to export');
+        return;
+    }
+    
+    let csvContent = `Fee History - ${student ? student.name : studentId}\n`;
+    csvContent += `Student ID: ${studentId}\n`;
+    csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    csvContent += `Receipt No,Payment Date,Amount,Payment Mode,Status\n`;
+    
+    studentFees.forEach(fee => {
+        csvContent += `${fee.receipt_no},${formatDate(fee.payment_date)},${fee.amount},${fee.payment_mode},${fee.status}\n`;
+    });
+    
+    const totalPaid = studentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    csvContent += `\nSummary\n`;
+    csvContent += `Total Fee,${student ? student.fee_amount : 'N/A'}\n`;
+    csvContent += `Total Paid,${totalPaid}\n`;
+    csvContent += `Due Amount,${student ? student.due_amount : 'N/A'}\n`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fee_history_${studentId}_${new Date().getTime()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Fee history exported successfully!');
+}
+
+// Export class fee report
+function exportClassFeeReport(className) {
+    const classFees = feesData.filter(fee => {
+        const student = studentsData.find(s => s.student_id === fee.student_id);
+        return student && student.course === className;
+    });
+    
+    if (classFees.length === 0) {
+        showError('No records to export');
+        return;
+    }
+    
+    let csvContent = `Fee Report - ${className}\n`;
+    csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    csvContent += `Receipt No,Student Name,Student ID,Date,Amount,Mode,Status\n`;
+    
+    classFees.forEach(fee => {
+        csvContent += `${fee.receipt_no},${fee.student_name},${fee.student_id},${formatDate(fee.payment_date)},${fee.amount},${fee.payment_mode},${fee.status}\n`;
+    });
+    
+    const total = classFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    csvContent += `\nTotal Collected,${total}\n`;
+    csvContent += `Total Payments,${classFees.length}\n`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fee_report_${className}_${new Date().getTime()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Fee report exported successfully!');
+}
+
+// Delete fee record
+async function deleteFeeRecord(receiptNo) {
+    if (!confirm('Are you sure you want to delete this fee record? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/delete-fee/${receiptNo}`,
+            { method: 'DELETE' }
+        );
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            await loadDashboardData();
+            
+            // Close any open modals
+            ['feeDetailsModal', 'studentFeeDetailsModal', 'classFeeReportModal'].forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    const instance = bootstrap.Modal.getInstance(modal);
+                    if (instance) instance.hide();
+                }
+            });
+            
+            showSuccess('Fee record deleted successfully!');
+        } else {
+            showError('Error: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting fee record:', error);
+        showError('Failed to delete fee record: ' + error.message);
+    }
+}
+
+// Helper function for fee status class
+function getFeeStatusClass(status) {
+    if (!status) return 'bg-secondary';
+    
+    switch (status.toLowerCase()) {
+        case 'paid': return 'bg-success';
+        case 'partial': return 'bg-warning';
+        case 'pending': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
+}
+
+// Initialize fee modal
+document.addEventListener('DOMContentLoaded', function() {
+    const feeModal = document.getElementById('feeModal');
+    if (feeModal) {
+        feeModal.addEventListener('show.bs.modal', function() {
+            const form = document.getElementById('feeForm');
+            form.reset();
+            
+            // Set today's date
+            const dateInput = form.querySelector('input[name="paymentDate"]');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Populate student dropdown
+            populateStudentDropdown('feeForm');
+        });
+    }
+    
+    // Student change listener
+    const studentSelect = document.querySelector('#feeForm select[name="studentId"]');
+    if (studentSelect) {
+        studentSelect.addEventListener('change', function() {
+            if (this.value) {
+                updateFeeDetails(this.value);
+            }
+        });
+    }
+});
+
+console.log('Fee Management functions loaded successfully!');
+
+
+
+
+
+
+
 
 // Get grade class
 function getGradeClass(grade) {
@@ -2363,138 +4521,9 @@ async function saveCourse() {
     }
 }
 
-// Record payment function
-async function recordPayment() {
-    const form = document.getElementById('feeForm');
-    if (!form) {
-        alert('Fee form not found');
-        return;
-    }
-    
-    const formData = new FormData(form);
-    
-    const requiredFields = ['studentId', 'payingNow', 'paymentDate', 'paymentMode'];
-    const missingFields = requiredFields.filter(field => !formData.get(field));
-    
-    if (missingFields.length > 0) {
-        alert('Please fill all required fields: ' + missingFields.join(', '));
-        return;
-    }
-    
-    const payingAmount = parseFloat(formData.get('payingNow'));
-    const dueAmount = parseFloat(formData.get('dueAmount'));
-    
-    if (payingAmount > dueAmount) {
-        alert('Paying amount cannot be greater than due amount');
-        return;
-    }
-    
-    try {
-        const response = await fetch('https://aacem-backend.onrender.com/api/record-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                studentId: formData.get('studentId'),
-                amount: payingAmount,
-                paymentDate: formData.get('paymentDate'),
-                paymentMode: formData.get('paymentMode')
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            await loadDashboardData();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('feeModal'));
-            if (modal) modal.hide();
-            showSuccess('Payment recorded successfully!');
-        } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
-        }
-        
-    } catch (error) {
-        console.error('Error recording payment:', error);
-        alert('Failed to record payment. Please try again. Error: ' + error.message);
-    }
-}
 
-// Save marks function
-async function saveMarks() {
-    const form = document.getElementById('marksForm');
-    if (!form) {
-        alert('Marks form not found');
-        return;
-    }
-    
-    const formData = new FormData(form);
-    
-    const requiredFields = ['exam', 'studentId', 'subject', 'marks', 'examDate'];
-    const missingFields = requiredFields.filter(field => !formData.get(field));
-    
-    if (missingFields.length > 0) {
-        alert('Please fill all required fields: ' + missingFields.join(', '));
-        return;
-    }
-    
-    const marks = parseFloat(formData.get('marks'));
-    if (marks < 0 || marks > 100) {
-        alert('Marks must be between 0 and 100');
-        return;
-    }
-    
-    try {
-        const button = document.getElementById('marksSaveBtn');
-        const originalText = button.innerHTML;
-        button.innerHTML = '<span class="loading-spinner"></span> Saving...';
-        button.disabled = true;
-        
-        const url = currentEditId ? 
-            `https://aacem-backend.onrender.com/api/update-marks/${currentEditId}` :
-            'https://aacem-backend.onrender.com/api/add-marks';
-        
-        const method = currentEditId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                exam: formData.get('exam'),
-                studentId: formData.get('studentId'),
-                subject: formData.get('subject'),
-                marks: marks,
-                totalMarks: formData.get('totalMarks'),
-                examDate: formData.get('examDate')
-            })
-        });
-        
-        const result = await response.json();
-        
-        button.innerHTML = originalText;
-        button.disabled = false;
-        
-        if (result.success) {
-            await loadDashboardData();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('marksModal'));
-            if (modal) modal.hide();
-            showSuccess(currentEditId ? 'Marks updated successfully!' : 'Marks saved successfully!');
-        } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
-        }
-        
-    } catch (error) {
-        console.error('Error saving marks:', error);
-        const button = document.getElementById('marksSaveBtn');
-        if (button) {
-            button.innerHTML = 'Save Marks';
-            button.disabled = false;
-        }
-        alert('Failed to save marks. Please try again. Error: ' + error.message);
-    }
-}
+
+
 
 // Send notification function
 async function sendNotification() {
@@ -2873,41 +4902,7 @@ async function editCourse(courseCode) {
     bsModal.show();
 }
 
-// Edit Marks Function
-async function editMarks(marksId) {
-    const mark = marksData.find(m => m.id == marksId);
-    if (!mark) {
-        alert('Marks record not found!');
-        return;
-    }
 
-    const form = document.getElementById('marksForm');
-    if (!form) {
-        alert('Marks form not found');
-        return;
-    }
-
-    form.querySelector('select[name="exam"]').value = mark.exam_type || '';
-    form.querySelector('select[name="studentId"]').value = mark.student_id || '';
-    form.querySelector('input[name="subject"]').value = mark.subject || '';
-    form.querySelector('input[name="marks"]').value = mark.marks_obtained || '';
-    form.querySelector('input[name="totalMarks"]').value = mark.total_marks || '';
-    form.querySelector('input[name="examDate"]').value = mark.exam_date || '';
-
-    const modal = document.getElementById('marksModal');
-    const title = modal.querySelector('.modal-title');
-    const saveBtn = modal.querySelector('.btn-primary');
-    
-    if (title) title.textContent = 'Edit Marks';
-    if (saveBtn) {
-        saveBtn.textContent = 'Update Marks';
-        saveBtn.onclick = function() { saveMarks(); };
-    }
-
-    currentEditId = marksId;
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
 
 // Edit Notification Function
 async function editNotification(notificationId) {
@@ -3552,116 +5547,7 @@ function viewReceipt(receiptNo) {
     showModal(modalHTML);
 }
 
-// 5. Marks View
-function viewMarks(marksId) {
-    const mark = marksData.find(m => m.id == marksId);
-    if (!mark) {
-        showError('Marks record not found!');
-        return;
-    }
 
-    const percentage = ((mark.marks_obtained || 0) / (mark.total_marks || 100)) * 100;
-    let grade = 'F';
-    let gradeClass = 'bg-danger';
-    
-    if (percentage >= 90) { grade = 'A+'; gradeClass = 'bg-success'; }
-    else if (percentage >= 80) { grade = 'A'; gradeClass = 'bg-success'; }
-    else if (percentage >= 70) { grade = 'B'; gradeClass = 'bg-info'; }
-    else if (percentage >= 60) { grade = 'C'; gradeClass = 'bg-info'; }
-    else if (percentage >= 50) { grade = 'D'; gradeClass = 'bg-warning'; }
-    else if (percentage >= 40) { grade = 'E'; gradeClass = 'bg-warning'; }
-    
-    const modalHTML = `
-        <div class="modal fade" id="viewModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-purple text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-chart-line me-2"></i>
-                            Exam Result Details
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-purple border-bottom pb-2">
-                                    <i class="fas fa-info-circle me-2"></i>Exam Information
-                                </h6>
-                                <div class="row mb-2">
-                                    <div class="col-5 text-muted">Exam Type:</div>
-                                    <div class="col-7 fw-bold">${mark.exam_type}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-5 text-muted">Subject:</div>
-                                    <div class="col-7">
-                                        <span class="badge bg-info">${mark.subject}</span>
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-5 text-muted">Exam Date:</div>
-                                    <div class="col-7">${formatDate(mark.exam_date)}</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-purple border-bottom pb-2">
-                                    <i class="fas fa-chart-bar me-2"></i>Result Details
-                                </h6>
-                                <div class="row mb-2">
-                                    <div class="col-6 text-muted">Marks Obtained:</div>
-                                    <div class="col-6 text-end fw-bold fs-4">
-                                        ${mark.marks_obtained}/${mark.total_marks}
-                                    </div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6 text-muted">Percentage:</div>
-                                    <div class="col-6 text-end fw-bold fs-5 ${percentage >= 40 ? 'text-success' : 'text-danger'}">
-                                        ${percentage.toFixed(2)}%
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-6 text-muted">Grade:</div>
-                                    <div class="col-6 text-end">
-                                        <span class="badge ${gradeClass} fs-6">${grade}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-title text-purple border-bottom pb-2">
-                                    <i class="fas fa-user-graduate me-2"></i>Student Information
-                                </h6>
-                                <div class="row mb-2">
-                                    <div class="col-5 text-muted">Student Name:</div>
-                                    <div class="col-7 fw-bold">${mark.student_name}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-5 text-muted">Class:</div>
-                                    <div class="col-7">
-                                        <span class="badge bg-primary">${mark.course || 'N/A'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-purple" onclick="editMarks('${marksId}')">
-                            <i class="fas fa-edit me-1"></i> Edit
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    showModal(modalHTML);
-}
 
 // ADD ये functions अगर नहीं हैं तो:
 // ADD ये helper functions file के अंत में:
@@ -3967,27 +5853,7 @@ async function deleteCourse(courseCode) {
     }
 }
 
-async function deleteFeeRecord(receiptNo) {
-    if (!confirm("Are you sure you want to delete this fee record? This action cannot be undone.")) return;
-    
-    try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/delete-fee/${receiptNo}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            await loadDashboardData();
-            showSuccess('Fee record deleted successfully!');
-        } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error deleting fee record:', error);
-        alert('Failed to delete fee record. Please try again. Error: ' + error.message);
-    }
-}
+
 
 async function deleteAttendance(attendanceId) {
     if (!confirm("Are you sure you want to delete this attendance record? This action cannot be undone.")) return;
@@ -4011,27 +5877,7 @@ async function deleteAttendance(attendanceId) {
     }
 }
 
-async function deleteMarks(marksId) {
-    if (!confirm("Are you sure you want to delete this marks record? This action cannot be undone.")) return;
-    
-    try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/delete-marks/${marksId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            await loadDashboardData();
-            showSuccess('Marks record deleted successfully!');
-        } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error deleting marks record:', error);
-        alert('Failed to delete marks record. Please try again. Error: ' + error.message);
-    }
-}
+
 
 async function deleteNotification(notificationId) {
     if (!confirm("Are you sure you want to delete this notification?")) return;
@@ -4091,785 +5937,17 @@ function debugCourses() {
     }
     console.log('=== END DEBUG ===');
 }
-// Add this function to generate and print receipts in A4 size
-async function printReceipt(receiptNo) {
-    try {
-        // Get fee record details
-        const feeRecord = feesData.find(f => f.receipt_no === receiptNo);
-        if (!feeRecord) {
-            alert('Fee record not found!');
-            return;
-        }
-
-        // Get student details
-        const student = studentsData.find(s => s.student_id === feeRecord.student_id);
-        if (!student) {
-            alert('Student details not found!');
-            return;
-        }
-
-        // Create receipt HTML
-        const receiptHtml = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Fee Receipt - ${receiptNo}</title>
-                <style>
-                    @page {
-                        size: A4;
-                        margin: 15mm;
-                    }
-                    
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    
-                    body {
-                        font-family: 'Arial', sans-serif;
-                        font-size: 12px;
-                        line-height: 1.4;
-                        color: #333;
-                        background: white;
-                    }
-                    
-                    .receipt-container {
-                        max-width: 100%;
-                        padding: 10px;
-                    }
-                    
-                    .header {
-                        text-align: center;
-                        border-bottom: 2px solid #333;
-                        padding-bottom: 8px;
-                        margin-bottom: 12px;
-                    }
-                    
-                    .institute-name {
-                        font-size: 20px;
-                        font-weight: bold;
-                        color: #2d6b6b;
-                        margin-bottom: 3px;
-                    }
-                    
-                    .institute-address {
-                        font-size: 10px;
-                        color: #666;
-                        margin-bottom: 5px;
-                    }
-                    
-                    .receipt-title {
-                        font-size: 16px;
-                        font-weight: bold;
-                        color: #333;
-                        margin-top: 8px;
-                    }
-                    
-                    .info-table {
-                        width: 100%;
-                        margin-bottom: 12px;
-                        border-collapse: collapse;
-                    }
-                    
-                    .info-table td {
-                        padding: 4px 8px;
-                        border: 1px solid #ddd;
-                        font-size: 11px;
-                    }
-                    
-                    .info-table td:first-child {
-                        font-weight: bold;
-                        background: #f5f5f5;
-                        width: 35%;
-                    }
-                    
-                    .amount-table {
-                        width: 100%;
-                        margin: 12px 0;
-                        border-collapse: collapse;
-                    }
-                    
-                    .amount-table th {
-                        background: #2d6b6b;
-                        color: white;
-                        padding: 6px;
-                        text-align: left;
-                        font-size: 11px;
-                        border: 1px solid #2d6b6b;
-                    }
-                    
-                    .amount-table td {
-                        padding: 5px 8px;
-                        border: 1px solid #ddd;
-                        font-size: 11px;
-                    }
-                    
-                    .amount-table .text-right {
-                        text-align: right;
-                    }
-                    
-                    .amount-table .total-row {
-                        background: #f8f9fa;
-                        font-weight: bold;
-                        font-size: 12px;
-                    }
-                    
-                    .amount-table .highlight {
-                        background: #fff3cd;
-                        font-weight: bold;
-                    }
-                    
-                    .signature-section {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-top: 30px;
-                    }
-                    
-                    .signature {
-                        text-align: center;
-                        width: 40%;
-                    }
-                    
-                    .signature-line {
-                        border-top: 1px solid #333;
-                        margin-top: 35px;
-                        margin-bottom: 5px;
-                    }
-                    
-                    .signature-label {
-                        font-size: 10px;
-                        color: #666;
-                    }
-                    
-                    .footer {
-                        text-align: center;
-                        margin-top: 20px;
-                        padding-top: 10px;
-                        border-top: 1px solid #ddd;
-                        font-size: 9px;
-                        color: #666;
-                    }
-                    
-                    @media print {
-                        body {
-                            background: white;
-                        }
-                        .no-print {
-                            display: none !important;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="receipt-container">
-                    <div class="header">
-                        <div class="institute-name">AACEM INSTITUTE</div>
-                        <div class="institute-address">
-                            123 Education Street, Learning City, LC 12345 | Phone: +91-9876543210 | Email: info@aacem.edu.in
-                        </div>
-                        <div class="receipt-title">FEE PAYMENT RECEIPT</div>
-                    </div>
-
-                    <table class="info-table">
-                        <tr>
-                            <td>Receipt Number</td>
-                            <td><strong>${receiptNo}</strong></td>
-                            <td>Student ID</td>
-                            <td><strong>${student.student_id}</strong></td>
-                        </tr>
-                        <tr>
-                            <td>Payment Date</td>
-                            <td>${formatDate(feeRecord.payment_date)}</td>
-                            <td>Student Name</td>
-                            <td>${student.name}</td>
-                        </tr>
-                        <tr>
-                            <td>Payment Mode</td>
-                            <td>${feeRecord.payment_mode.toUpperCase()}</td>
-                            <td>Course</td>
-                            <td>${student.course}</td>
-                        </tr>
-                    </table>
-
-                    <table class="amount-table">
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th class="text-right">Amount (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Total Course Fee</td>
-                                <td class="text-right">${(student.fee_amount || 0).toLocaleString()}</td>
-                            </tr>
-                            <tr>
-                                <td>Previously Paid</td>
-                                <td class="text-right">${((student.paid_amount || 0) - (feeRecord.amount || 0)).toLocaleString()}</td>
-                            </tr>
-                            <tr class="highlight">
-                                <td><strong>Current Payment (${feeRecord.status || 'Completed'})</strong></td>
-                                <td class="text-right"><strong>${(feeRecord.amount || 0).toLocaleString()}</strong></td>
-                            </tr>
-                            <tr class="total-row">
-                                <td>Total Paid Amount</td>
-                                <td class="text-right">${(student.paid_amount || 0).toLocaleString()}</td>
-                            </tr>
-                            <tr style="background: #ffe6e6;">
-                                <td><strong>Remaining Due Amount</strong></td>
-                                <td class="text-right" style="color: #dc3545;"><strong>${(student.due_amount || 0).toLocaleString()}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="signature-section">
-                        <div class="signature">
-                            <div class="signature-line"></div>
-                            <div class="signature-label">Student/Parent Signature</div>
-                        </div>
-                        <div class="signature">
-                            <div class="signature-line"></div>
-                            <div class="signature-label">Authorized Signature</div>
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        <p>This is a computer generated receipt. No signature required.</p>
-                        <p>Generated on: ${new Date().toLocaleString()}</p>
-                    </div>
-
-                    <div class="no-print" style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.print()" style="
-                            background: #2d6b6b;
-                            color: white;
-                            border: none;
-                            padding: 10px 20px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">
-                            🖨️ Print Receipt
-                        </button>
-                        <button onclick="window.close()" style="
-                            background: #6c757d;
-                            color: white;
-                            border: none;
-                            padding: 10px 20px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            margin-left: 10px;
-                        ">
-                            ❌ Close
-                        </button>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        // Open receipt in new window
-        const receiptWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
-        receiptWindow.document.write(receiptHtml);
-        receiptWindow.document.close();
-
-        // Focus on the new window
-        receiptWindow.focus();
-
-    } catch (error) {
-        console.error('Error generating receipt:', error);
-        alert('Failed to generate receipt. Please try again. Error: ' + error.message);
-    }
-}
-
-// Add this function to view student fee history and print all receipts
-async function viewStudentFeeHistory(studentId) {
-    try {
-        const student = studentsData.find(s => s.student_id === studentId);
-        if (!student) {
-            alert('Student not found!');
-            return;
-        }
-
-        // Get all fee records for this student
-        const studentFees = feesData.filter(f => f.student_id === studentId);
-        
-        if (studentFees.length === 0) {
-            alert('No fee records found for this student!');
-            return;
-        }
-
-        // Create modal to show fee history
-        const modalHtml = `
-            <div class="modal fade" id="feeHistoryModal" tabindex="-1">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>
-                                Fee History - ${student.name} (${student.student_id})
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h6 class="card-title">Fee Summary</h6>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <small class="text-muted">Total Fee:</small><br>
-                                                    <strong>₹${(student.fee_amount || 0).toLocaleString()}</strong>
-                                                </div>
-                                                <div class="col-6">
-                                                    <small class="text-muted">Total Paid:</small><br>
-                                                    <strong class="text-success">₹${(student.paid_amount || 0).toLocaleString()}</strong>
-                                                </div>
-                                            </div>
-                                            <div class="row mt-2">
-                                                <div class="col-6">
-                                                    <small class="text-muted">Due Amount:</small><br>
-                                                    <strong class="text-danger">₹${(student.due_amount || 0).toLocaleString()}</strong>
-                                                </div>
-                                                <div class="col-6">
-                                                    <small class="text-muted">Status:</small><br>
-                                                    <span class="badge ${getFeeStatusClass(student.fee_status)}">${student.fee_status}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body text-center">
-                                            <button class="btn btn-success btn-sm" onclick="printAllReceipts('${studentId}')">
-                                                <i class="fas fa-print me-1"></i> Print All Receipts
-                                            </button>
-                                            <button class="btn btn-info btn-sm ms-2" onclick="exportStudentFeeHistory('${studentId}')">
-                                                <i class="fas fa-download me-1"></i> Export History
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-hover table-sm">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Receipt No</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Payment Mode</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${studentFees.map(fee => `
-                                            <tr>
-                                                <td><strong>${fee.receipt_no}</strong></td>
-                                                <td>${formatDate(fee.payment_date)}</td>
-                                                <td>₹${(fee.amount || 0).toLocaleString()}</td>
-                                                <td><span class="badge bg-secondary">${fee.payment_mode}</span></td>
-                                                <td><span class="badge bg-success">${fee.status}</span></td>
-                                                <td>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <button class="btn btn-outline-primary" onclick="printReceipt('${fee.receipt_no}')" title="Print Receipt">
-                                                            <i class="fas fa-print"></i>
-                                                        </button>
-                                                        <button class="btn btn-outline-info" onclick="viewReceipt('${fee.receipt_no}')" title="View Details">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button class="btn btn-outline-danger" onclick="deleteFeeRecord('${fee.receipt_no}')" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Remove existing modal if any
-        const existingModal = document.getElementById('feeHistoryModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        // Add modal to body
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('feeHistoryModal'));
-        modal.show();
-
-    } catch (error) {
-        console.error('Error viewing fee history:', error);
-        alert('Failed to load fee history. Error: ' + error.message);
-    }
-}
-
-// Function to print all receipts for a student in A4 size
-async function printAllReceipts(studentId) {
-    try {
-        const student = studentsData.find(s => s.student_id === studentId);
-        if (!student) {
-            alert('Student not found!');
-            return;
-        }
-
-        const studentFees = feesData.filter(f => f.student_id === studentId);
-        
-        if (studentFees.length === 0) {
-            alert('No fee records found for this student!');
-            return;
-        }
-
-        // Create combined receipt HTML
-        let combinedReceiptHtml = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>All Receipts - ${student.name}</title>
-                <style>
-                    @page {
-                        size: A4;
-                        margin: 15mm;
-                    }
-                    
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    
-                    body {
-                        font-family: 'Arial', sans-serif;
-                        font-size: 12px;
-                        line-height: 1.4;
-                        color: #333;
-                        background: white;
-                    }
-                    
-                    .receipt-container {
-                        page-break-after: always;
-                        padding: 10px;
-                    }
-                    
-                    .header {
-                        text-align: center;
-                        border-bottom: 2px solid #333;
-                        padding-bottom: 8px;
-                        margin-bottom: 12px;
-                    }
-                    
-                    .institute-name {
-                        font-size: 20px;
-                        font-weight: bold;
-                        color: #2d6b6b;
-                        margin-bottom: 3px;
-                    }
-                    
-                    .receipt-title {
-                        font-size: 16px;
-                        font-weight: bold;
-                        color: #333;
-                        margin-top: 8px;
-                    }
-                    
-                    .info-table {
-                        width: 100%;
-                        margin-bottom: 12px;
-                        border-collapse: collapse;
-                    }
-                    
-                    .info-table td {
-                        padding: 4px 8px;
-                        border: 1px solid #ddd;
-                        font-size: 11px;
-                    }
-                    
-                    .info-table td:first-child {
-                        font-weight: bold;
-                        background: #f5f5f5;
-                        width: 35%;
-                    }
-                    
-                    .amount-table {
-                        width: 100%;
-                        margin: 12px 0;
-                        border-collapse: collapse;
-                    }
-                    
-                    .amount-table th {
-                        background: #2d6b6b;
-                        color: white;
-                        padding: 6px;
-                        text-align: left;
-                        font-size: 11px;
-                        border: 1px solid #2d6b6b;
-                    }
-                    
-                    .amount-table td {
-                        padding: 5px 8px;
-                        border: 1px solid #ddd;
-                        font-size: 11px;
-                    }
-                    
-                    .amount-table .text-right {
-                        text-align: right;
-                    }
-                    
-                    .amount-table .highlight {
-                        background: #fff3cd;
-                        font-weight: bold;
-                    }
-                    
-                    .signature-section {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-top: 30px;
-                    }
-                    
-                    .signature {
-                        text-align: center;
-                        width: 40%;
-                    }
-                    
-                    .signature-line {
-                        border-top: 1px solid #333;
-                        margin-top: 35px;
-                        margin-bottom: 5px;
-                    }
-                    
-                    .signature-label {
-                        font-size: 10px;
-                        color: #666;
-                    }
-                    
-                    .footer {
-                        text-align: center;
-                        margin-top: 15px;
-                        padding-top: 8px;
-                        border-top: 1px solid #ddd;
-                        font-size: 9px;
-                        color: #666;
-                    }
-                    
-                    @media print {
-                        .no-print {
-                            display: none !important;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="no-print" style="text-align: center; margin-bottom: 20px; padding: 20px;">
-                    <button onclick="window.print()" style="
-                        background: #2d6b6b;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        margin: 5px;
-                    ">
-                        🖨️ Print All Receipts
-                    </button>
-                    <button onclick="window.close()" style="
-                        background: #6c757d;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        margin: 5px;
-                    ">
-                        ❌ Close
-                    </button>
-                </div>
-        `;
-
-        // Add each receipt
-        studentFees.forEach((fee, index) => {
-            combinedReceiptHtml += `
-                <div class="receipt-container">
-                    <div class="header">
-                        <div class="institute-name">AACEM INSTITUTE</div>
-                        <div class="receipt-title">FEE PAYMENT RECEIPT</div>
-                    </div>
-
-                    <table class="info-table">
-                        <tr>
-                            <td>Receipt Number</td>
-                            <td><strong>${fee.receipt_no}</strong></td>
-                            <td>Student ID</td>
-                            <td><strong>${student.student_id}</strong></td>
-                        </tr>
-                        <tr>
-                            <td>Payment Date</td>
-                            <td>${formatDate(fee.payment_date)}</td>
-                            <td>Student Name</td>
-                            <td>${student.name}</td>
-                        </tr>
-                        <tr>
-                            <td>Payment Mode</td>
-                            <td>${fee.payment_mode.toUpperCase()}</td>
-                            <td>Course</td>
-                            <td>${student.course}</td>
-                        </tr>
-                    </table>
-
-                    <table class="amount-table">
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th class="text-right">Amount (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="highlight">
-                                <td><strong>Payment Amount (${fee.status || 'Completed'})</strong></td>
-                                <td class="text-right"><strong>${(fee.amount || 0).toLocaleString()}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="signature-section">
-                        <div class="signature">
-                            <div class="signature-line"></div>
-                            <div class="signature-label">Student/Parent Signature</div>
-                        </div>
-                        <div class="signature">
-                            <div class="signature-line"></div>
-                            <div class="signature-label">Authorized Signature</div>
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        <p>This is a computer generated receipt. No signature required.</p>
-                        <p>Receipt ${index + 1} of ${studentFees.length} | Generated on: ${new Date().toLocaleString()}</p>
-                    </div>
-                </div>
-            `;
-        });
-
-        combinedReceiptHtml += `
-            </body>
-            </html>
-        `;
-
-        // Open in new window
-        const printWindow = window.open('', '_blank', 'width=900,height=700');
-        printWindow.document.write(combinedReceiptHtml);
-        printWindow.document.close();
-        printWindow.focus();
-
-    } catch (error) {
-        console.error('Error printing all receipts:', error);
-        alert('Failed to print receipts. Error: ' + error.message);
-    }
-}
-
-// Function to export student fee history as CSV
-async function exportStudentFeeHistory(studentId) {
-    try {
-        const student = studentsData.find(s => s.student_id === studentId);
-        if (!student) {
-            alert('Student not found!');
-            return;
-        }
-
-        const studentFees = feesData.filter(f => f.student_id === studentId);
-        
-        if (studentFees.length === 0) {
-            alert('No fee records found for this student!');
-            return;
-        }
-
-        // Create CSV content
-        let csvContent = "Fee History for " + student.name + " (" + student.student_id + ")\n\n";
-        csvContent += "Receipt No,Payment Date,Amount,Payment Mode,Status,Course\n";
-        
-        studentFees.forEach(fee => {
-            csvContent += `"${fee.receipt_no}","${formatDate(fee.payment_date)}","${fee.amount}","${fee.payment_mode}","${fee.status}","${student.course}"\n`;
-        });
-
-        csvContent += `\nSummary\n`;
-        csvContent += `Total Fee,${student.fee_amount}\n`;
-        csvContent += `Total Paid,${student.paid_amount}\n`;
-        csvContent += `Due Amount,${student.due_amount}\n`;
-        csvContent += `Fee Status,${student.fee_status}\n`;
-        csvContent += `Generated on,${new Date().toLocaleString()}\n`;
-
-        // Create and download CSV file
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `fee_history_${student.student_id}_${new Date().getTime()}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        showSuccess('Fee history exported successfully!');
-
-    } catch (error) {
-        console.error('Error exporting fee history:', error);
-        alert('Failed to export fee history. Error: ' + error.message);
-    }
-}
 
 
 
-// Also update the viewReceipt function to include print option
-function viewReceipt(receiptNo) {
-    const fee = feesData.find(f => f.receipt_no === receiptNo);
-    if (fee) {
-        const student = studentsData.find(s => s.student_id === fee.student_id);
-        let details = `Receipt Details:\n\n`;
-        details += `Receipt No: ${fee.receipt_no}\n`;
-        details += `Student: ${fee.student_name}\n`;
-        details += `Course: ${fee.course}\n`;
-        details += `Amount: ₹${fee.amount}\n`;
-        details += `Payment Date: ${formatDate(fee.payment_date)}\n`;
-        details += `Payment Mode: ${fee.payment_mode}\n`;
-        details += `Status: ${fee.status}\n\n`;
-        
-        if (student) {
-            details += `Student Details:\n`;
-            details += `Total Fee: ₹${student.fee_amount || 0}\n`;
-            details += `Total Paid: ₹${student.paid_amount || 0}\n`;
-            details += `Due Amount: ₹${student.due_amount || 0}\n`;
-            details += `Fee Status: ${student.fee_status}\n\n`;
-        }
-        
-        details += `Do you want to print this receipt?`;
-        
-        if (confirm(details)) {
-            printReceipt(receiptNo);
-        }
-    }
-}
+
+
+
+
+
+
+
+
 
 // View individual class attendance
 async function viewClassAttendance(className) {
@@ -5424,7 +6502,6 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
-
 
 
 
