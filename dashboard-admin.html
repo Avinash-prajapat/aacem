@@ -1649,7 +1649,7 @@
         </div>
     </div>
 
-    <!-- Fee Modal -->
+    <!-- Fee Modal - UPDATED VERSION -->
     <div class="modal fade" id="feeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1659,12 +1659,22 @@
                 </div>
                 <div class="modal-body">
                     <form id="feeForm">
+                        <!-- NEW: Course Filter -->
+                        <div class="mb-3">
+                            <label class="form-label">Select Course First *</label>
+                            <select class="form-select" name="course" required onchange="loadStudentsForFee(this.value)">
+                                <option value="">Select Course</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Student Dropdown -->
                         <div class="mb-3">
                             <label class="form-label">Select Student *</label>
                             <select class="form-select" name="studentId" required onchange="updateFeeDetails(this.value)">
-                                <option value="">Select Student</option>
+                                <option value="">Select Course First</option>
                             </select>
                         </div>
+                        
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Total Fee</label>
@@ -1690,6 +1700,7 @@
                         <div class="mb-3">
                             <label class="form-label">Payment Mode *</label>
                             <select class="form-select" name="paymentMode" required>
+                                <option value="">Select Mode</option>
                                 <option value="cash">Cash</option>
                                 <option value="bank">Bank Transfer</option>
                                 <option value="cheque">Cheque</option>
@@ -2048,6 +2059,9 @@
 </body>
 
 </html>
+
+
+
 
 
 
