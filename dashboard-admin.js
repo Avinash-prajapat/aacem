@@ -3298,7 +3298,7 @@ function updateFeeDetails(studentId) {
     }
 }
 
-// Record payment - FIXED VERSION
+// Record payment - FIXED VERSION with working print
 async function recordPayment() {
     const form = document.getElementById('feeForm');
     if (!form) {
@@ -3363,21 +3363,43 @@ async function recordPayment() {
         button.disabled = false;
         
         if (result.success) {
-            await loadDashboardData();
-            
+            // Close modal first
             const modal = bootstrap.Modal.getInstance(document.getElementById('feeModal'));
             if (modal) modal.hide();
             
+            // Reset form
             form.reset();
             
-            // Show success with receipt option
-            if (confirm('Payment recorded successfully! Do you want to print the receipt?')) {
-                if (result.receipt_no) {
-                    printReceipt(result.receipt_no);
-                }
-            }
-            
             showSuccess('Payment recorded successfully!');
+            
+            // Reload data
+            await loadDashboardData();
+            
+            // Ask for print AFTER modal is closed and data is loaded
+            setTimeout(() => {
+                if (confirm('Payment recorded successfully! Do you want to print the receipt?')) {
+                    // Get the latest receipt number from result or find it
+                    let receiptNo = result.receipt_no;
+                    
+                    // If receipt_no not in result, find the latest receipt for this student
+                    if (!receiptNo) {
+                        const studentFees = feesData.filter(f => f.student_id === studentId);
+                        if (studentFees.length > 0) {
+                            // Sort by date to get latest
+                            studentFees.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+                            receiptNo = studentFees[0].receipt_no;
+                        }
+                    }
+                    
+                    if (receiptNo) {
+                        console.log('Printing receipt:', receiptNo);
+                        printReceipt(receiptNo);
+                    } else {
+                        showError('Receipt number not found. Please print from fee records.');
+                    }
+                }
+            }, 500); // Wait for data to load
+            
         } else {
             showError('Error: ' + (result.message || 'Unknown error'));
         }
@@ -4217,7 +4239,103 @@ function getFeeStatusClass(status) {
     }
 }
 
-// Initialize fee modal
+// Load students for fee based on course selection
+async function loadStudentsForFee(courseCode) {
+    const studentSelect = document.querySelector('#feeForm select[name="studentId"]');
+    
+    if (!studentSelect) {
+        console.error('Student select not found in fee form');
+        return;
+    }
+    
+    if (!courseCode) {
+        studentSelect.innerHTML = '<option value="">Select Course First</option>';
+        
+        // Clear fee details
+        const totalFeeInput = document.querySelector('#feeForm input[name="totalFee"]');
+        const paidAmountInput = document.querySelector('#feeForm input[name="paidAmount"]');
+        const dueAmountInput = document.querySelector('#feeForm input[name="dueAmount"]');
+        const payingInput = document.querySelector('#feeForm input[name="payingNow"]');
+        
+        if (totalFeeInput) totalFeeInput.value = '';
+        if (paidAmountInput) paidAmountInput.value = '';
+        if (dueAmountInput) dueAmountInput.value = '';
+        if (payingInput) payingInput.value = '';
+        
+        return;
+    }
+    
+    studentSelect.innerHTML = '<option value="">Loading students...</option>';
+    
+    try {
+        console.log(`Loading students for course: ${courseCode}`);
+        
+        // API call to get students by course
+        const response = await fetch(
+            `https://aacem-backend.onrender.com/api/students/course/${encodeURIComponent(courseCode)}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+        
+        if (result.success && result.students && result.students.length > 0) {
+            console.log(`Loaded ${result.students.length} students for fee payment`);
+            
+            result.students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.student_id;
+                
+                // Show name, UID, and due amount
+                const dueAmount = (student.fee_amount || 0) - (student.paid_amount || 0);
+                option.textContent = `${student.name} (${student.student_id}) - Due: ₹${dueAmount.toLocaleString()}`;
+                
+                option.setAttribute('data-student-name', student.name);
+                option.setAttribute('data-due-amount', dueAmount);
+                
+                studentSelect.appendChild(option);
+            });
+            
+        } else {
+            console.log(`No students found for course: ${courseCode}`);
+            studentSelect.innerHTML = '<option value="">No students found in this course</option>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading students for fee:', error);
+        
+        // Fallback: Use local data
+        console.log('Trying fallback with local data...');
+        const courseStudents = studentsData.filter(s => s.course === courseCode);
+        
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+        
+        if (courseStudents.length > 0) {
+            console.log(`Fallback: Loaded ${courseStudents.length} students from local data`);
+            
+            courseStudents.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.student_id;
+                
+                const dueAmount = (student.fee_amount || 0) - (student.paid_amount || 0);
+                option.textContent = `${student.name} (${student.student_id}) - Due: ₹${dueAmount.toLocaleString()}`;
+                
+                option.setAttribute('data-student-name', student.name);
+                option.setAttribute('data-due-amount', dueAmount);
+                
+                studentSelect.appendChild(option);
+            });
+        } else {
+            studentSelect.innerHTML = '<option value="">No students found in this course</option>';
+        }
+    }
+}
+
+// Initialize fee modal - UPDATED VERSION
 document.addEventListener('DOMContentLoaded', function() {
     const feeModal = document.getElementById('feeModal');
     if (feeModal) {
@@ -4231,8 +4349,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 dateInput.value = new Date().toISOString().split('T')[0];
             }
             
-            // Populate student dropdown
-            populateStudentDropdown('feeForm');
+            // Populate COURSE dropdown (NEW - not student)
+            populateCourseDropdown('feeForm', 'course');
+            
+            // Clear student dropdown
+            const studentSelect = form.querySelector('select[name="studentId"]');
+            if (studentSelect) {
+                studentSelect.innerHTML = '<option value="">Select Course First</option>';
+            }
+            
+            // Clear fee details
+            const inputs = ['totalFee', 'paidAmount', 'dueAmount', 'payingNow'];
+            inputs.forEach(name => {
+                const input = form.querySelector(`input[name="${name}"]`);
+                if (input) input.value = '';
+            });
         });
     }
     
