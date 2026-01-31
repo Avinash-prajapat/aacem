@@ -1258,6 +1258,12 @@
                                 <i class="fas fa-file-pdf me-2"></i>Course PDFs
                             </button>
                         </li>
+                        <!-- Syllabus Tab -->
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="syllabus-tab" data-bs-toggle="tab" data-bs-target="#syllabus" type="button" role="tab">
+                                <i class="fas fa-book-open me-2"></i>Syllabus & Subjects
+                            </button>
+                        </li>
                         <!-- Contact Messages Tab - Add this in your nav tabs -->
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
@@ -1424,6 +1430,243 @@
                                                 <!-- Fees data will be loaded here -->
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Syllabus Tab Content -->
+                        <div class="tab-pane fade" id="syllabus" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h4><i class="fas fa-book-open me-2 text-primary"></i>Course Syllabus Management</h4>
+                                    <p class="text-muted mb-0">Manage course syllabus, subjects, and topics</p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-success me-2" onclick="showAddSyllabusModal()">
+                                        <i class="fas fa-plus me-2"></i>Add New Syllabus
+                                    </button>
+                                    <button class="btn btn-primary" onclick="refreshSyllabus()">
+                                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Statistics Cards -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-book-open fa-2x text-primary mb-2"></i>
+                                            <h3 class="mb-0" id="totalSyllabus">0</h3>
+                                            <small class="text-muted">Total Syllabus</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
+                                            <h3 class="mb-0" id="coursesWithSyllabus">0</h3>
+                                            <small class="text-muted">Courses with Syllabus</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-list fa-2x text-warning mb-2"></i>
+                                            <h3 class="mb-0" id="totalSubjects">0</h3>
+                                            <small class="text-muted">Total Subjects</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                                            <h3 class="mb-0" id="totalHours">0</h3>
+                                            <small class="text-muted">Total Hours</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filters -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Filter by Course:</label>
+                                            <select class="form-select" id="syllabusCourseFilter" onchange="filterSyllabus()">
+                                                <option value="">All Courses</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Search Syllabus:</label>
+                                            <input type="text" class="form-control" id="searchSyllabus" 
+                                                placeholder="Search by title or description..." onkeyup="searchSyllabus()">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check mt-4">
+                                                <input class="form-check-input" type="checkbox" id="showActiveOnly" checked 
+                                                    onchange="filterSyllabus()">
+                                                <label class="form-check-label" for="showActiveOnly">
+                                                    Show Active Syllabus Only
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Syllabus Table -->
+                            <div class="card">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list me-2"></i>Syllabus List
+                                        <span class="badge bg-primary ms-2" id="syllabusCount">0</span>
+                                    </h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="exportSyllabus()">
+                                            <i class="fas fa-download me-1"></i>Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="syllabusTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="5%">#</th>
+                                                    <th width="15%">Course</th>
+                                                    <th width="25%">Syllabus Title</th>
+                                                    <th width="20%">Description</th>
+                                                    <th width="10%">Duration</th>
+                                                    <th width="10%">Subjects</th>
+                                                    <th width="10%">Status</th>
+                                                    <th width="15%" class="text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="syllabusTableBody">
+                                                <!-- Data will be loaded here -->
+                                                <tr>
+                                                    <td colspan="8" class="text-center py-5">
+                                                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                                        <p class="text-muted">No syllabus found. Click "Add New Syllabus" to create one.</p>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add/Edit Syllabus Modal -->
+                        <div class="modal fade" id="syllabusModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-plus me-2"></i>Add New Syllabus
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="syllabusForm">
+                                            <input type="hidden" id="editSyllabusId">
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Course *</label>
+                                                    <select class="form-select" id="syllabusCourse" required>
+                                                        <option value="">Select course...</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Syllabus Title *</label>
+                                                    <input type="text" class="form-control" id="syllabusTitle" 
+                                                        placeholder="e.g., Complete Course Syllabus" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" id="syllabusDescription" rows="2" 
+                                                        placeholder="Brief description of the syllabus..."></textarea>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Total Duration (Hours) *</label>
+                                                    <input type="number" class="form-control" id="syllabusDuration" 
+                                                        min="1" max="500" value="40" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Status</label>
+                                                    <select class="form-select" id="syllabusStatus">
+                                                        <option value="active">Active</option>
+                                                        <option value="inactive">Inactive</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Subjects Section -->
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">
+                                                        <i class="fas fa-list me-2"></i>Subjects & Topics
+                                                    </h6>
+                                                    <button type="button" class="btn btn-sm btn-success" onclick="addSubjectRow()">
+                                                        <i class="fas fa-plus me-1"></i> Add Subject
+                                                    </button>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered" id="subjectsTable">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th width="5%">#</th>
+                                                                    <th width="40%">Subject Name *</th>
+                                                                    <th width="20%">Duration (Hrs)</th>
+                                                                    <th width="30%">Topics</th>
+                                                                    <th width="5%">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="subjectsTableBody">
+                                                                <tr class="subject-row">
+                                                                    <td>1</td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm subject-name" 
+                                                                            placeholder="Enter subject name" required>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control form-control-sm subject-duration" 
+                                                                            min="1" max="100" value="4">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm subject-topics" 
+                                                                            placeholder="e.g., Basics, Theory, Practical">
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)" disabled>
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-success" onclick="saveSyllabus()">
+                                            <i class="fas fa-save me-1"></i> Save Syllabus
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2161,6 +2404,96 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Syllabus Modal -->
+<div class="modal fade" id="syllabusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white" id="syllabusModalHeader">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Add New Syllabus
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="syllabusForm">
+                    <input type="hidden" id="editSyllabusId">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Course *</label>
+                            <select class="form-select" id="syllabusCourse" required>
+                                <option value="">Select course...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Syllabus Title *</label>
+                            <input type="text" class="form-control" id="syllabusTitle" 
+                                   placeholder="e.g., Complete Course Syllabus" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="syllabusDescription" rows="2" 
+                                  placeholder="Brief description of the syllabus..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Total Duration (Hours) *</label>
+                            <input type="number" class="form-control" id="syllabusDuration" 
+                                   min="1" max="500" value="40" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="syllabusStatus">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Subjects Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Subjects & Topics
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-success" onclick="addSubjectRow()">
+                                <i class="fas fa-plus me-1"></i> Add Subject
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="subjectsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="5%">#</th>
+                                            <th width="40%">Subject Name *</th>
+                                            <th width="20%">Duration (Hrs)</th>
+                                            <th width="30%">Topics</th>
+                                            <th width="5%">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subjectsTableBody">
+                                        <!-- Subjects will be added here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveSyllabus()">
+                    <i class="fas fa-save me-1"></i> Save Syllabus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
