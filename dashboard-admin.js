@@ -6609,6 +6609,343 @@ function deleteCurrentMessage() {
     }
 }
 
+
+// ==================== PDF MANAGEMENT ====================
+let pdfData = [];
+let currentPdfFilter = '';
+
+async function loadPdfData() {
+    try {
+        const url = currentPdfFilter 
+            ? `https://aacem-backend.onrender.com/api/course-pdfs?course=${currentPdfFilter}`
+            : 'https://aacem-backend.onrender.com/api/course-pdfs';
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success) {
+            pdfData = result.pdfs || [];
+            updatePdfDisplay();
+            updatePdfStats();
+        }
+    } catch (error) {
+        console.error('Error loading PDFs:', error);
+    }
+}
+
+function updatePdfDisplay() {
+    const container = document.getElementById('pdfListContainer');
+    const countBadge = document.getElementById('pdfListCount');
+    
+    if (!container) return;
+    
+    countBadge.textContent = pdfData.length;
+    
+    if (pdfData.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
+                <p class="text-muted">No PDFs uploaded yet</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const pdfsByCourse = {};
+    pdfData.forEach(pdf => {
+        const course = pdf.course_code || 'Unknown';
+        if (!pdfsByCourse[course]) {
+            pdfsByCourse[course] = {
+                course_name: pdf.course_name || 'Unknown',
+                pdfs: []
+            };
+        }
+        pdfsByCourse[course].pdfs.push(pdf);
+    });
+    
+    let html = '';
+    Object.entries(pdfsByCourse).forEach(([courseCode, data]) => {
+        html += `
+            <div class="mb-4">
+                <h6 class="mb-3">
+                    <i class="fas fa-book me-2 text-primary"></i>
+                    ${data.course_name}
+                    <span class="badge bg-primary ms-2">${data.pdfs.length}</span>
+                </h6>
+                <div class="row">
+        `;
+        
+        data.pdfs.forEach(pdf => {
+            const uploadDate = new Date(pdf.created_at).toLocaleDateString();
+            const fileSize = formatFileSize(pdf.file_size);
+            
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-1">${pdf.pdf_title}</h6>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-calendar me-1"></i>${uploadDate}
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-database me-1"></i>${fileSize}
+                                    </small>
+                                </div>
+                            </div>
+                            ${pdf.description ? `<p class="card-text small text-muted mb-3">${pdf.description.substring(0, 80)}...</p>` : ''}
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success btn-sm" onclick="viewPdf('${pdf.pdf_id}')">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info" onclick="downloadPdf('${pdf.pdf_id}')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                    <button class="btn btn-warning" onclick="editPdf('${pdf.pdf_id}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deletePdf('${pdf.pdf_id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div></div>`;
+    });
+    
+    container.innerHTML = html;
+}
+
+function updatePdfStats() {
+    const totalPdfs = pdfData.length;
+    const uniqueCourses = new Set(pdfData.map(pdf => pdf.course_code)).size;
+    const totalBytes = pdfData.reduce((sum, pdf) => sum + (pdf.file_size || 0), 0);
+    const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+    
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const recentUploads = pdfData.filter(pdf => new Date(pdf.created_at) > weekAgo).length;
+    
+    document.getElementById('totalPdfsCount').textContent = totalPdfs;
+    document.getElementById('coursesWithPdfsCount').textContent = uniqueCourses;
+    document.getElementById('totalStorageSize').textContent = totalMB + ' MB';
+    document.getElementById('recentUploadsCount').textContent = recentUploads;
+}
+
+function populatePdfCourseDropdowns() {
+    const uploadSelect = document.getElementById('uploadCourseSelect');
+    const filterSelect = document.getElementById('pdfCourseFilter');
+    
+    if (!uploadSelect || !filterSelect) return;
+    
+    uploadSelect.innerHTML = '<option value="">Choose a course...</option>';
+    filterSelect.innerHTML = '<option value="">All Courses</option>';
+    
+    coursesData.filter(c => c.is_active).forEach(course => {
+        const option1 = document.createElement('option');
+        option1.value = course.course_code;
+        option1.textContent = `${course.course_name} (${course.course_code})`;
+        uploadSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = course.course_code;
+        option2.textContent = `${course.course_name} (${course.course_code})`;
+        filterSelect.appendChild(option2);
+    });
+}
+
+async function uploadCoursePdf() {
+    const form = document.getElementById('uploadPdfForm');
+    const formData = new FormData(form);
+    
+    const courseCode = formData.get('course_code');
+    const pdfTitle = formData.get('pdf_title');
+    const pdfFile = formData.get('pdf_file');
+    
+    if (!courseCode || !pdfTitle || !pdfFile || pdfFile.size === 0) {
+        showError('Please fill all required fields');
+        return;
+    }
+    
+    if (!pdfFile.name.toLowerCase().endsWith('.pdf')) {
+        showError('Only PDF files are allowed');
+        return;
+    }
+    
+    if (pdfFile.size > 10 * 1024 * 1024) {
+        showError('File must be less than 10MB');
+        return;
+    }
+    
+    try {
+        const uploadBtn = document.querySelector('#uploadPdfModal .btn-primary');
+        const originalText = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+        uploadBtn.disabled = true;
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/upload-course-pdf', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+        
+        if (result.success) {
+            showSuccess('PDF uploaded successfully!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('uploadPdfModal'));
+            modal.hide();
+            form.reset();
+            document.getElementById('filePreview').style.display = 'none';
+            await loadPdfData();
+        } else {
+            showError('Upload failed: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error uploading PDF:', error);
+        showError('Failed to upload PDF');
+    }
+}
+
+function viewPdf(pdfId) {
+    window.open(`https://aacem-backend.onrender.com/api/view-course-pdf/${pdfId}`, '_blank');
+}
+
+function downloadPdf(pdfId) {
+    window.open(`https://aacem-backend.onrender.com/api/view-course-pdf/${pdfId}?download=true`, '_blank');
+}
+
+async function editPdf(pdfId) {
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/course-pdf/${pdfId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const pdf = result.pdf;
+            document.getElementById('editPdfId').value = pdf.pdf_id;
+            document.getElementById('editPdfTitle').value = pdf.pdf_title;
+            document.getElementById('editPdfDescription').value = pdf.description || '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('editPdfModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Error loading PDF:', error);
+    }
+}
+
+async function saveEditedPdf() {
+    const pdfId = document.getElementById('editPdfId').value;
+    const pdfTitle = document.getElementById('editPdfTitle').value.trim();
+    const description = document.getElementById('editPdfDescription').value.trim();
+    
+    if (!pdfTitle) {
+        showError('PDF title is required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/update-course-pdf/${pdfId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pdf_title: pdfTitle, description: description })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('PDF updated successfully!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editPdfModal'));
+            modal.hide();
+            await loadPdfData();
+        }
+    } catch (error) {
+        console.error('Error updating PDF:', error);
+    }
+}
+
+async function deletePdf(pdfId) {
+    if (!confirm('Delete this PDF?')) return;
+    
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/delete-course-pdf/${pdfId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('PDF deleted successfully!');
+            await loadPdfData();
+        }
+    } catch (error) {
+        console.error('Error deleting PDF:', error);
+    }
+}
+
+function filterPdfsByCourse(courseCode = null) {
+    const filterSelect = document.getElementById('pdfCourseFilter');
+    currentPdfFilter = courseCode || filterSelect.value;
+    loadPdfData();
+}
+
+function refreshPdfList() {
+    currentPdfFilter = '';
+    document.getElementById('pdfCourseFilter').value = '';
+    loadPdfData();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const pdfsTab = document.getElementById('pdfs-tab');
+    if (pdfsTab) {
+        pdfsTab.addEventListener('shown.bs.tab', function() {
+            populatePdfCourseDropdowns();
+            loadPdfData();
+        });
+    }
+    
+    const uploadModal = document.getElementById('uploadPdfModal');
+    if (uploadModal) {
+        uploadModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('uploadPdfForm').reset();
+            document.getElementById('filePreview').style.display = 'none';
+        });
+    }
+    
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    if (pdfFileInput) {
+        pdfFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('selectedFileName').textContent = file.name;
+                document.getElementById('selectedFileSize').textContent = formatFileSize(file.size);
+                document.getElementById('filePreview').style.display = 'block';
+            }
+        });
+    }
+});
+
+console.log('PDF Management loaded!');
+
+
 // Initialize contact messages when tab is shown
 document.addEventListener('DOMContentLoaded', function() {
     const contactTab = document.getElementById('contact-tab');
