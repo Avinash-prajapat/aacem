@@ -6943,6 +6943,635 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ==================== SYLLABUS MANAGEMENT ====================
+
+let allSyllabus = [];
+let filteredSyllabus = [];
+
+// Initialize when syllabus tab is clicked
+document.getElementById('syllabus-tab')?.addEventListener('shown.bs.tab', function() {
+    initSyllabusTab();
+});
+
+function initSyllabusTab() {
+    populateCourseDropdowns();
+    loadSyllabusData();
+}
+
+// Populate course dropdowns
+function populateCourseDropdowns() {
+    const filterSelect = document.getElementById('syllabusCourseFilter');
+    const modalSelect = document.getElementById('syllabusCourse');
+    
+    if (!filterSelect || !modalSelect) return;
+    
+    filterSelect.innerHTML = '<option value="">All Courses</option>';
+    modalSelect.innerHTML = '<option value="">Select course...</option>';
+    
+    coursesData.filter(c => c.is_active).forEach(course => {
+        const option1 = document.createElement('option');
+        option1.value = course.course_code;
+        option1.textContent = `${course.course_name} (${course.course_code})`;
+        filterSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = course.course_code;
+        option2.textContent = `${course.course_name} (${course.course_code})`;
+        modalSelect.appendChild(option2);
+    });
+}
+
+// Load syllabus data
+async function loadSyllabusData() {
+    try {
+        showLoading('Loading syllabus...');
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/syllabus/all');
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+            allSyllabus = result.syllabus || [];
+            updateStatistics(allSyllabus);
+            filterSyllabus();
+        } else {
+            showError('Failed to load syllabus');
+        }
+    } catch (error) {
+        hideLoading();
+        showError('Network error');
+    }
+}
+
+// Update statistics
+function updateStatistics(syllabusList) {
+    const totalSyllabus = syllabusList.length;
+    const uniqueCourses = new Set(syllabusList.map(s => s.course_code)).size;
+    
+    let totalSubjects = 0;
+    let totalHours = 0;
+    
+    syllabusList.forEach(s => {
+        totalSubjects += s.subjects_count || 0;
+        totalHours += s.total_duration || 0;
+    });
+    
+    document.getElementById('totalSyllabus').textContent = totalSyllabus;
+    document.getElementById('coursesWithSyllabus').textContent = uniqueCourses;
+    document.getElementById('totalSubjects').textContent = totalSubjects;
+    document.getElementById('totalHours').textContent = totalHours;
+}
+
+// Filter syllabus
+function filterSyllabus() {
+    const courseFilter = document.getElementById('syllabusCourseFilter').value;
+    const searchText = document.getElementById('searchSyllabus').value.toLowerCase();
+    const showActiveOnly = document.getElementById('showActiveOnly').checked;
+    
+    filteredSyllabus = allSyllabus.filter(syllabus => {
+        if (courseFilter && syllabus.course_code !== courseFilter) return false;
+        if (showActiveOnly && !syllabus.is_active) return false;
+        if (searchText) {
+            const searchIn = (
+                syllabus.syllabus_title + ' ' + 
+                syllabus.description + ' ' + 
+                syllabus.course_name
+            ).toLowerCase();
+            if (!searchIn.includes(searchText)) return false;
+        }
+        return true;
+    });
+    
+    renderSyllabusTable();
+}
+
+// Search syllabus
+function searchSyllabus() {
+    filterSyllabus();
+}
+
+// Render syllabus table
+function renderSyllabusTable() {
+    const tbody = document.getElementById('syllabusTableBody');
+    const countBadge = document.getElementById('syllabusCount');
+    
+    if (!tbody) return;
+    
+    countBadge.textContent = filteredSyllabus.length;
+    
+    if (filteredSyllabus.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No syllabus found.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    filteredSyllabus.forEach((syllabus, index) => {
+        const statusClass = syllabus.is_active ? 'success' : 'danger';
+        const statusText = syllabus.is_active ? 'Active' : 'Inactive';
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <strong>${syllabus.course_code}</strong><br>
+                    <small>${syllabus.course_name}</small>
+                </td>
+                <td>
+                    <strong>${syllabus.syllabus_title}</strong><br>
+                    <small>ID: ${syllabus.syllabus_id}</small>
+                </td>
+                <td>${syllabus.description ? syllabus.description.substring(0, 50) + '...' : '-'}</td>
+                <td><span class="badge bg-info">${syllabus.total_duration} hrs</span></td>
+                <td><span class="badge bg-secondary">${syllabus.subjects_count || 0}</span></td>
+                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info" onclick="viewSyllabus('${syllabus.syllabus_id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning" onclick="editSyllabus('${syllabus.syllabus_id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-${syllabus.is_active ? 'secondary' : 'success'}" 
+                                onclick="toggleStatus('${syllabus.syllabus_id}')">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteSyllabus('${syllabus.syllabus_id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Show add syllabus modal
+function showAddSyllabusModal() {
+    console.log("showAddSyllabusModal called");
+    
+    // Check if modal exists
+    const modalElement = document.getElementById('syllabusModal');
+    if (!modalElement) {
+        console.error("❌ syllabusModal element not found in HTML!");
+        showError('Syllabus modal not found. Please refresh page.');
+        return;
+    }
+    
+    // Reset form
+    resetSyllabusForm();
+    
+    // Set modal title and header
+    const modalHeader = document.getElementById('syllabusModalHeader');
+    const modalTitle = document.querySelector('#syllabusModal .modal-title');
+    
+    if (modalHeader) {
+        modalHeader.className = 'modal-header bg-success text-white';
+    }
+    
+    if (modalTitle) {
+        modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Add New Syllabus';
+    }
+    
+    document.getElementById('editSyllabusId').value = '';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+}
+
+// Reset syllabus form
+function resetSyllabusForm() {
+    const form = document.getElementById('syllabusForm');
+    if (form) {
+        form.reset();
+    }
+    
+    document.getElementById('syllabusStatus').value = 'active';
+    
+    // Reset subjects table
+    const tbody = document.getElementById('subjectsTableBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr class="subject-row">
+                <td>1</td>
+                <td>
+                    <input type="text" class="form-control form-control-sm subject-name" 
+                           placeholder="Enter subject name" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm subject-duration" 
+                           min="1" max="100" value="4">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm subject-topics" 
+                           placeholder="e.g., Basics, Theory, Practical">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)" disabled>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Reset form
+function resetSyllabusForm() {
+    document.getElementById('syllabusForm').reset();
+    document.getElementById('syllabusStatus').value = 'active';
+    
+    // Reset subjects table
+    const tbody = document.getElementById('subjectsTableBody');
+    tbody.innerHTML = `
+        <tr class="subject-row">
+            <td>1</td>
+            <td>
+                <input type="text" class="form-control form-control-sm subject-name" 
+                       placeholder="Enter subject name" required>
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm subject-duration" 
+                       min="1" max="100" value="4">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm subject-topics" 
+                       placeholder="e.g., Basics, Theory, Practical">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)" disabled>
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// Add subject row
+function addSubjectRow() {
+    const tbody = document.getElementById('subjectsTableBody');
+    const rowCount = tbody.children.length + 1;
+    
+    const newRow = document.createElement('tr');
+    newRow.className = 'subject-row';
+    newRow.innerHTML = `
+        <td>${rowCount}</td>
+        <td>
+            <input type="text" class="form-control form-control-sm subject-name" 
+                   placeholder="Enter subject name" required>
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm subject-duration" 
+                   min="1" max="100" value="4">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm subject-topics" 
+                   placeholder="e.g., Basics, Theory, Practical">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+    
+    // Enable delete on first row if multiple rows
+    if (tbody.children.length > 1) {
+        const firstBtn = tbody.children[0].querySelector('button');
+        if (firstBtn) firstBtn.disabled = false;
+    }
+}
+
+// Remove subject row
+function removeSubjectRow(button) {
+    const row = button.closest('tr');
+    const tbody = document.getElementById('subjectsTableBody');
+    
+    if (tbody.children.length > 1) {
+        row.remove();
+        
+        // Update row numbers
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1;
+        });
+        
+        // Disable delete on first row if only one left
+        if (tbody.children.length === 1) {
+            const firstBtn = tbody.children[0].querySelector('button');
+            if (firstBtn) firstBtn.disabled = true;
+        }
+    }
+}
+
+// View syllabus
+async function viewSyllabus(syllabusId) {
+    try {
+        showLoading('Loading...');
+        const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/${syllabusId}`);
+        const result = await response.json();
+        hideLoading();
+        
+        if (result.success) {
+            const syllabus = result.syllabus;
+            let content = `
+                <div class="alert alert-info">
+                    <h4>${syllabus.syllabus_title}</h4>
+                    <p><strong>Course:</strong> ${syllabus.course_name} (${syllabus.course_code})</p>
+                    <p><strong>Duration:</strong> ${syllabus.total_duration} hours</p>
+                    <p><strong>Status:</strong> <span class="badge bg-${syllabus.is_active ? 'success' : 'danger'}">${syllabus.is_active ? 'Active' : 'Inactive'}</span></p>
+                    ${syllabus.description ? `<p>${syllabus.description}</p>` : ''}
+                </div>
+                <h5>Subjects:</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Subject</th>
+                            <th>Duration</th>
+                            <th>Topics</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            if (syllabus.subjects && syllabus.subjects.length > 0) {
+                syllabus.subjects.forEach((subject, index) => {
+                    content += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${subject.subject_name}</td>
+                            <td>${subject.duration_hours} hrs</td>
+                            <td>${subject.topics || '-'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                content += `<tr><td colspan="4" class="text-center">No subjects</td></tr>`;
+            }
+            
+            content += `</tbody></table>`;
+            
+            // Create a simple modal to show
+            const modalHtml = `
+                <div class="modal fade" id="viewModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title">Syllabus Details</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                ${content}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page
+            let modalDiv = document.getElementById('viewModalTemp');
+            if (modalDiv) modalDiv.remove();
+            
+            modalDiv = document.createElement('div');
+            modalDiv.id = 'viewModalTemp';
+            modalDiv.innerHTML = modalHtml;
+            document.body.appendChild(modalDiv);
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+            modal.show();
+        }
+    } catch (error) {
+        hideLoading();
+        showError('Error loading details');
+    }
+}
+
+// Edit syllabus
+async function editSyllabus(syllabusId) {
+    try {
+        showLoading('Loading...');
+        const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/${syllabusId}`);
+        const result = await response.json();
+        hideLoading();
+        
+        if (result.success) {
+            const syllabus = result.syllabus;
+            
+            // Fill form
+            document.getElementById('editSyllabusId').value = syllabus.syllabus_id;
+            document.getElementById('syllabusCourse').value = syllabus.course_code;
+            document.getElementById('syllabusTitle').value = syllabus.syllabus_title;
+            document.getElementById('syllabusDescription').value = syllabus.description || '';
+            document.getElementById('syllabusDuration').value = syllabus.total_duration;
+            document.getElementById('syllabusStatus').value = syllabus.is_active ? 'active' : 'inactive';
+            
+            // Update modal
+            document.getElementById('syllabusModalHeader').className = 'modal-header bg-warning text-dark';
+            document.querySelector('#syllabusModal .modal-title').innerHTML = `
+                <i class="fas fa-edit me-2"></i>Edit Syllabus
+            `;
+            
+            // Fill subjects
+            const tbody = document.getElementById('subjectsTableBody');
+            tbody.innerHTML = '';
+            
+            if (syllabus.subjects && syllabus.subjects.length > 0) {
+                syllabus.subjects.forEach((subject, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'subject-row';
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm subject-name" 
+                                   value="${subject.subject_name}" required>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm subject-duration" 
+                                   value="${subject.duration_hours}" min="1" max="100">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm subject-topics" 
+                                   value="${subject.topics || ''}">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)"
+                                    ${syllabus.subjects.length === 1 ? 'disabled' : ''}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                addSubjectRow();
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('syllabusModal'));
+            modal.show();
+        }
+    } catch (error) {
+        hideLoading();
+        showError('Error loading for edit');
+    }
+}
+
+// Save syllabus
+async function saveSyllabus() {
+    const syllabusId = document.getElementById('editSyllabusId').value;
+    const courseCode = document.getElementById('syllabusCourse').value;
+    const syllabusTitle = document.getElementById('syllabusTitle').value.trim();
+    const description = document.getElementById('syllabusDescription').value.trim();
+    const duration = parseInt(document.getElementById('syllabusDuration').value) || 40;
+    const status = document.getElementById('syllabusStatus').value;
+    
+    if (!courseCode || !syllabusTitle) {
+        showError('Please fill required fields');
+        return;
+    }
+    
+    // Collect subjects
+    const subjects = [];
+    document.querySelectorAll('.subject-row').forEach(row => {
+        const name = row.querySelector('.subject-name').value.trim();
+        if (name) {
+            subjects.push({
+                name: name,
+                duration: parseInt(row.querySelector('.subject-duration').value) || 4,
+                topics: row.querySelector('.subject-topics').value.trim()
+            });
+        }
+    });
+    
+    if (subjects.length === 0) {
+        if (!confirm('No subjects added. Save without subjects?')) return;
+    }
+    
+    const data = {
+        syllabus_id: syllabusId || null,
+        course_code: courseCode,
+        syllabus_title: syllabusTitle,
+        description: description,
+        total_duration: duration,
+        status: status,
+        created_by: 'admin',
+        subjects: subjects
+    };
+    
+    try {
+        const btn = document.querySelector('#syllabusModal .btn-success');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        btn.disabled = true;
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/syllabus/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+            showSuccess('Syllabus saved!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('syllabusModal'));
+            modal.hide();
+            await loadSyllabusData();
+        } else {
+            showError('Save failed: ' + result.message);
+        }
+    } catch (error) {
+        showError('Network error');
+    }
+}
+
+// Toggle status
+async function toggleStatus(syllabusId) {
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/toggle-status/${syllabusId}`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Status updated');
+            await loadSyllabusData();
+        }
+    } catch (error) {
+        showError('Error updating status');
+    }
+}
+
+// Delete syllabus
+async function deleteSyllabus(syllabusId) {
+    if (!confirm('Delete this syllabus?')) return;
+    
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/delete/${syllabusId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Syllabus deleted');
+            await loadSyllabusData();
+        }
+    } catch (error) {
+        showError('Error deleting');
+    }
+}
+
+// Export
+function exportSyllabus() {
+    let csv = 'Course,Syllabus Title,Description,Duration,Subjects,Status\n';
+    
+    filteredSyllabus.forEach(s => {
+        csv += `"${s.course_name}","${s.syllabus_title}","${s.description || ''}",${s.total_duration},${s.subjects_count || 0},"${s.is_active ? 'Active' : 'Inactive'}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'syllabus.csv';
+    a.click();
+}
+
+// Refresh
+function refreshSyllabus() {
+    loadSyllabusData();
+}
+
+// Helper functions
+function showLoading(msg) {
+    // You can implement a loading spinner
+    console.log('Loading:', msg);
+}
+
+function hideLoading() {
+    // Hide loading
+}
+
+console.log('Syllabus Management loaded!');
+
 console.log('PDF Management loaded!');
 
 
