@@ -81,7 +81,7 @@
     window.logout = function() {
         if (confirm("Are you sure you want to log out?")) {
             sessionStorage.clear();
-            window.location.href = "admin-login.html";
+            window.location.href = "index.html";
         }
     };
     
@@ -7599,6 +7599,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
