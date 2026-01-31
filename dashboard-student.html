@@ -10,245 +10,400 @@
 
   <style>
     :root {
-      --primary: #0d6efd;
-      --secondary: #8a8d93;
-      --success: #198754;
-      --danger: #dc3545;
-      --warning: #ffc107;
+      --primary: #2d6b6b;
+      --primary-light: #3d8b8b;
+      --primary-dark: #1d4b4b;
+      --accent: #00b4d8;
+      --accent-light: #0dcaf0;
+      --sidebar-width: 280px;
+      --header-height: 60px;
     }
     
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    * {
       margin: 0;
       padding: 0;
-      background-color: #f8f9fa;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      overflow-x: hidden;
     }
 
     /* Header */
-    .navbar {
-      background-color: rgb(45, 107, 107) !important;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1030;
-    }
-
-    .navbar .navbar-brand i {
-      color: #00b4d8;
-    }
-
-    /* Sidebar */
-    #studentSidebar {
+    .top-header {
       position: fixed;
-      top: 56px;
+      top: 0;
       left: 0;
-      width: 250px;
-      height: calc(100vh - 56px);
-      background-color: #343a40;
-      padding-top: 20px;
-      overflow-y: auto;
-    }
-
-    #studentSidebar h4 {
-      padding-left: 15px;
-      margin-bottom: 10px;
-      color: #00b4d8;
-    }
-
-    #studentSidebar .nav-link {
-      color: #adb5bd;
-      padding: 12px 20px;
-      border-radius: 8px;
-      margin-bottom: 5px;
+      right: 0;
+      height: var(--header-height);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
       display: flex;
       align-items: center;
-      transition: 0.3s;
-    }
-
-    #studentSidebar .nav-link i {
-      margin-right: 10px;
-      color: #0dcaf0;
-    }
-
-    #studentSidebar .nav-link:hover,
-    #studentSidebar .nav-link.active {
-      background: linear-gradient(90deg, #00b4d8, #0077b6);
-      color: #fff;
-    }
-
-    /* Main Content */
-    #studentMain {
-      margin-left: 250px;
-      padding: 30px 20px 20px 20px;
-      height: calc(100vh - 56px);
-      overflow-y: auto;
-    }
-
-    /* Cards */
-    .studentCard {
-      background-color: #fff;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .studentCard:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-
-    .studentCard h4 i {
-      color: #0077b6;
-    }
-
-    /* Tables */
-    table {
-      border-radius: 10px;
-      overflow: hidden;
-      background-color: #fff;
-    }
-
-    .table th, .table td {
-      vertical-align: middle !important;
-    }
-
-    /* Buttons */
-    .btn-success {
-      background-color: #0077b6;
-      border: none;
-      transition: 0.3s;
-    }
-
-    .btn-success:hover {
-      background-color: #00b4d8;
-    }
-
-    /* Loading States */
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #6c757d;
-    }
-
-    .spinner-border {
-      width: 2rem;
-      height: 2rem;
-    }
-
-    /* Progress Bars */
-    .progress {
-      height: 25px;
-      border-radius: 12px;
-    }
-
-    .progress-bar {
-      border-radius: 12px;
-      font-weight: 600;
-    }
-
-    /* Badges */
-    .badge {
-      font-size: 0.8em;
-      padding: 6px 12px;
-    }
-
-    /* Scrollbar */
-    #studentMain::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    #studentMain::-webkit-scrollbar-track {
-      background: #e9ecef;
-      border-radius: 10px;
-    }
-
-    #studentMain::-webkit-scrollbar-thumb {
-      background: #0077b6;
-      border-radius: 10px;
-    }
-
-    #studentMain::-webkit-scrollbar-thumb:hover {
-      background: #00b4d8;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-      #studentSidebar {
-        position: relative;
-        width: 100%;
-        height: auto;
-        top: 0;
-      }
-
-      #studentMain {
-        margin-left: 0;
-        height: auto;
-        padding-top: 20px;
-      }
-    }
-
-    /* Stats Cards */
-    .stats-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 0 20px;
       color: white;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 20px;
     }
 
-    .stats-card .number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .stats-card .label {
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-    
-    /* Attendance Details */
-    .attendance-details {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease;
-    }
-
-    .attendance-details.show {
-      max-height: 1000px;
-    }
-
-    .attendance-toggle {
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
       cursor: pointer;
-      color: #0077b6;
-      font-weight: 500;
-      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      margin-right: 15px;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .header-brand {
+      display: flex;
       align-items: center;
-      margin-top: 15px;
-      padding: 8px 15px;
-      border: 1px solid #0077b6;
-      border-radius: 5px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .header-brand i {
+      color: var(--accent-light);
+      margin-right: 10px;
+      font-size: 1.5rem;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .welcome-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
       transition: all 0.3s ease;
     }
 
-    .attendance-toggle:hover {
-      background-color: #0077b6;
-      color: white;
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
     }
 
-    .attendance-toggle.active {
-      background-color: #0077b6;
-      color: white;
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      overflow-y: auto;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 
-    .attendance-toggle i {
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header h4 {
+      color: var(--accent-light);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .sidebar-menu {
+      padding: 15px 10px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      margin: 5px 0;
+      color: #b8c5d6;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: var(--accent);
+      transform: scaleY(0);
       transition: transform 0.3s ease;
     }
 
-    .attendance-toggle.active i {
-      transform: rotate(180deg);
+    .menu-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: white;
+      padding-left: 24px;
     }
-    
+
+    .menu-item:hover::before {
+      transform: scaleY(1);
+    }
+
+    .menu-item.active {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,180,216,0.3);
+    }
+
+    .menu-item.active::before {
+      transform: scaleY(1);
+    }
+
+    .menu-item i {
+      margin-right: 12px;
+      font-size: 1.1rem;
+      width: 25px;
+      text-align: center;
+    }
+
+    .menu-item span {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      margin-top: var(--header-height);
+      padding: 30px;
+      min-height: calc(100vh - var(--header-height));
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.expanded {
+      margin-left: 0;
+    }
+
+    /* Content Sections */
+    .content-section {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Cards */
+    .dashboard-card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .card-header-custom {
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-header-custom h4 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .card-header-custom i {
+      font-size: 1.8rem;
+      margin-right: 12px;
+      color: var(--accent);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 20px rgba(102,126,234,0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-card .number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .stat-card .label {
+      font-size: 1rem;
+      opacity: 0.95;
+      font-weight: 500;
+    }
+
+    /* Loading */
+    .loading-container {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .spinner-custom {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Tables */
+    .table-custom {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .table-custom thead {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+    }
+
+    .table-custom thead th {
+      border: none;
+      padding: 15px;
+      font-weight: 600;
+    }
+
+    .table-custom tbody td {
+      padding: 12px 15px;
+      vertical-align: middle;
+    }
+
+    .table-custom tbody tr {
+      transition: background 0.2s ease;
+    }
+
+    .table-custom tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* Badges */
+    .badge-custom {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* Progress Bar */
+    .progress-custom {
+      height: 30px;
+      border-radius: 15px;
+      background: #e9ecef;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar-custom {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 15px;
+      transition: width 0.6s ease;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+    }
+
+    /* Buttons */
+    .btn-custom {
+      padding: 10px 25px;
+      border-radius: 25px;
+      font-weight: 600;
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary-custom {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: white;
+    }
+
     /* Login Modal */
     .login-modal {
       display: none;
@@ -257,7 +412,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       z-index: 9999;
       justify-content: center;
       align-items: center;
@@ -269,11 +424,155 @@
     
     .login-box {
       background: white;
-      padding: 40px;
-      border-radius: 15px;
+      padding: 50px;
+      border-radius: 20px;
       text-align: center;
-      max-width: 400px;
+      max-width: 450px;
       width: 90%;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-box h3 {
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .login-box i {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-100%);
+      }
+
+      .sidebar:not(.collapsed) {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .welcome-text {
+        display: none;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Scrollbar */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* Alert Custom */
+    .alert-custom {
+      border-radius: 12px;
+      border: none;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .alert-custom i {
+      font-size: 1.5rem;
+    }
+
+    /* Toggle Details Button */
+    .toggle-details {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: 2px solid var(--accent);
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .toggle-details:hover {
+      background: var(--accent);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,180,216,0.3);
+    }
+
+    .toggle-details i {
+      margin-left: 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-details.active i {
+      transform: rotate(180deg);
+    }
+
+    .details-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+    }
+
+    .details-content.show {
+      max-height: 2000px;
+    }
+
+    /* PDF Card */
+    .pdf-card {
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+
+    .pdf-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,180,216,0.2);
+    }
+
+    .pdf-card .card-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 2px solid #dee2e6;
     }
   </style>
 </head>
@@ -282,163 +581,189 @@
   <!-- Login Modal -->
   <div id="loginModal" class="login-modal">
     <div class="login-box">
-      <h3 class="mb-4"><i class="fas fa-lock text-danger"></i> Authentication Required</h3>
+      <i class="fas fa-lock text-danger"></i>
+      <h3>Authentication Required</h3>
       <p class="mb-4">Please login to access the student dashboard</p>
-      <button class="btn btn-primary btn-lg" onclick="redirectToLogin()">
+      <button class="btn btn-primary-custom btn-lg" onclick="redirectToLogin()">
         <i class="fas fa-sign-in-alt me-2"></i>Go to Login Page
       </button>
     </div>
   </div>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="index.html">
-        <i class="fas fa-graduation-cap me-2"></i>AACEM Institute
+  <!-- Header -->
+  <header class="top-header">
+    <button class="toggle-btn" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="header-brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span>AACEM Institute</span>
+    </div>
+    <div class="header-user">
+      <span class="welcome-text" id="welcomeText">Welcome, Student</span>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt me-1"></i> Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h4><i class="fas fa-tachometer-alt me-2"></i>Student Dashboard</h4>
+    </div>
+    <div class="sidebar-menu">
+      <a class="menu-item active" onclick="showSection('profile')">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
       </a>
-      <div>
-        <span class="text-white me-3" id="welcomeText">Welcome, Student</span>
-        <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
-      </div>
+      <a class="menu-item" onclick="showSection('attendance')">
+        <i class="fas fa-chart-bar"></i>
+        <span>Attendance</span>
+      </a>
+      <a class="menu-item" onclick="showSection('timetable')">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Timetable</span>
+      </a>
+      <a class="menu-item" onclick="showSection('study-materials')">
+        <i class="fas fa-file-pdf"></i>
+        <span>Study Materials</span>
+      </a>
+      <a class="menu-item" onclick="showSection('syllabus')">
+        <i class="fas fa-book-open"></i>
+        <span>Course Syllabus</span>
+      </a>
+      <a class="menu-item" onclick="showSection('results')">
+        <i class="fas fa-file-alt"></i>
+        <span>Results</span>
+      </a>
+      <a class="menu-item" onclick="showSection('fees')">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>Fees</span>
+      </a>
+      <a class="menu-item" onclick="showSection('notice')">
+        <i class="fas fa-bullhorn"></i>
+        <span>Notices</span>
+      </a>
     </div>
   </nav>
 
-  <div class="container-fluid">
-    <div class="row">
-      <!-- Sidebar -->
-      <nav id="studentSidebar" class="col-md-3 col-lg-2 d-none d-md-block bg-dark sidebar">
-        <div class="position-sticky pt-3">
-          <h4 class="text-white">Student Dashboard</h4>
-          <ul class="nav flex-column mt-3">
-            <li class="nav-item"><a class="nav-link active" href="#profile"><i class="fas fa-user me-2"></i>Profile</a></li>
-            <li class="nav-item"><a class="nav-link" href="#attendance"><i class="fas fa-chart-bar me-2"></i>Attendance</a></li>
-            <li class="nav-item"><a class="nav-link" href="#timetable"><i class="fas fa-calendar-alt me-2"></i>Timetable</a></li>
-            <li class="nav-item">
-                <a class="nav-link" href="#study-materials">
-                    <i class="fas fa-file-pdf me-2"></i>Study Materials
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#syllabus">
-                    <i class="fas fa-book-open me-2"></i>Course Syllabus
-                </a>
-            </li>
-            <li class="nav-item"><a class="nav-link" href="#results"><i class="fas fa-file-alt me-2"></i>Results</a></li>
-            <li class="nav-item"><a class="nav-link" href="#fees"><i class="fas fa-money-bill-wave me-2"></i>Fees</a></li>
-            <li class="nav-item"><a class="nav-link" href="#notice"><i class="fas fa-bullhorn me-2"></i>Notices</a></li>
-          </ul>
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    
+    <!-- Profile Section -->
+    <section id="profile" class="content-section active">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-user"></i>
+          <h4>My Profile</h4>
         </div>
-      </nav>
+        <div id="profileContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading profile data...</p>
+        </div>
+      </div>
+    </section>
 
-      <!-- Main Content -->
-      <main id="studentMain" class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
-        
-        <!-- Profile -->
-        <section id="profile" class="mt-5 mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-user me-2"></i>My Profile</h4>
-            <div id="profileContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading profile data...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Attendance Section -->
+    <section id="attendance" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-chart-bar"></i>
+          <h4>Attendance</h4>
+        </div>
+        <div id="attendanceContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading attendance data...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Attendance -->
-        <section id="attendance" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-chart-bar me-2"></i>Attendance</h4>
-            <div id="attendanceContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading attendance data...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Timetable Section -->
+    <section id="timetable" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-calendar-alt"></i>
+          <h4>Timetable</h4>
+        </div>
+        <div id="timetableContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading timetable...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Timetable -->
-        <section id="timetable" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-calendar-alt me-2"></i>Timetable</h4>
-            <div id="timetableContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading timetable...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Study Materials Section -->
+    <section id="study-materials" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-file-pdf"></i>
+          <h4>Study Materials</h4>
+        </div>
+        <div id="pdfsContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading study materials...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Results -->
-        <section id="results" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-file-alt me-2"></i>Results</h4>
-            <div id="resultsContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading results...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Syllabus Section -->
+    <section id="syllabus" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-book-open"></i>
+          <h4>Course Syllabus</h4>
+        </div>
+        <div id="syllabusContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading course syllabus...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Fees -->
-        <section id="fees" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-money-bill-wave me-2"></i>Fees</h4>
-            <div id="feesContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading fee details...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Results Section -->
+    <section id="results" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-file-alt"></i>
+          <h4>Results</h4>
+        </div>
+        <div id="resultsContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading results...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Notices -->
-        <section id="notice" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-            <h4><i class="fas fa-bullhorn me-2"></i>Notice Board</h4>
-            <div id="noticesContent" class="loading">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Loading notices...</p>
-            </div>
-          </div>
-        </section>
+    <!-- Fees Section -->
+    <section id="fees" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-money-bill-wave"></i>
+          <h4>Fees</h4>
+        </div>
+        <div id="feesContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading fee details...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Syllabus Section -->
-      <section id="syllabus" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-              <h4><i class="fas fa-book-open me-2 text-primary"></i>Course Syllabus</h4>
-              <div id="syllabusContent" class="loading">
-                  <div class="spinner-border text-primary" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                  </div>
-                  <p class="mt-2">Loading course syllabus...</p>
-              </div>
-          </div>
-      </section>
+    <!-- Notices Section -->
+    <section id="notice" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom">
+          <i class="fas fa-bullhorn"></i>
+          <h4>Notice Board</h4>
+        </div>
+        <div id="noticesContent" class="loading-container">
+          <div class="spinner-custom"></div>
+          <p class="text-muted">Loading notices...</p>
+        </div>
+      </div>
+    </section>
 
-        <!-- Study Materials/PDFs -->
-        <section id="study-materials" class="mb-4">
-          <div class="studentCard p-4 shadow-sm">
-              <h4><i class="fas fa-file-pdf me-2 text-danger"></i>Study Materials</h4>
-              <div id="pdfsContent" class="loading">
-                  <div class="spinner-border text-primary" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                  </div>
-                  <p class="mt-2">Loading study materials...</p>
-              </div>
-          </div>
-        </section>
-
-      </main>
-    </div>
-  </div>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -448,19 +773,45 @@
     // Session timeout configuration (30 minutes)
     const SESSION_TIMEOUT = 30 * 60 * 1000;
     let sessionTimer;
-    let sessionTimeInterval;
+
+    // Sidebar Toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('expanded');
+    }
+
+    // Show Section
+    function showSection(sectionId) {
+      // Hide all sections
+      const sections = document.querySelectorAll('.content-section');
+      sections.forEach(section => section.classList.remove('active'));
+      
+      // Show selected section
+      const selectedSection = document.getElementById(sectionId);
+      if (selectedSection) {
+        selectedSection.classList.add('active');
+      }
+      
+      // Update menu items
+      const menuItems = document.querySelectorAll('.menu-item');
+      menuItems.forEach(item => item.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      // Auto-close sidebar on mobile
+      if (window.innerWidth <= 768) {
+        toggleSidebar();
+      }
+    }
 
     // Check authentication
     function checkAuthentication() {
-      // Check sessionStorage for student data
       const studentData = sessionStorage.getItem('studentData');
       
       if (!studentData) {
-        // Show login modal instead of alert
         document.getElementById('loginModal').classList.add('show');
-        // Hide main content
-        document.getElementById('studentMain').style.display = 'none';
-        document.getElementById('studentSidebar').style.display = 'none';
         return null;
       }
       
@@ -468,8 +819,6 @@
         return JSON.parse(studentData);
       } catch (e) {
         document.getElementById('loginModal').classList.add('show');
-        document.getElementById('studentMain').style.display = 'none';
-        document.getElementById('studentSidebar').style.display = 'none';
         return null;
       }
     }
@@ -502,26 +851,17 @@
       sessionStorage.removeItem('studentData');
       sessionStorage.removeItem('loginTime');
       
-      if (sessionTimeInterval) {
-        clearInterval(sessionTimeInterval);
-      }
-      
       document.getElementById('loginModal').classList.add('show');
-      document.getElementById('studentMain').style.display = 'none';
-      document.getElementById('studentSidebar').style.display = 'none';
     }
 
-    // Start session timer (SIMPLIFIED - no timer display)
+    // Start session timer
     function startSessionTimer() {
-      // Clear any existing timer
       if (sessionTimer) {
         clearTimeout(sessionTimer);
       }
       
-      // Set new timeout
       sessionTimer = setTimeout(logoutDueToTimeout, SESSION_TIMEOUT);
       
-      // Reset timer on user activity
       const resetTimer = () => {
         if (sessionTimer) {
           clearTimeout(sessionTimer);
@@ -529,7 +869,6 @@
         sessionTimer = setTimeout(logoutDueToTimeout, SESSION_TIMEOUT);
       };
 
-      // Add event listeners
       const events = ['mousedown', 'mousemove', 'keypress', 'click', 'scroll', 'touchstart'];
       events.forEach(event => {
         document.addEventListener(event, resetTimer, false);
@@ -538,25 +877,14 @@
 
     // Main initialization
     document.addEventListener('DOMContentLoaded', function() {
-      // Check authentication
       if (!studentData || !checkSessionTimeout()) {
         document.getElementById('loginModal').classList.add('show');
-        document.getElementById('studentMain').style.display = 'none';
-        document.getElementById('studentSidebar').style.display = 'none';
         return;
       }
       
-      // Hide login modal
       document.getElementById('loginModal').classList.remove('show');
-      
-      // Show content
-      document.getElementById('studentMain').style.display = 'block';
-      document.getElementById('studentSidebar').style.display = 'block';
-      
-      // Start session timer
       startSessionTimer();
       
-      // Load data
       console.log('Loading student dashboard data for:', STUDENT_ID);
       updateWelcomeMessage();
       loadStudentData();
@@ -572,7 +900,6 @@
     // Load all student data
     async function loadStudentData() {
       try {
-        // Load all data
         await Promise.all([
           loadProfile(),
           loadAttendance(),
@@ -589,7 +916,6 @@
         
       } catch (error) {
         console.error('Error loading student data:', error);
-        showError('Failed to load data. Please refresh the page.');
       }
     }
 
@@ -603,298 +929,71 @@
           const student = result.student;
           
           document.getElementById('profileContent').innerHTML = `
-            <div class="row">
+            <div class="row g-4">
               <div class="col-md-6">
-                <p><strong>Name:</strong> ${student.name}</p>
-                <p><strong>Student ID:</strong> ${student.student_id}</p>
-                <p><strong>Course:</strong> ${student.course}</p>
-                <p><strong>Parent Name:</strong> ${student.parent_name || 'N/A'}</p>
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                  <label class="text-muted small mb-1">Full Name</label>
+                  <h6 class="mb-0">${student.name}</h6>
+                </div>
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                  <label class="text-muted small mb-1">Student ID</label>
+                  <h6 class="mb-0">${student.student_id}</h6>
+                </div>
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                  <label class="text-muted small mb-1">Course</label>
+                  <h6 class="mb-0">${student.course}</h6>
+                </div>
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                  <label class="text-muted small mb-1">Parent Name</label>
+                  <h6 class="mb-0">${student.parent_name || 'N/A'}</h6>
+                </div>
               </div>
               <div class="col-md-6">
-                <p><strong>Join Date:</strong> ${student.join_date}</p>
-                <p><strong>Phone:</strong> ${student.phone}</p>
-                <p><strong>Email:</strong> ${student.email || 'N/A'}</p>
-                <p><strong>Fee Status:</strong> <span class="badge bg-${getFeeStatusColor(student.fee_status)}">${student.fee_status}</span></p>
+                <div class="border-start border-4 border-info ps-3 mb-3">
+                  <label class="text-muted small mb-1">Join Date</label>
+                  <h6 class="mb-0">${student.join_date}</h6>
+                </div>
+                <div class="border-start border-4 border-info ps-3 mb-3">
+                  <label class="text-muted small mb-1">Phone</label>
+                  <h6 class="mb-0">${student.phone}</h6>
+                </div>
+                <div class="border-start border-4 border-info ps-3 mb-3">
+                  <label class="text-muted small mb-1">Email</label>
+                  <h6 class="mb-0">${student.email || 'N/A'}</h6>
+                </div>
+                <div class="border-start border-4 border-info ps-3 mb-3">
+                  <label class="text-muted small mb-1">Fee Status</label>
+                  <h6 class="mb-0">
+                    <span class="badge badge-custom bg-${getFeeStatusColor(student.fee_status)}">
+                      ${student.fee_status}
+                    </span>
+                  </h6>
+                </div>
               </div>
             </div>
-            ${student.address ? `<div class="mt-3"><strong>Address:</strong><br>${student.address}</div>` : ''}
+            ${student.address ? `
+              <div class="mt-4 p-3 bg-light rounded">
+                <label class="text-muted small mb-2"><i class="fas fa-map-marker-alt me-2"></i>Address</label>
+                <p class="mb-0">${student.address}</p>
+              </div>
+            ` : ''}
           `;
         } else {
           document.getElementById('profileContent').innerHTML = `
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Profile data not available
+            <div class="alert alert-custom alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Profile data not available</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading profile:', error);
         document.getElementById('profileContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load profile data
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load profile data</span>
           </div>
         `;
-      }
-    }
-
-    // Load Course Syllabus
-    async function loadSyllabus() {
-      try {
-        // First get student profile to know their course
-        const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        const profileResult = await profileResponse.json();
-        
-        if (!profileResult.success || !profileResult.student) {
-          document.getElementById('syllabusContent').innerHTML = `
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Please complete your profile to view syllabus
-            </div>
-          `;
-          return;
-        }
-        
-        const student = profileResult.student;
-        const courseCode = student.course;
-        
-        if (!courseCode) {
-          document.getElementById('syllabusContent').innerHTML = `
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Course information not found in your profile
-            </div>
-          `;
-          return;
-        }
-        
-        // Get syllabus for student's course
-        const response = await fetch(`${API_BASE_URL}/syllabus/course/${courseCode}`);
-        const result = await response.json();
-        
-        if (result.success && result.syllabus && result.syllabus.length > 0) {
-          // Update section title with course name
-          const sectionTitle = document.querySelector('#syllabus h4');
-          if (sectionTitle) {
-            sectionTitle.innerHTML = `<i class="fas fa-book-open me-2 text-primary"></i>${courseCode} - Course Syllabus`;
-          }
-          
-          let syllabusHTML = '';
-          
-          result.syllabus.forEach((syllabus, index) => {
-            // Only show active syllabus
-            if (syllabus.is_active) {
-              syllabusHTML += `
-                <div class="card mb-4 border-primary">
-                  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">${syllabus.syllabus_title}</h5>
-                    <span class="badge bg-light text-primary">${syllabus.total_duration} hours</span>
-                  </div>
-                  <div class="card-body">
-                    ${syllabus.description ? `
-                      <div class="mb-4">
-                        <h6><i class="fas fa-info-circle me-2"></i>Description</h6>
-                        <p class="text-muted">${syllabus.description}</p>
-                      </div>
-                    ` : ''}
-                    
-                    <h6 class="mb-3"><i class="fas fa-list me-2"></i>Course Curriculum</h6>
-                    
-                    <div class="table-responsive">
-                      <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                          <tr>
-                            <th width="5%">#</th>
-                            <th width="35%">Subject</th>
-                            <th width="15%">Duration</th>
-                            <th width="45%">Topics Covered</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-              `;
-              
-              // Add subjects
-              if (syllabus.subjects && syllabus.subjects.length > 0) {
-                syllabus.subjects.forEach((subject, idx) => {
-                  const topics = subject.topics ? 
-                    subject.topics.split(',').map(topic => 
-                      `<span class="badge bg-info me-1 mb-1">${topic.trim()}</span>`
-                    ).join(' ') : 
-                    '<span class="text-muted">No topics specified</span>';
-                  
-                  syllabusHTML += `
-                    <tr>
-                      <td>${idx + 1}</td>
-                      <td><strong>${subject.subject_name}</strong></td>
-                      <td>${subject.duration_hours} hours</td>
-                      <td>${topics}</td>
-                    </tr>
-                  `;
-                });
-              } else {
-                syllabusHTML += `
-                  <tr>
-                    <td colspan="4" class="text-center text-muted py-3">
-                      <i class="fas fa-info-circle me-2"></i>
-                      Subjects will be added soon
-                    </td>
-                  </tr>
-                `;
-              }
-              
-              syllabusHTML += `
-                        </tbody>
-                        <tfoot>
-                          <tr class="table-primary">
-                            <td colspan="2" class="text-end"><strong>Total Duration:</strong></td>
-                            <td><strong>${syllabus.total_duration} hours</strong></td>
-                            <td><strong>${syllabus.subjects?.length || 0} subjects</strong></td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                    
-                    <div class="mt-4 d-flex justify-content-between align-items-center">
-                      <div class="text-muted small">
-                        <i class="fas fa-calendar me-1"></i>
-                        Updated: ${new Date(syllabus.updated_at).toLocaleDateString('en-IN')}
-                      </div>
-                      <button class="btn btn-sm btn-outline-primary" onclick="downloadSyllabus('${syllabus.syllabus_id}')">
-                        <i class="fas fa-download me-1"></i> Download Syllabus
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }
-          });
-          
-          if (syllabusHTML === '') {
-            syllabusHTML = `
-              <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No active syllabus found for your course (${courseCode}). Please check back later.
-              </div>
-            `;
-          }
-          
-          document.getElementById('syllabusContent').innerHTML = syllabusHTML;
-          
-        } else {
-          document.getElementById('syllabusContent').innerHTML = `
-            <div class="text-center py-5">
-              <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
-              <h5 class="text-muted mb-2">Syllabus Not Available Yet</h5>
-              <p class="text-muted mb-0">
-                The syllabus for your course (${courseCode}) is being prepared.<br>
-                It will be available here once finalized by the faculty.
-              </p>
-            </div>
-          `;
-        }
-        
-      } catch (error) {
-        console.error('Error loading syllabus:', error);
-        document.getElementById('syllabusContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load course syllabus. Please try again later.
-          </div>
-        `;
-      }
-    }
-
-    // Download syllabus as PDF (simple version)
-    async function downloadSyllabus(syllabusId) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/syllabus/${syllabusId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-          const syllabus = result.syllabus;
-          
-          // Create printable content
-          let content = `
-            <html>
-            <head>
-              <title>${syllabus.syllabus_title}</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .header { text-align: center; margin-bottom: 30px; }
-                .course-info { margin-bottom: 20px; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h2>${syllabus.syllabus_title}</h2>
-                <h4>${syllabus.course_name} (${syllabus.course_code})</h4>
-              </div>
-              
-              <div class="course-info">
-                <p><strong>Total Duration:</strong> ${syllabus.total_duration} hours</p>
-                ${syllabus.description ? `<p><strong>Description:</strong> ${syllabus.description}</p>` : ''}
-              </div>
-              
-              <h3>Course Subjects</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Subject Name</th>
-                    <th>Duration</th>
-                    <th>Topics Covered</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
-          
-          if (syllabus.subjects && syllabus.subjects.length > 0) {
-            syllabus.subjects.forEach((subject, index) => {
-              content += `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${subject.subject_name}</td>
-                  <td>${subject.duration_hours} hours</td>
-                  <td>${subject.topics || 'N/A'}</td>
-                </tr>
-              `;
-            });
-          }
-          
-          content += `
-                </tbody>
-              </table>
-              
-              <div class="footer">
-                <p>Generated from AACEM Student Portal on ${new Date().toLocaleDateString()}</p>
-                <p>${syllabus.course_code} - ${syllabus.syllabus_title}</p>
-              </div>
-            </body>
-            </html>
-          `;
-          
-          // Open in new window for printing
-          const printWindow = window.open('', '_blank');
-          printWindow.document.write(content);
-          printWindow.document.close();
-          printWindow.focus();
-          
-          // Ask user to print
-          setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 500);
-          
-        } else {
-          alert('Failed to download syllabus. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error downloading syllabus:', error);
-        alert('Failed to download syllabus. Please try again later.');
       }
     }
 
@@ -908,78 +1007,94 @@
           const attendance = result.attendance;
           
           document.getElementById('attendanceContent').innerHTML = `
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <div class="stats-card">
-                  <div class="number">${attendance.percentage}%</div>
-                  <div class="label">Overall Attendance</div>
-                </div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="number">${attendance.percentage}%</div>
+                <div class="label">Overall Attendance</div>
               </div>
-              <div class="col-md-6">
-                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                  <div class="number">${attendance.present_days}</div>
-                  <div class="label">Present Days</div>
-                </div>
+              <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="number">${attendance.present_days}</div>
+                <div class="label">Present Days</div>
+              </div>
+              <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="number">${attendance.total_days}</div>
+                <div class="label">Total Days</div>
               </div>
             </div>
-            <div class="mb-3">
-              <p><strong>Attendance Progress:</strong></p>
-              <div class="progress">
-                <div class="progress-bar ${attendance.percentage >= 75 ? 'bg-success' : attendance.percentage >= 60 ? 'bg-warning' : 'bg-danger'}" 
+            
+            <div class="mb-4">
+              <label class="fw-bold mb-2">Attendance Progress</label>
+              <div class="progress-custom">
+                <div class="progress-bar-custom ${attendance.percentage >= 75 ? '' : 'bg-warning'}" 
                   style="width: ${attendance.percentage}%">
                   ${attendance.percentage}%
                 </div>
               </div>
             </div>
-            <div class="row text-center">
+            
+            <div class="row text-center g-3 mb-4">
               <div class="col-4">
-                <div class="border rounded p-2 bg-light">
-                  <strong>${attendance.present_days}</strong><br>
-                  <small>Present</small>
+                <div class="p-3 bg-light rounded">
+                  <h4 class="text-success mb-1">${attendance.present_days}</h4>
+                  <small class="text-muted">Present</small>
                 </div>
               </div>
               <div class="col-4">
-                <div class="border rounded p-2 bg-light">
-                  <strong>${attendance.absent_days}</strong><br>
-                  <small>Absent</small>
+                <div class="p-3 bg-light rounded">
+                  <h4 class="text-danger mb-1">${attendance.absent_days}</h4>
+                  <small class="text-muted">Absent</small>
                 </div>
               </div>
               <div class="col-4">
-                <div class="border rounded p-2 bg-light">
-                  <strong>${attendance.total_days}</strong><br>
-                  <small>Total</small>
+                <div class="p-3 bg-light rounded">
+                  <h4 class="text-primary mb-1">${attendance.total_days}</h4>
+                  <small class="text-muted">Total</small>
                 </div>
               </div>
             </div>
-            <div class="attendance-toggle mt-3" onclick="toggleAttendanceDetails()">
-              <i class="fas fa-chevron-down me-2"></i>
+            
+            <div class="toggle-details" onclick="toggleAttendanceDetails()">
               View Detailed Attendance
+              <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="attendance-details mt-3" id="attendanceDetails">
-              <div class="loading">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Click above to load detailed attendance...</p>
+            
+            <div class="details-content mt-3" id="attendanceDetails">
+              <div class="loading-container">
+                <p class="text-muted">Click above to load detailed attendance...</p>
               </div>
             </div>
           `;
         } else {
           document.getElementById('attendanceContent').innerHTML = `
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Attendance data not available
+            <div class="alert alert-custom alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Attendance data not available</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading attendance:', error);
         document.getElementById('attendanceContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load attendance data
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load attendance data</span>
           </div>
         `;
+      }
+    }
+
+    // Toggle attendance details
+    async function toggleAttendanceDetails() {
+      const toggle = event.currentTarget;
+      const details = document.getElementById('attendanceDetails');
+      
+      toggle.classList.toggle('active');
+      
+      if (toggle.classList.contains('active')) {
+        details.classList.add('show');
+        await loadDetailedAttendance();
+      } else {
+        details.classList.remove('show');
       }
     }
 
@@ -993,9 +1108,9 @@
           const attendanceDetails = result.attendance_details;
           
           let tableHTML = `
-            <div class="table-responsive">
-              <table class="table table-bordered table-hover">
-                <thead class="table-dark">
+            <div class="table-responsive mt-3">
+              <table class="table table-custom">
+                <thead>
                   <tr>
                     <th>Date</th>
                     <th>Day</th>
@@ -1023,7 +1138,7 @@
                 <td>${dayName}</td>
                 <td>${item.class || 'N/A'}</td>
                 <td>
-                  <span class="badge bg-${item.status === 'Present' ? 'success' : 'danger'}">
+                  <span class="badge badge-custom bg-${item.status === 'Present' ? 'success' : 'danger'}">
                     ${item.status}
                   </span>
                 </td>
@@ -1037,42 +1152,26 @@
           document.getElementById('attendanceDetails').innerHTML = tableHTML;
         } else {
           document.getElementById('attendanceDetails').innerHTML = `
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>
-              No attendance records found.
+            <div class="alert alert-custom alert-info mt-3">
+              <i class="fas fa-info-circle"></i>
+              <span>No attendance records found</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading detailed attendance:', error);
         document.getElementById('attendanceDetails').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load attendance details
+          <div class="alert alert-custom alert-danger mt-3">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load attendance details</span>
           </div>
         `;
-      }
-    }
-
-    // Toggle attendance details
-    async function toggleAttendanceDetails() {
-      const toggle = document.querySelector('.attendance-toggle');
-      const details = document.getElementById('attendanceDetails');
-      
-      toggle.classList.toggle('active');
-      
-      if (toggle.classList.contains('active')) {
-        details.classList.add('show');
-        await loadDetailedAttendance();
-      } else {
-        details.classList.remove('show');
       }
     }
 
     // Load Study Materials
     async function loadStudyMaterials() {
       try {
-        // Get student profile
         const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
         const profileResult = await profileResponse.json();
         
@@ -1082,19 +1181,17 @@
         
         const student = profileResult.student;
         
-        // Get PDFs for student's course
         const response = await fetch(`${API_BASE_URL}/course-pdfs?course=${encodeURIComponent(student.course)}`);
         const result = await response.json();
         
         if (result.success && result.pdfs && result.pdfs.length > 0) {
-          // Update section header
-          const sectionHeader = document.querySelector('#study-materials h4');
-          if (sectionHeader) {
-            sectionHeader.innerHTML = `<i class="fas fa-file-pdf me-2 text-danger"></i>Study Materials (${student.course})`;
-          }
-          
-          // Create PDF grid
-          let pdfsHTML = `<div class="row g-3">`;
+          let pdfsHTML = `
+            <div class="mb-3">
+              
+              <span class="text-muted ms-2">${result.pdfs.length} materials available</span>
+            </div>
+            <div class="row g-4">
+          `;
           
           result.pdfs.forEach((pdf, index) => {
             const uploadDate = new Date(pdf.created_at).toLocaleDateString('en-IN');
@@ -1102,8 +1199,8 @@
             
             pdfsHTML += `
             <div class="col-md-6 col-lg-4">
-              <div class="card h-100 border shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <div class="pdf-card card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
                   <small class="text-muted">
                     <i class="fas fa-book me-1"></i>${pdf.course_code}
                   </small>
@@ -1112,12 +1209,10 @@
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex align-items-start mb-3">
                     <div class="me-3">
-                      <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                      <i class="fas fa-file-pdf fa-3x text-danger"></i>
                     </div>
                     <div class="flex-grow-1">
-                      <h6 class="card-title mb-1 text-truncate" title="${pdf.pdf_title}">
-                        ${pdf.pdf_title}
-                      </h6>
+                      <h6 class="mb-2">${pdf.pdf_title}</h6>
                       <div class="d-flex flex-wrap gap-2">
                         <small class="text-muted">
                           <i class="fas fa-calendar me-1"></i>${uploadDate}
@@ -1130,27 +1225,19 @@
                   </div>
                   
                   ${pdf.description ? `
-                  <div class="mb-3 flex-grow-1">
-                    <p class="card-text small text-muted" style="font-size: 0.85rem;">
-                      ${pdf.description.substring(0, 80)}${pdf.description.length > 80 ? '...' : ''}
-                    </p>
-                  </div>
+                  <p class="card-text small text-muted mb-3">
+                    ${pdf.description.substring(0, 80)}${pdf.description.length > 80 ? '...' : ''}
+                  </p>
                   ` : ''}
                   
-                  <div class="mt-auto pt-2 border-top">
+                  <div class="mt-auto pt-3 border-top">
                     <div class="d-grid gap-2">
-                      <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-success" 
-                                onclick="viewStudentPdf('${pdf.pdf_id}')" 
-                                title="View PDF">
-                          <i class="fas fa-eye me-1"></i> View
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" 
-                                onclick="downloadStudentPdf('${pdf.pdf_id}')" 
-                                title="Download PDF">
-                          <i class="fas fa-download me-1"></i> Download
-                        </button>
-                      </div>
+                      <button class="btn btn-outline-success btn-sm" onclick="viewStudentPdf('${pdf.pdf_id}')">
+                        <i class="fas fa-eye me-1"></i> View PDF
+                      </button>
+                      <button class="btn btn-outline-primary btn-sm" onclick="downloadStudentPdf('${pdf.pdf_id}')">
+                        <i class="fas fa-download me-1"></i> Download
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1167,7 +1254,7 @@
             <div class="text-center py-5">
               <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
               <h5 class="text-muted mb-2">No Study Materials Available</h5>
-              <p class="text-muted mb-0">Study materials for your course (${student.course}) will appear here once uploaded by faculty.</p>
+              <p class="text-muted">Study materials for ${student.course} will appear here once uploaded.</p>
             </div>
           `;
         }
@@ -1175,9 +1262,9 @@
       } catch (error) {
         console.error('Error loading study materials:', error);
         document.getElementById('pdfsContent').innerHTML = `
-          <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            Failed to load study materials. Please check your connection.
+          <div class="alert alert-custom alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Failed to load study materials</span>
           </div>
         `;
       }
@@ -1193,6 +1280,219 @@
       window.open(`${API_BASE_URL}/view-course-pdf/${pdfId}?download=true`, '_blank');
     }
 
+    // Load Syllabus
+    async function loadSyllabus() {
+      try {
+        const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        const profileResult = await profileResponse.json();
+        
+        if (!profileResult.success || !profileResult.student) {
+          document.getElementById('syllabusContent').innerHTML = `
+            <div class="alert alert-custom alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Please complete your profile to view syllabus</span>
+            </div>
+          `;
+          return;
+        }
+        
+        const student = profileResult.student;
+        const courseCode = student.course;
+        
+        const response = await fetch(`${API_BASE_URL}/syllabus/course/${courseCode}`);
+        const result = await response.json();
+        
+        if (result.success && result.syllabus && result.syllabus.length > 0) {
+          let syllabusHTML = '';
+          
+          result.syllabus.forEach((syllabus) => {
+            if (syllabus.is_active) {
+              syllabusHTML += `
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 class="mb-1">${syllabus.syllabus_title}</h5>
+                      <span class="badge bg-primary">${syllabus.total_duration} hours</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="downloadSyllabus('${syllabus.syllabus_id}')">
+                      <i class="fas fa-download me-1"></i> Download
+                    </button>
+                  </div>
+                  
+                  ${syllabus.description ? `
+                  <div class="alert alert-custom alert-info mb-3">
+                    <i class="fas fa-info-circle"></i>
+                    <span>${syllabus.description}</span>
+                  </div>
+                  ` : ''}
+                  
+                  <div class="table-responsive">
+                    <table class="table table-custom">
+                      <thead>
+                        <tr>
+                          <th width="5%">#</th>
+                          <th width="35%">Subject</th>
+                          <th width="15%">Duration</th>
+                          <th width="45%">Topics</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+              `;
+              
+              if (syllabus.subjects && syllabus.subjects.length > 0) {
+                syllabus.subjects.forEach((subject, idx) => {
+                  const topics = subject.topics ? 
+                    subject.topics.split(',').map(topic => 
+                      `<span class="badge bg-info me-1">${topic.trim()}</span>`
+                    ).join(' ') : 
+                    '<span class="text-muted">No topics</span>';
+                  
+                  syllabusHTML += `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td><strong>${subject.subject_name}</strong></td>
+                      <td>${subject.duration_hours} hrs</td>
+                      <td>${topics}</td>
+                    </tr>
+                  `;
+                });
+              } else {
+                syllabusHTML += `
+                  <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                      Subjects will be added soon
+                    </td>
+                  </tr>
+                `;
+              }
+              
+              syllabusHTML += `
+                      </tbody>
+                      <tfoot>
+                        <tr class="table-active">
+                          <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                          <td><strong>${syllabus.total_duration} hrs</strong></td>
+                          <td><strong>${syllabus.subjects?.length || 0} subjects</strong></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              `;
+            }
+          });
+          
+          if (syllabusHTML === '') {
+            syllabusHTML = `
+              <div class="alert alert-custom alert-info">
+                <i class="fas fa-info-circle"></i>
+                <span>No active syllabus found for ${courseCode}</span>
+              </div>
+            `;
+          }
+          
+          document.getElementById('syllabusContent').innerHTML = syllabusHTML;
+          
+        } else {
+          document.getElementById('syllabusContent').innerHTML = `
+            <div class="text-center py-5">
+              <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+              <h5 class="text-muted mb-2">Syllabus Not Available Yet</h5>
+              <p class="text-muted">The syllabus for ${courseCode} is being prepared.</p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('Error loading syllabus:', error);
+        document.getElementById('syllabusContent').innerHTML = `
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load course syllabus</span>
+          </div>
+        `;
+      }
+    }
+
+    // Download syllabus
+    async function downloadSyllabus(syllabusId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/syllabus/${syllabusId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          const syllabus = result.syllabus;
+          
+          let content = `
+            <html>
+            <head>
+              <title>${syllabus.syllabus_title}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h2>${syllabus.syllabus_title}</h2>
+                <h4>${syllabus.course_name} (${syllabus.course_code})</h4>
+              </div>
+              <p><strong>Total Duration:</strong> ${syllabus.total_duration} hours</p>
+              ${syllabus.description ? `<p><strong>Description:</strong> ${syllabus.description}</p>` : ''}
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Subject</th>
+                    <th>Duration</th>
+                    <th>Topics</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          if (syllabus.subjects && syllabus.subjects.length > 0) {
+            syllabus.subjects.forEach((subject, index) => {
+              content += `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${subject.subject_name}</td>
+                  <td>${subject.duration_hours} hours</td>
+                  <td>${subject.topics || 'N/A'}</td>
+                </tr>
+              `;
+            });
+          }
+          
+          content += `
+                </tbody>
+              </table>
+            </body>
+            </html>
+          `;
+          
+          const printWindow = window.open('', '_blank');
+          printWindow.document.write(content);
+          printWindow.document.close();
+          printWindow.focus();
+          
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 500);
+          
+        } else {
+          alert('Failed to download syllabus');
+        }
+      } catch (error) {
+        console.error('Error downloading syllabus:', error);
+        alert('Failed to download syllabus');
+      }
+    }
+
     // Load Timetable
     async function loadTimetable() {
       try {
@@ -1202,8 +1502,8 @@
         if (result.success && result.timetable && result.timetable.length > 0) {
           let tableHTML = `
             <div class="table-responsive">
-              <table class="table table-bordered table-hover">
-                <thead class="table-dark">
+              <table class="table table-custom">
+                <thead>
                   <tr>
                     <th>Day</th>
                     <th>Subject</th>
@@ -1218,7 +1518,7 @@
           result.timetable.forEach(item => {
             tableHTML += `
               <tr>
-                <td>${item.day || 'N/A'}</td>
+                <td><strong>${item.day || 'N/A'}</strong></td>
                 <td>${item.subject || 'N/A'}</td>
                 <td>${item.teacher_name || 'N/A'}</td>
                 <td>${item.start_time || 'N/A'} - ${item.end_time || 'N/A'}</td>
@@ -1231,18 +1531,18 @@
           document.getElementById('timetableContent').innerHTML = tableHTML;
         } else {
           document.getElementById('timetableContent').innerHTML = `
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>
-              Timetable will be updated soon.
+            <div class="alert alert-custom alert-info">
+              <i class="fas fa-info-circle"></i>
+              <span>Timetable will be updated soon</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading timetable:', error);
         document.getElementById('timetableContent').innerHTML = `
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            Timetable will be updated soon.
+          <div class="alert alert-custom alert-info">
+            <i class="fas fa-info-circle"></i>
+            <span>Timetable will be updated soon</span>
           </div>
         `;
       }
@@ -1257,16 +1557,16 @@
         if (result.success && result.results && result.results.length > 0) {
           let tableHTML = `
             <div class="table-responsive">
-              <table class="table table-striped table-hover">
-                <thead class="table-dark">
+              <table class="table table-custom">
+                <thead>
                   <tr>
                     <th>Subject</th>
                     <th>Exam Type</th>
-                    <th>Marks Obtained</th>
-                    <th>Total Marks</th>
+                    <th>Marks</th>
+                    <th>Total</th>
                     <th>Percentage</th>
                     <th>Grade</th>
-                    <th>Exam Date</th>
+                    <th>Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1277,12 +1577,12 @@
             
             tableHTML += `
               <tr>
-                <td>${item.subject}</td>
+                <td><strong>${item.subject}</strong></td>
                 <td>${item.exam_type}</td>
                 <td>${item.marks_obtained}</td>
                 <td>${item.total_marks}</td>
                 <td>${percentage}%</td>
-                <td><span class="badge bg-${getGradeColor(item.grade)}">${item.grade}</span></td>
+                <td><span class="badge badge-custom bg-${getGradeColor(item.grade)}">${item.grade}</span></td>
                 <td>${item.exam_date}</td>
               </tr>
             `;
@@ -1292,18 +1592,18 @@
           document.getElementById('resultsContent').innerHTML = tableHTML;
         } else {
           document.getElementById('resultsContent').innerHTML = `
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>
-              No results available yet.
+            <div class="alert alert-custom alert-info">
+              <i class="fas fa-info-circle"></i>
+              <span>No results available yet</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading results:', error);
         document.getElementById('resultsContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load results
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load results</span>
           </div>
         `;
       }
@@ -1325,65 +1625,69 @@
           const paymentProgress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
           
           document.getElementById('feesContent').innerHTML = `
-            <div class="row mb-4">
+            <div class="row g-4 mb-4">
               <div class="col-md-3">
-                <div class="border rounded p-3 bg-light mb-3 text-center">
-                  <h6 class="text-muted">Total Fees</h6>
-                  <h4 class="text-primary">₹${totalAmount.toLocaleString('en-IN')}</h4>
+                <div class="p-4 bg-light rounded text-center">
+                  <h6 class="text-muted mb-2">Total Fees</h6>
+                  <h3 class="text-primary mb-0">₹${totalAmount.toLocaleString('en-IN')}</h3>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="border rounded p-3 bg-light mb-3 text-center">
-                  <h6 class="text-muted">Paid Amount</h6>
-                  <h4 class="text-success">₹${paidAmount.toLocaleString('en-IN')}</h4>
+                <div class="p-4 bg-light rounded text-center">
+                  <h6 class="text-muted mb-2">Paid Amount</h6>
+                  <h3 class="text-success mb-0">₹${paidAmount.toLocaleString('en-IN')}</h3>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="border rounded p-3 bg-light mb-3 text-center">
-                  <h6 class="text-muted">Due Amount</h6>
-                  <h4 class="text-danger">₹${dueAmount.toLocaleString('en-IN')}</h4>
+                <div class="p-4 bg-light rounded text-center">
+                  <h6 class="text-muted mb-2">Due Amount</h6>
+                  <h3 class="text-danger mb-0">₹${dueAmount.toLocaleString('en-IN')}</h3>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="border rounded p-3 bg-light mb-3 text-center">
-                  <h6 class="text-muted">Status</h6>
-                  <h4><span class="badge bg-${getFeeStatusColor(paymentStatus)}">${paymentStatus}</span></h4>
+                <div class="p-4 bg-light rounded text-center">
+                  <h6 class="text-muted mb-2">Status</h6>
+                  <h4 class="mb-0">
+                    <span class="badge badge-custom bg-${getFeeStatusColor(paymentStatus)}">${paymentStatus}</span>
+                  </h4>
                 </div>
               </div>
             </div>
+            
             <div class="mb-4">
-              <p><strong>Payment Progress:</strong></p>
-              <div class="progress">
-                <div class="progress-bar bg-success" style="width: ${paymentProgress}%">
+              <label class="fw-bold mb-2">Payment Progress</label>
+              <div class="progress-custom">
+                <div class="progress-bar-custom" style="width: ${paymentProgress}%">
                   ${paymentProgress.toFixed(1)}%
                 </div>
               </div>
             </div>
+            
             ${dueAmount > 0 ? `
-            <button class="btn btn-success" onclick="payFees()">
+            <button class="btn btn-primary-custom btn-custom" onclick="payFees()">
               <i class="fas fa-credit-card me-2"></i>Pay Online
             </button>
             ` : `
-            <div class="alert alert-success">
-              <i class="fas fa-check-circle me-2"></i>
-              All fees have been paid. Thank you!
+            <div class="alert alert-custom alert-success">
+              <i class="fas fa-check-circle"></i>
+              <span>All fees have been paid. Thank you!</span>
             </div>
             `}
           `;
         } else {
           document.getElementById('feesContent').innerHTML = `
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Fee details not available
+            <div class="alert alert-custom alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Fee details not available</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading fees:', error);
         document.getElementById('feesContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load fee details
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load fee details</span>
           </div>
         `;
       }
@@ -1399,14 +1703,14 @@
           let noticesHTML = '<div class="list-group">';
           
           result.notices.forEach(notice => {
-            const noticeDate = new Date(notice.created_at).toLocaleDateString();
-            const priorityClass = notice.priority === 'high' ? 'list-group-item-danger' : 
-                                notice.priority === 'medium' ? 'list-group-item-warning' : '';
+            const noticeDate = new Date(notice.created_at).toLocaleDateString('en-IN');
+            const priorityClass = notice.priority === 'high' ? 'border-danger' : 
+                                notice.priority === 'medium' ? 'border-warning' : 'border-secondary';
             
             noticesHTML += `
-            <div class="list-group-item ${priorityClass}">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">${notice.title}</h6>
+            <div class="list-group-item ${priorityClass} border-start border-4 mb-3">
+              <div class="d-flex w-100 justify-content-between align-items-start mb-2">
+                <h6 class="mb-0">${notice.title}</h6>
                 <small class="text-muted">${noticeDate}</small>
               </div>
               <p class="mb-1">${notice.message}</p>
@@ -1419,18 +1723,18 @@
           document.getElementById('noticesContent').innerHTML = noticesHTML;
         } else {
           document.getElementById('noticesContent').innerHTML = `
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>
-              No notices at the moment
+            <div class="alert alert-custom alert-info">
+              <i class="fas fa-info-circle"></i>
+              <span>No notices at the moment</span>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading notices:', error);
         document.getElementById('noticesContent').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            Failed to load notices
+          <div class="alert alert-custom alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load notices</span>
           </div>
         `;
       }
@@ -1455,15 +1759,8 @@
       }
     }
 
-    // Pay fees function
     function payFees() {
       alert('Payment gateway integration would be implemented here. Please contact administration for fee payment.');
-    }
-
-    // Show error message
-    function showError(message) {
-      console.error('Dashboard Error:', message);
-      alert(message);
     }
 
     // Logout function
@@ -1471,12 +1768,10 @@
       const confirmLogout = confirm("Are you sure you want to log out?");
       
       if (confirmLogout) {
-        // Clear all session data
         sessionStorage.removeItem('studentToken');
         sessionStorage.removeItem('studentData');
         sessionStorage.removeItem('loginTime');
         
-        // Clear session timer
         clearTimeout(sessionTimer);
         
         alert("You have been logged out!");
