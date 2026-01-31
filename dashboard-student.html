@@ -317,6 +317,11 @@
                     <i class="fas fa-file-pdf me-2"></i>Study Materials
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#syllabus">
+                    <i class="fas fa-book-open me-2"></i>Course Syllabus
+                </a>
+            </li>
             <li class="nav-item"><a class="nav-link" href="#results"><i class="fas fa-file-alt me-2"></i>Results</a></li>
             <li class="nav-item"><a class="nav-link" href="#fees"><i class="fas fa-money-bill-wave me-2"></i>Fees</a></li>
             <li class="nav-item"><a class="nav-link" href="#notice"><i class="fas fa-bullhorn me-2"></i>Notices</a></li>
@@ -404,6 +409,19 @@
             </div>
           </div>
         </section>
+
+        <!-- Syllabus Section -->
+      <section id="syllabus" class="mb-4">
+          <div class="studentCard p-4 shadow-sm">
+              <h4><i class="fas fa-book-open me-2 text-primary"></i>Course Syllabus</h4>
+              <div id="syllabusContent" class="loading">
+                  <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="mt-2">Loading course syllabus...</p>
+              </div>
+          </div>
+      </section>
 
         <!-- Study Materials/PDFs -->
         <section id="study-materials" class="mb-4">
@@ -561,7 +579,8 @@
           loadResults(),
           loadFees(),
           loadNotices(),
-          loadStudyMaterials()
+          loadStudyMaterials(),
+          loadSyllabus() 
         ]);
         
         await loadTimetable();
@@ -616,6 +635,266 @@
             Failed to load profile data
           </div>
         `;
+      }
+    }
+
+    // Load Course Syllabus
+    async function loadSyllabus() {
+      try {
+        // First get student profile to know their course
+        const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        const profileResult = await profileResponse.json();
+        
+        if (!profileResult.success || !profileResult.student) {
+          document.getElementById('syllabusContent').innerHTML = `
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              Please complete your profile to view syllabus
+            </div>
+          `;
+          return;
+        }
+        
+        const student = profileResult.student;
+        const courseCode = student.course;
+        
+        if (!courseCode) {
+          document.getElementById('syllabusContent').innerHTML = `
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              Course information not found in your profile
+            </div>
+          `;
+          return;
+        }
+        
+        // Get syllabus for student's course
+        const response = await fetch(`${API_BASE_URL}/syllabus/course/${courseCode}`);
+        const result = await response.json();
+        
+        if (result.success && result.syllabus && result.syllabus.length > 0) {
+          // Update section title with course name
+          const sectionTitle = document.querySelector('#syllabus h4');
+          if (sectionTitle) {
+            sectionTitle.innerHTML = `<i class="fas fa-book-open me-2 text-primary"></i>${courseCode} - Course Syllabus`;
+          }
+          
+          let syllabusHTML = '';
+          
+          result.syllabus.forEach((syllabus, index) => {
+            // Only show active syllabus
+            if (syllabus.is_active) {
+              syllabusHTML += `
+                <div class="card mb-4 border-primary">
+                  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">${syllabus.syllabus_title}</h5>
+                    <span class="badge bg-light text-primary">${syllabus.total_duration} hours</span>
+                  </div>
+                  <div class="card-body">
+                    ${syllabus.description ? `
+                      <div class="mb-4">
+                        <h6><i class="fas fa-info-circle me-2"></i>Description</h6>
+                        <p class="text-muted">${syllabus.description}</p>
+                      </div>
+                    ` : ''}
+                    
+                    <h6 class="mb-3"><i class="fas fa-list me-2"></i>Course Curriculum</h6>
+                    
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                          <tr>
+                            <th width="5%">#</th>
+                            <th width="35%">Subject</th>
+                            <th width="15%">Duration</th>
+                            <th width="45%">Topics Covered</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+              `;
+              
+              // Add subjects
+              if (syllabus.subjects && syllabus.subjects.length > 0) {
+                syllabus.subjects.forEach((subject, idx) => {
+                  const topics = subject.topics ? 
+                    subject.topics.split(',').map(topic => 
+                      `<span class="badge bg-info me-1 mb-1">${topic.trim()}</span>`
+                    ).join(' ') : 
+                    '<span class="text-muted">No topics specified</span>';
+                  
+                  syllabusHTML += `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td><strong>${subject.subject_name}</strong></td>
+                      <td>${subject.duration_hours} hours</td>
+                      <td>${topics}</td>
+                    </tr>
+                  `;
+                });
+              } else {
+                syllabusHTML += `
+                  <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                      <i class="fas fa-info-circle me-2"></i>
+                      Subjects will be added soon
+                    </td>
+                  </tr>
+                `;
+              }
+              
+              syllabusHTML += `
+                        </tbody>
+                        <tfoot>
+                          <tr class="table-primary">
+                            <td colspan="2" class="text-end"><strong>Total Duration:</strong></td>
+                            <td><strong>${syllabus.total_duration} hours</strong></td>
+                            <td><strong>${syllabus.subjects?.length || 0} subjects</strong></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                      <div class="text-muted small">
+                        <i class="fas fa-calendar me-1"></i>
+                        Updated: ${new Date(syllabus.updated_at).toLocaleDateString('en-IN')}
+                      </div>
+                      <button class="btn btn-sm btn-outline-primary" onclick="downloadSyllabus('${syllabus.syllabus_id}')">
+                        <i class="fas fa-download me-1"></i> Download Syllabus
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+          });
+          
+          if (syllabusHTML === '') {
+            syllabusHTML = `
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No active syllabus found for your course (${courseCode}). Please check back later.
+              </div>
+            `;
+          }
+          
+          document.getElementById('syllabusContent').innerHTML = syllabusHTML;
+          
+        } else {
+          document.getElementById('syllabusContent').innerHTML = `
+            <div class="text-center py-5">
+              <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+              <h5 class="text-muted mb-2">Syllabus Not Available Yet</h5>
+              <p class="text-muted mb-0">
+                The syllabus for your course (${courseCode}) is being prepared.<br>
+                It will be available here once finalized by the faculty.
+              </p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('Error loading syllabus:', error);
+        document.getElementById('syllabusContent').innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Failed to load course syllabus. Please try again later.
+          </div>
+        `;
+      }
+    }
+
+    // Download syllabus as PDF (simple version)
+    async function downloadSyllabus(syllabusId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/syllabus/${syllabusId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          const syllabus = result.syllabus;
+          
+          // Create printable content
+          let content = `
+            <html>
+            <head>
+              <title>${syllabus.syllabus_title}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .course-info { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h2>${syllabus.syllabus_title}</h2>
+                <h4>${syllabus.course_name} (${syllabus.course_code})</h4>
+              </div>
+              
+              <div class="course-info">
+                <p><strong>Total Duration:</strong> ${syllabus.total_duration} hours</p>
+                ${syllabus.description ? `<p><strong>Description:</strong> ${syllabus.description}</p>` : ''}
+              </div>
+              
+              <h3>Course Subjects</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Subject Name</th>
+                    <th>Duration</th>
+                    <th>Topics Covered</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          if (syllabus.subjects && syllabus.subjects.length > 0) {
+            syllabus.subjects.forEach((subject, index) => {
+              content += `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${subject.subject_name}</td>
+                  <td>${subject.duration_hours} hours</td>
+                  <td>${subject.topics || 'N/A'}</td>
+                </tr>
+              `;
+            });
+          }
+          
+          content += `
+                </tbody>
+              </table>
+              
+              <div class="footer">
+                <p>Generated from AACEM Student Portal on ${new Date().toLocaleDateString()}</p>
+                <p>${syllabus.course_code} - ${syllabus.syllabus_title}</p>
+              </div>
+            </body>
+            </html>
+          `;
+          
+          // Open in new window for printing
+          const printWindow = window.open('', '_blank');
+          printWindow.document.write(content);
+          printWindow.document.close();
+          printWindow.focus();
+          
+          // Ask user to print
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 500);
+          
+        } else {
+          alert('Failed to download syllabus. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error downloading syllabus:', error);
+        alert('Failed to download syllabus. Please try again later.');
       }
     }
 
