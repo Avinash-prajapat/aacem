@@ -2697,7 +2697,7 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('Marks/Exam Results functions loaded successfully!');
 
 
-// Update students table - MODIFIED VERSION
+// Update students table - MODIFIED VERSION with COLLAPSED groups by default
 function updateStudentsTable() {
     const tbody = document.getElementById('studentsTableBody');
     if (!tbody) return;
@@ -2744,17 +2744,18 @@ function updateStudentsTable() {
                         <span class="badge bg-primary ms-2">${classStudents.length} students</span>
                     </div>
                     <button class="btn btn-sm btn-outline-primary" onclick="toggleClassStudents('${className}')">
-                        <i class="fas fa-chevron-down"></i> Toggle
+                        <i class="fas fa-chevron-down"></i> Show Students
                     </button>
                 </div>
             </td>
         `;
         tbody.appendChild(headerRow);
         
-        // Add students for this class
+        // Add students for this class - HIDDEN BY DEFAULT
         classStudents.forEach(student => {
             const row = document.createElement('tr');
             row.className = `class-student-row class-${className.replace(/\s+/g, '-')}`;
+            row.style.display = 'none'; // यह line ADD करें - Students hidden by default
             row.innerHTML = `
                 <td>${student.student_id || 'N/A'}</td>
                 <td>
@@ -2795,23 +2796,32 @@ function updateStudentsTable() {
     });
 }
 
-// Toggle class students visibility
+// Toggle class students visibility - MODIFIED VERSION
 function toggleClassStudents(className) {
     const rows = document.querySelectorAll(`.class-${className.replace(/\s+/g, '-')}`);
-    const isVisible = rows[0] && rows[0].style.display !== 'none';
+    const button = event.target.closest('button');
+    const icon = button.querySelector('i');
     
+    // Check if any row is currently visible
+    let isVisible = false;
+    if (rows.length > 0) {
+        isVisible = rows[0].style.display !== 'none';
+    }
+    
+    // Toggle visibility
     rows.forEach(row => {
         row.style.display = isVisible ? 'none' : '';
     });
     
-    // Update toggle button icon
-    const button = event.target.closest('button');
+    // Update button text and icon
     if (button) {
-        const icon = button.querySelector('i');
-        if (icon) {
-            icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        if (isVisible) {
+            button.innerHTML = '<i class="fas fa-chevron-down"></i> Show Students';
+            button.title = "Show students";
+        } else {
+            button.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Students';
+            button.title = "Hide students";
         }
-        button.textContent = isVisible ? 'Show Students' : 'Hide Students';
     }
 }
 // Filter students by class when class is clicked
@@ -7599,6 +7609,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
