@@ -1274,8 +1274,6 @@
       }
     }
 
-    
-
     // Load Profile Data
     async function loadProfile() {
       try {
@@ -1860,147 +1858,153 @@
       }
     }
 
-    // Load timetable with AM/PM format
-    async function loadTimetable() {
-      try {
-        // Get student profile for course
-        const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        if (!profileRes.ok) throw new Error('Failed to get student profile');
-        
-        const profileData = await profileRes.json();
-        if (!profileData.success || !profileData.student) {
-          throw new Error('Invalid student profile');
-        }
-        
-        const course = profileData.student.course;
-        if (!course) throw new Error('Course not found in profile');
-        
-        const response = await fetch(`${API_BASE_URL}/timetable/course/${encodeURIComponent(course)}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success && result.timetable && result.timetable.length > 0) {
-          // Filter active classes and sort by day and time
-          const activeClasses = result.timetable
-            .filter(item => item.is_active)
-            .sort((a, b) => {
-              // Sort by day order
-              const dayOrder = {
-                'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 
-                'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7
-              };
-              
-              if (dayOrder[a.day_of_week] !== dayOrder[b.day_of_week]) {
-                return dayOrder[a.day_of_week] - dayOrder[b.day_of_week];
-              }
-              
-              // Sort by start time
-              return a.start_time.localeCompare(b.start_time);
-            });
-          
-          let html = `
-            <div class="mb-3">
-              <h6 class="text-primary">
-                <i class="fas fa-graduation-cap me-2"></i>Course: ${course}
-              </h6>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-custom table-hover">
-                <thead class="table-dark">
-                  <tr>
-                    <th width="15%">Day</th>
-                    <th width="20%">Time</th>
-                    <th width="30%">Subject</th>
-                    <th width="25%">Teacher</th>
-                    <th width="10%">Room</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
-          
-          activeClasses.forEach(item => {
-            // Convert times to AM/PM format
-            const startTime12hr = formatTimeTo12Hour(item.start_time);
-            const endTime12hr = formatTimeTo12Hour(item.end_time);
-            
-            html += `
-              <tr>
-                <td><strong class="text-primary">${item.day_of_week || 'N/A'}</strong></td>
-                <td>
-                  <span class="badge bg-info text-dark">${startTime12hr}</span>
-                  <span class="mx-2">to</span>
-                  <span class="badge bg-info text-dark">${endTime12hr}</span>
-                </td>
-                <td><strong>${item.subject || 'N/A'}</strong></td>
-                <td><i class="fas fa-chalkboard-teacher me-2 text-muted"></i>${item.teacher_name || 'TBA'}</td>
-                <td><span class="badge bg-secondary">${item.room_number || '-'}</span></td>
-              </tr>
-            `;
-          });
-          
-          html += `
-                </tbody>
-              </table>
-            </div>
-            
-            <div class="alert alert-info mt-3">
-              <i class="fas fa-info-circle me-2"></i>
-              <strong>Note:</strong> All times are displayed in 12-hour format (AM/PM). Please arrive 5 minutes before class time.
-            </div>
-          `;
-          
-          document.getElementById('timetableContent').innerHTML = html;
-        } else {
-          throw new Error(result.message || 'No timetable found');
-        }
-      } catch (error) {
-        console.error('Error loading timetable:', error);
-        document.getElementById('timetableContent').innerHTML = `
-          <div class="alert alert-warning">
-            <i class="fas fa-calendar-times me-2"></i>
-            <strong>No Timetable Available</strong>
-            <p class="mb-0 mt-2">The timetable for your course will be available soon.</p>
-            <small class="text-muted">Error: ${error.message}</small>
-          </div>
-        `;
-      }
+    // Load timetable
+async function loadTimetable() {
+  try {
+    // First get student profile to get course
+    const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+    if (!profileRes.ok) throw new Error('Failed to get student profile');
+    
+    const profileData = await profileRes.json();
+    if (!profileData.success || !profileData.student) {
+      throw new Error('Invalid student profile');
     }
     
-    // Time format converter function
-    function formatTimeTo12Hour(timeString) {
-      if (!timeString) return 'N/A';
-      
-      // Check if already in 12-hour format
-      if (/(AM|PM|am|pm)/i.test(timeString)) {
-        // Capitalize AM/PM
-        return timeString.toUpperCase().replace(/\s+/g, ' ');
-      }
-      
-      // Try to parse as 24-hour format
-      const timeRegex = /^(\d{1,2}):(\d{2})$/;
-      const match = timeString.match(timeRegex);
-      
-      if (match) {
-        let hours = parseInt(match[1], 10);
-        const minutes = match[2];
-        
-        if (hours < 0 || hours > 23 || isNaN(hours)) {
-          return timeString;
-        }
-        
-        const period = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
-        
-        return `${hours}:${minutes} ${period}`;
-      }
-      
-      return timeString;
+    const course = profileData.student.course;
+    if (!course) throw new Error('Course not found in profile');
+    
+    const response = await fetch(`${API_BASE_URL}/timetable/course/${encodeURIComponent(course)}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
+    const result = await response.json();
+    
+    if (result.success && result.timetable && result.timetable.length > 0) {
+      let html = `
+        <div class="table-responsive">
+          <table class="table table-custom">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Room</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      result.timetable.forEach(item => {
+        if (item.is_active) {
+          // Convert 24-hour time to 12-hour AM/PM format
+          const startTime12hr = convertTo12HourFormat(item.start_time);
+          const endTime12hr = convertTo12HourFormat(item.end_time);
+          
+          html += `
+            <tr>
+              <td><strong>${item.day_of_week || 'N/A'}</strong></td>
+              <td>
+                <span class="badge bg-primary">${startTime12hr}</span>
+                <span class="mx-1">-</span>
+                <span class="badge bg-primary">${endTime12hr}</span>
+              </td>
+              <td><strong>${item.subject || 'N/A'}</strong></td>
+              <td>${item.teacher_name || 'N/A'}</td>
+              <td><span class="badge bg-secondary">${item.room_number || 'N/A'}</span></td>
+            </tr>
+          `;
+        }
+      });
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      document.getElementById('timetableContent').innerHTML = html;
+    } else {
+      throw new Error(result.message || 'No timetable found');
+    }
+  } catch (error) {
+    console.error('Error loading timetable:', error);
+    document.getElementById('timetableContent').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Error loading timetable: ${error.message}
+      </div>
+    `;
+  }
+}
+
+// Helper function to convert 24-hour time to 12-hour AM/PM format
+function convertTo12HourFormat(time24) {
+  if (!time24) return 'N/A';
+  
+  // Check if time is already in 12-hour format
+  if (time24.includes('AM') || time24.includes('PM') || time24.includes('am') || time24.includes('pm')) {
+    return time24;
+  }
+  
+  try {
+    // Split hours and minutes
+    const [hours, minutes] = time24.split(':').map(Number);
+    
+    if (isNaN(hours) || isNaN(minutes)) {
+      return time24;
+    }
+    
+    // Determine AM/PM
+    const period = hours >= 12 ? 'PM' : 'AM';
+    
+    // Convert to 12-hour format
+    let hours12 = hours % 12;
+    hours12 = hours12 === 0 ? 12 : hours12; // 0 should be 12 AM
+    
+    // Format minutes with leading zero if needed
+    const minutesStr = minutes.toString().padStart(2, '0');
+    
+    return `${hours12}:${minutesStr} ${period}`;
+  } catch (error) {
+    console.error('Error converting time format:', error, 'for time:', time24);
+    return time24;
+  }
+}
+
+// Alternative: More robust time conversion function
+function formatTimeTo12Hour(timeString) {
+  if (!timeString) return '';
+  
+  // Remove any spaces
+  timeString = timeString.trim();
+  
+  // If already in 12-hour format, return as is
+  if (/^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM|am|pm)$/i.test(timeString)) {
+    return timeString.toUpperCase().replace(/\s+/g, ' ');
+  }
+  
+  // Try to parse as 24-hour format
+  const timePattern = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+  const match = timeString.match(timePattern);
+  
+  if (match) {
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const period = hours >= 12 ? 'PM' : 'AM';
+    
+    // Convert to 12-hour format
+    hours = hours % 12;
+    hours = hours === 0 ? 12 : hours;
+    
+    return `${hours}:${minutes} ${period}`;
+  }
+  
+  // Return original if format is not recognized
+  return timeString;
+}
 
     // Load Results
     async function loadResults() {
@@ -2107,121 +2111,494 @@
       return 'F';
     }
 
-    // Load Fees
+    // Load Fees with detailed history
     async function loadFees() {
       try {
-        const response = await fetch(`${API_BASE_URL}/student-fees/${STUDENT_ID}`);
+        // Show loading
+        document.getElementById('feesContent').innerHTML = `
+          <div class="text-center py-5">
+            <div class="spinner-custom mb-3"></div>
+            <p class="text-muted">Loading fee details...</p>
+          </div>
+        `;
+        
+        // Use the detailed fee API
+        const response = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
         const result = await response.json();
         
-        if (result.success && result.fee_details) {
-          const fees = result.fee_details;
-          const paidAmount = parseFloat(fees.paid_amount) || 0;
-          const totalAmount = parseFloat(fees.fee_amount) || 0;
-          const dueAmount = parseFloat(fees.due_amount) || 0;
-          const paymentStatus = fees.fee_status || 'Pending';
+        if (result.success) {
+          const feeSummary = result.fee_summary;
+          const feeHistory = result.fee_history;
+          const studentInfo = result.student;
+          
+          const paidAmount = parseFloat(feeSummary.paid_amount) || 0;
+          const totalAmount = parseFloat(feeSummary.fee_amount) || 0;
+          const dueAmount = parseFloat(feeSummary.due_amount) || 0;
+          const paymentStatus = feeSummary.fee_status || 'Pending';
+          const totalRecords = result.total_records || 0;
           
           const paymentProgress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
           
+          // Build fee history table
+          let feeHistoryHTML = '';
+          if (feeHistory.length > 0) {
+            feeHistoryHTML = `
+              <div class="table-container mt-4">
+                <div class="table-title bg-primary">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                  <span>Fee Payment History (${totalRecords} transactions)</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th width="15%">Receipt No</th>
+                        <th width="20%">Payment Date</th>
+                        <th width="20%">Amount</th>
+                        <th width="20%">Payment Mode</th>
+                        <th width="15%">Status</th>
+                        <th width="10%" class="text-center">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            feeHistory.forEach((fee, index) => {
+              // Format payment date
+              let paymentDate = 'N/A';
+              if (fee.payment_date) {
+                try {
+                  const dateObj = new Date(fee.payment_date);
+                  paymentDate = dateObj.toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  });
+                } catch (e) {
+                  paymentDate = fee.payment_date;
+                }
+              }
+              
+              // Format amount
+              const amount = parseFloat(fee.amount) || 0;
+              
+              // Payment mode badge
+              let modeBadgeClass = 'bg-secondary';
+              let modeIcon = 'fa-money-bill-wave';
+              let modeText = fee.payment_mode || 'Cash';
+              
+              if (modeText.toLowerCase().includes('online')) {
+                modeBadgeClass = 'bg-success';
+                modeIcon = 'fa-globe';
+              } else if (modeText.toLowerCase().includes('card')) {
+                modeBadgeClass = 'bg-primary';
+                modeIcon = 'fa-credit-card';
+              } else if (modeText.toLowerCase().includes('cheque')) {
+                modeBadgeClass = 'bg-info';
+                modeIcon = 'fa-file-invoice';
+              } else if (modeText.toLowerCase().includes('cash')) {
+                modeBadgeClass = 'bg-dark';
+                modeIcon = 'fa-money-bill-wave';
+              }
+              
+              // Status badge
+              const statusBadgeClass = fee.status === 'Completed' ? 'bg-success' : 
+                                   fee.status === 'Pending' ? 'bg-warning' : 'bg-secondary';
+              
+              feeHistoryHTML += `
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-receipt text-primary me-2"></i>
+                      <strong>${fee.receipt_no || `REC${index + 1}`}</strong>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-calendar-day text-muted me-2"></i>
+                      <span>${paymentDate}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-rupee-sign text-success me-2"></i>
+                      <span class="fw-bold">${amount.toLocaleString('en-IN')}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge ${modeBadgeClass} px-3 py-2">
+                      <i class="fas ${modeIcon} me-1"></i>
+                      ${modeText}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge ${statusBadgeClass} px-3 py-2">
+                      <i class="fas fa-check-circle me-1"></i>
+                      ${fee.status || 'Completed'}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary px-3" onclick="downloadReceipt('${fee.receipt_no}', ${amount}, '${paymentDate}', '${modeText}')" title="Download Receipt">
+                      <i class="fas fa-download"></i>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            });
+            
+            feeHistoryHTML += `
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-footer bg-light p-3 border-top">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        ${totalRecords} payment records found
+                      </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                      <strong class="text-primary">Total Paid: ₹${paidAmount.toLocaleString('en-IN')}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            feeHistoryHTML = `
+              <div class="text-center py-5">
+                <div class="display-1 text-muted mb-3">
+                  <i class="fas fa-receipt"></i>
+                </div>
+                <h4 class="text-muted mb-3">No Payment Records Yet</h4>
+                <p class="text-muted mb-4">Your payment history will appear here after your first fee payment.</p>
+                <div class="alert alert-info w-75 mx-auto">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Please visit the institute office to make your first payment.
+                </div>
+              </div>
+            `;
+          }
+          
+          // Payment statistics card
+          let paymentStatsHTML = '';
+          if (feeHistory.length > 0) {
+            // Count payment modes
+            const modeCount = {};
+            feeHistory.forEach(fee => {
+              const mode = fee.payment_mode || 'Cash';
+              modeCount[mode] = (modeCount[mode] || 0) + 1;
+            });
+            
+            paymentStatsHTML = `
+              <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                  <h6 class="mb-0">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>
+                    Payment Analysis
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <h6 class="text-muted mb-3">Payment Methods Used</h6>
+                      <div class="mb-4">
+            `;
+            
+            Object.entries(modeCount).forEach(([mode, count]) => {
+              const percentage = ((count / feeHistory.length) * 100).toFixed(0);
+              paymentStatsHTML += `
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span>${mode}</span>
+                    <span class="text-muted">${count} (${percentage}%)</span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: ${percentage}%; background-color: ${getModeColor(mode)}">
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            
+            paymentStatsHTML += `
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="text-center p-4 bg-light rounded">
+                        <div class="display-4 text-primary mb-2">${totalRecords}</div>
+                        <div class="text-muted">Total Transactions</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          
+          // Office payment information card
+          const officePaymentHTML = `
+            <div class="card border-primary border-2 mt-4">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-building me-2"></i>
+                  Institute Payment Information
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="text-primary mb-3">
+                      <i class="fas fa-map-marker-alt me-2"></i>
+                      Visit Office For Payment
+                    </h6>
+                    <div class="mb-3">
+                      <p class="mb-1">
+                        <strong>Office Hours:</strong><br>
+                        Monday - Friday: 9:00 AM - 6:00 PM<br>
+                        Saturday: 9:00 AM - 2:00 PM<br>
+                        Sunday: Closed
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <p class="mb-1">
+                        <strong>Accepted Payment Methods:</strong><br>
+                        • Cash<br>
+                        • Cheque (Payable to AACEM Institute)<br>
+                        • Demand Draft<br>
+                        • Bank Transfer
+                      </p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <h6 class="text-primary mb-3">
+                      <i class="fas fa-phone-alt me-2"></i>
+                      Contact Information
+                    </h6>
+                    <div class="mb-3">
+                      <p class="mb-1">
+                        <strong>Institute Address:</strong><br>
+                        AACEM Institute<br>
+                        123 Education Street<br>
+                        Knowledge City, Mumbai - 400001
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <p class="mb-1">
+                        <strong>Contact Details:</strong><br>
+                        <i class="fas fa-phone me-2 text-muted"></i> +91 9876543210<br>
+                        <i class="fas fa-envelope me-2 text-muted"></i> accounts@aacem.edu.in<br>
+                        <i class="fas fa-globe me-2 text-muted"></i> www.aacem.edu.in
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                ${dueAmount > 0 ? `
+                <div class="alert alert-warning mt-3">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                    <div>
+                      <h6 class="mb-1">Payment Due: ₹${dueAmount.toLocaleString('en-IN')}</h6>
+                      <p class="mb-0">Please visit the institute office to clear your pending dues at the earliest.</p>
+                    </div>
+                  </div>
+                </div>
+                ` : `
+                <div class="alert alert-success mt-3">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x me-3 text-success"></i>
+                    <div>
+                      <h6 class="mb-1">All Payments Complete!</h6>
+                      <p class="mb-0">Thank you for completing all your fee payments. No dues remaining.</p>
+                    </div>
+                  </div>
+                </div>
+                `}
+              </div>
+            </div>
+          `;
+          
+          // Progress bar with colors
+          let progressBarColor = '';
+          if (paymentProgress >= 100) {
+            progressBarColor = 'bg-success';
+          } else if (paymentProgress >= 75) {
+            progressBarColor = 'bg-info';
+          } else if (paymentProgress >= 50) {
+            progressBarColor = 'bg-primary';
+          } else if (paymentProgress >= 25) {
+            progressBarColor = 'bg-warning';
+          } else {
+            progressBarColor = 'bg-danger';
+          }
+          
+          // Main HTML
           document.getElementById('feesContent').innerHTML = `
+            <!-- Student Info Header -->
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-body">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <h4 class="text-primary mb-1">
+                      <i class="fas fa-user-graduate me-2"></i>${studentInfo.name}
+                    </h4>
+                    <p class="text-muted mb-2">
+                      <i class="fas fa-book me-2"></i>${studentInfo.course_name || studentInfo.course}
+                      | <i class="fas fa-id-card me-2"></i>${STUDENT_ID}
+                      | <i class="fas fa-calendar-day me-2"></i>Admitted: ${studentInfo.join_date || 'N/A'}
+                    </p>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <div class="h3 mb-0 text-${paymentStatus === 'Paid' ? 'success' : paymentStatus === 'Partial' ? 'warning' : 'danger'}">
+                      ${paymentStatus}
+                    </div>
+                    <small class="text-muted">Fee Status</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Fee Summary Cards -->
             <div class="row g-4 mb-4">
               <div class="col-md-3">
-                <div class="p-4 bg-light rounded text-center">
-                  <h6 class="text-muted mb-2">Total Fees</h6>
-                  <h3 class="text-primary mb-0">₹${totalAmount.toLocaleString('en-IN')}</h3>
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body text-center p-4">
+                    <div class="text-primary mb-3">
+                      <i class="fas fa-file-invoice-dollar fa-3x"></i>
+                    </div>
+                    <h5 class="card-title text-muted mb-2">Total Course Fee</h5>
+                    <h2 class="card-text text-primary">₹${totalAmount.toLocaleString('en-IN')}</h2>
+                  </div>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="p-4 bg-light rounded text-center">
-                  <h6 class="text-muted mb-2">Paid Amount</h6>
-                  <h3 class="text-success mb-0">₹${paidAmount.toLocaleString('en-IN')}</h3>
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body text-center p-4">
+                    <div class="text-success mb-3">
+                      <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <h5 class="card-title text-muted mb-2">Total Paid</h5>
+                    <h2 class="card-text text-success">₹${paidAmount.toLocaleString('en-IN')}</h2>
+                  </div>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="p-4 bg-light rounded text-center">
-                  <h6 class="text-muted mb-2">Due Amount</h6>
-                  <h3 class="text-danger mb-0">₹${dueAmount.toLocaleString('en-IN')}</h3>
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body text-center p-4">
+                    <div class="${dueAmount > 0 ? 'text-danger' : 'text-secondary'} mb-3">
+                      <i class="fas fa-balance-scale fa-3x"></i>
+                    </div>
+                    <h5 class="card-title text-muted mb-2">Balance Due</h5>
+                    <h2 class="card-text ${dueAmount > 0 ? 'text-danger' : 'text-secondary'}">₹${dueAmount.toLocaleString('en-IN')}</h2>
+                  </div>
                 </div>
               </div>
               <div class="col-md-3">
-                <div class="p-4 bg-light rounded text-center">
-                  <h6 class="text-muted mb-2">Status</h6>
-                  <h4 class="mb-0">
-                    <span class="badge badge-custom bg-${getFeeStatusColor(paymentStatus)}">${paymentStatus}</span>
-                  </h4>
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body text-center p-4">
+                    <div class="text-info mb-3">
+                      <i class="fas fa-percentage fa-3x"></i>
+                    </div>
+                    <h5 class="card-title text-muted mb-2">Payment Progress</h5>
+                    <h2 class="card-text text-info">${paymentProgress.toFixed(1)}%</h2>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div class="mb-4">
-              <label class="fw-bold mb-2">Payment Progress</label>
-              <div class="progress-custom">
-                <div class="progress-bar-custom" style="width: ${paymentProgress}%">
-                  ${paymentProgress.toFixed(1)}%
+            <!-- Progress Bar -->
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                  <h6 class="card-title text-muted mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Payment Completion
+                  </h6>
+                  <span class="badge ${paymentProgress === 100 ? 'bg-success' : 'bg-primary'}">
+                    ${paymentProgress.toFixed(1)}%
+                  </span>
+                </div>
+                <div class="progress" style="height: 15px;">
+                  <div class="progress-bar ${progressBarColor} progress-bar-striped progress-bar-animated" 
+                       role="progressbar" 
+                       style="width: ${paymentProgress}%"
+                       aria-valuenow="${paymentProgress}" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                  <small class="text-muted">₹0</small>
+                  <small class="text-muted">₹${totalAmount.toLocaleString('en-IN')}</small>
                 </div>
               </div>
             </div>
             
-            <div class="table-container mt-4">
-              <div class="table-title">
-                <i class="fas fa-receipt"></i>
-                <span>Fee Payment History</span>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-custom">
-                  <thead>
-                    <tr>
-                      <th>Payment Date</th>
-                      <th>Amount</th>
-                      <th>Payment Mode</th>
-                      <th>Transaction ID</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>${fees.last_payment_date || 'N/A'}</td>
-                      <td>₹${paidAmount.toLocaleString('en-IN')}</td>
-                      <td>${fees.payment_mode || 'N/A'}</td>
-                      <td>${fees.transaction_id || 'N/A'}</td>
-                      <td>
-                        <span class="badge badge-custom bg-${getFeeStatusColor(paymentStatus)}">
-                          ${paymentStatus}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <!-- Payment History -->
+            ${feeHistoryHTML}
             
-            ${dueAmount > 0 ? `
-            <div class="text-center mt-4">
-              <button class="btn btn-primary-custom btn-custom" onclick="payFees()">
-                <i class="fas fa-credit-card me-2"></i>Pay Online
-              </button>
-              <p class="text-muted mt-2 small">Note: Online payment gateway will open in a new window</p>
+            <!-- Payment Statistics -->
+            ${paymentStatsHTML}
+            
+            <!-- Office Payment Information -->
+            ${officePaymentHTML}
+            
+            <!-- Important Notice -->
+            <div class="alert alert-primary mt-4">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+                <div>
+                  <h6 class="mb-1">Important Notice</h6>
+                  <p class="mb-0">
+                    All fee payments must be made directly at the institute office. 
+                    Please bring your student ID card and previous receipts (if any) when making payments.
+                    Online payment facility will be available soon.
+                  </p>
+                </div>
+              </div>
             </div>
-            ` : `
-            <div class="alert alert-custom alert-success mt-4">
-              <i class="fas fa-check-circle"></i>
-              <span>All fees have been paid. Thank you!</span>
-            </div>
-            `}
           `;
+          
         } else {
           document.getElementById('feesContent').innerHTML = `
-            <div class="alert alert-custom alert-warning">
-              <i class="fas fa-exclamation-triangle"></i>
-              <span>Fee details not available</span>
+            <div class="alert alert-warning">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-1">Fee Details Not Available</h5>
+                  <p class="mb-0">${result.message || 'Unable to load your fee information at the moment.'}</p>
+                </div>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-primary" onclick="loadFees()">
+                  <i class="fas fa-redo me-2"></i>Try Again
+                </button>
+              </div>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading fees:', error);
         document.getElementById('feesContent').innerHTML = `
-          <div class="alert alert-custom alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Failed to load fee details</span>
+          <div class="alert alert-danger">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+              <div>
+                <h5 class="mb-1">Connection Error</h5>
+                <p class="mb-0">Unable to connect to the server. Please check your internet connection.</p>
+                <small class="text-muted">Error: ${error.message}</small>
+              </div>
+            </div>
+            <div class="mt-3">
+              <button class="btn btn-outline-primary" onclick="loadFees()">
+                <i class="fas fa-redo me-2"></i>Retry
+              </button>
+              <button class="btn btn-primary ms-2" onclick="showSection('profile')">
+                <i class="fas fa-user me-2"></i>Go to Profile
+              </button>
+            </div>
           </div>
         `;
       }
@@ -2274,6 +2651,332 @@
       }
     }
 
+    // Helper function for mode colors
+    function getModeColor(mode) {
+      switch(mode.toLowerCase()) {
+        case 'cash': return '#343a40';
+        case 'online': return '#28a745';
+        case 'card': return '#007bff';
+        case 'cheque': return '#17a2b8';
+        default: return '#6c757d';
+      }
+    }
+
+    // Enhanced receipt download function
+    // Enhanced receipt download function
+    async function downloadReceipt(receiptNo, amount, paymentDate, paymentMode) {
+      // Get student info
+      const student = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)
+        .then(res => res.json())
+        .then(data => data.student)
+        .catch(() => null);
+      
+      const receiptWindow = window.open('', '_blank');
+      const today = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      const formattedDate = paymentDate ? 
+        new Date(paymentDate).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }) : today;
+      
+      // Amount to words function - इसे पहले ही परिभाषित करें
+      function amountToWords(num) {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        if (num === 0) return 'Zero';
+        
+        let words = '';
+        
+        if (Math.floor(num / 10000000) > 0) {
+          words += amountToWords(Math.floor(num / 10000000)) + ' Crore ';
+          num %= 10000000;
+        }
+        
+        if (Math.floor(num / 100000) > 0) {
+          words += amountToWords(Math.floor(num / 100000)) + ' Lakh ';
+          num %= 100000;
+        }
+        
+        if (Math.floor(num / 1000) > 0) {
+          words += amountToWords(Math.floor(num / 1000)) + ' Thousand ';
+          num %= 1000;
+        }
+        
+        if (Math.floor(num / 100) > 0) {
+          words += amountToWords(Math.floor(num / 100)) + ' Hundred ';
+          num %= 100;
+        }
+        
+        if (num > 0) {
+          if (words !== '') words += 'and ';
+          
+          if (num < 10) {
+            words += ones[num];
+          } else if (num < 20) {
+            words += teens[num - 10];
+          } else {
+            words += tens[Math.floor(num / 10)];
+            if (num % 10 > 0) {
+              words += ' ' + ones[num % 10];
+            }
+          }
+        }
+        
+        return words.trim();
+      }
+      
+      // Amount in words calculate करें
+      const amountInWords = amount ? amountToWords(amount) : 'Zero';
+      
+      receiptWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Receipt ${receiptNo}</title>
+          <style>
+            @media print {
+              body { margin: 0; padding: 20px; }
+              .no-print { display: none !important; }
+            }
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              padding: 30px;
+              background: #f8f9fa;
+              color: #333;
+            }
+            .receipt-container {
+              max-width: 800px;
+              margin: 0 auto;
+              background: white;
+              border: 2px solid #2d6b6b;
+              border-radius: 10px;
+              padding: 40px;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #2d6b6b;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              color: #2d6b6b;
+              margin: 0 0 10px 0;
+              font-size: 28px;
+            }
+            .header p {
+              color: #666;
+              margin: 0;
+              font-size: 14px;
+            }
+            .receipt-title {
+              text-align: center;
+              font-size: 24px;
+              color: #2d6b6b;
+              margin: 30px 0;
+              font-weight: bold;
+            }
+            .receipt-details {
+              margin: 30px 0;
+            }
+            .detail-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 12px 0;
+              border-bottom: 1px solid #eee;
+            }
+            .detail-row:last-child {
+              border-bottom: none;
+            }
+            .detail-label {
+              font-weight: 600;
+              color: #555;
+              width: 40%;
+            }
+            .detail-value {
+              width: 60%;
+              text-align: right;
+              font-weight: 500;
+            }
+            .amount-box {
+              background: #f8f9fa;
+              border: 2px dashed #2d6b6b;
+              border-radius: 8px;
+              padding: 25px;
+              text-align: center;
+              margin: 30px 0;
+            }
+            .amount-in-words {
+              font-style: italic;
+              color: #666;
+              margin-top: 10px;
+              font-size: 14px;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 2px solid #eee;
+              text-align: center;
+              color: #666;
+              font-size: 12px;
+            }
+            .stamp {
+              float: right;
+              margin-top: 30px;
+              padding: 15px;
+              border: 2px solid #28a745;
+              border-radius: 5px;
+              text-align: center;
+              transform: rotate(5deg);
+            }
+            .stamp span {
+              display: block;
+              font-weight: bold;
+              color: #28a745;
+              font-size: 18px;
+            }
+            .action-buttons {
+              margin-top: 30px;
+              text-align: center;
+            }
+            .btn {
+              padding: 12px 30px;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 600;
+              margin: 0 10px;
+              transition: all 0.3s;
+            }
+            .btn-print {
+              background: #2d6b6b;
+              color: white;
+            }
+            .btn-print:hover {
+              background: #1d4b4b;
+            }
+            .btn-close {
+              background: #6c757d;
+              color: white;
+            }
+            .btn-close:hover {
+              background: #545b62;
+            }
+            .watermark {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              font-size: 120px;
+              color: rgba(45, 107, 107, 0.1);
+              z-index: -1;
+              font-weight: bold;
+              white-space: nowrap;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="watermark">AACEM INSTITUTE</div>
+          <div class="receipt-container">
+            <div class="header">
+              <h1>AACEM INSTITUTE</h1>
+              <p>123 Education Street, Knowledge City, Mumbai - 400001</p>
+              <p>Phone: +91 9876543210 | Email: accounts@aacem.edu.in | Website: www.aacem.edu.in</p>
+            </div>
+            
+            <div class="receipt-title">FEE PAYMENT RECEIPT</div>
+            
+            <div class="receipt-details">
+              <div class="detail-row">
+                <div class="detail-label">Receipt Number:</div>
+                <div class="detail-value"><strong>${receiptNo}</strong></div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Student Name:</div>
+                <div class="detail-value"><strong>${student?.name || STUDENT_ID}</strong></div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Student ID:</div>
+                <div class="detail-value">${STUDENT_ID}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Course:</div>
+                <div class="detail-value">${student?.course || 'N/A'}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Payment Date:</div>
+                <div class="detail-value">${formattedDate}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Payment Mode:</div>
+                <div class="detail-value">${paymentMode}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-label">Receipt Generated On:</div>
+                <div class="detail-value">${today}</div>
+              </div>
+            </div>
+            
+            <div class="amount-box">
+              <div style="font-size: 36px; color: #2d6b6b; font-weight: bold;">
+                ₹ ${amount ? amount.toLocaleString('en-IN') : '0'}
+              </div>
+              <div class="amount-in-words">
+                Amount in words: ${amountInWords} rupees only
+              </div>
+            </div>
+            
+            <div class="stamp">
+              <span>PAID</span>
+              <div style="font-size: 12px; margin-top: 5px;">AACEM Institute</div>
+            </div>
+            
+            <div class="footer">
+              <p>This is a computer generated receipt. No signature required.</p>
+              <p>Please keep this receipt for future reference.</p>
+              <p>For any queries, contact the accounts department.</p>
+              <br>
+              <p>Thank you for your payment!</p>
+            </div>
+            
+            <div class="action-buttons no-print">
+              <button class="btn btn-print" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Print Receipt
+              </button>
+              <button class="btn btn-close" onclick="window.close()">
+                <i class="fas fa-times me-2"></i>Close Window
+              </button>
+            </div>
+          </div>
+          
+          <script>
+            // Auto-print option
+            setTimeout(() => {
+              if (confirm('Do you want to print this receipt?')) {
+                window.print();
+              }
+            }, 1000);
+          
+        </body>
+        </html>
+      `);
+      receiptWindow.document.close();
+    }
+
+    // Pay fees function (update this)
+    function payFees() {
+      alert('Please visit the institute office for all fee payments.\n\nOffice Hours:\nMonday-Friday: 9:00 AM - 6:00 PM\nSaturday: 9:00 AM - 2:00 PM\n\nContact: +91 9876543210\nEmail: accounts@aacem.edu.in\n\nPlease bring your student ID card and previous receipts (if any).');
+    }
+
     // Helper functions
     function getGradeColor(grade) {
       switch(grade) {
@@ -2292,12 +2995,7 @@
         default: return 'secondary';
       }
     }
-
-    function payFees() {
-      alert('Payment gateway integration would be implemented here. Please contact administration for fee payment.');
-    }
   </script>
 </body>
 </html>
-
 
