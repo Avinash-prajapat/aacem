@@ -3210,32 +3210,32 @@ function updateFeesTable() {
         }
     });
     
-    // Grand total row
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'grand-total-row';
-    totalRow.innerHTML = `
-        <td colspan="8" class="py-3" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d); color: white;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        <strong>GRAND TOTAL</strong>
-                    </h6>
-                </div>
-                <div>
-                    <span class="badge bg-light text-dark me-3" style="font-size: 1rem;">
-                        <i class="fas fa-receipt me-1"></i>
-                        ${feesData.length} Payments
-                    </span>
-                    <span class="fs-4 fw-bold">
-                        <i class="fas fa-rupee-sign me-1"></i>
-                        ${grandTotal.toLocaleString()}
-                    </span>
-                </div>
-            </div>
-        </td>
-    `;
-    tbody.appendChild(totalRow);
+    // // Grand total row
+    // const totalRow = document.createElement('tr');
+    // totalRow.className = 'grand-total-row';
+    // totalRow.innerHTML = `
+    //     <td colspan="8" class="py-3" style="background: linear-gradient(135deg, #2d6b6b, #3a9d9d); color: white;">
+    //         <div class="d-flex justify-content-between align-items-center">
+    //             <div>
+    //                 <h6 class="mb-0">
+    //                     <i class="fas fa-chart-line me-2"></i>
+    //                     <strong>GRAND TOTAL</strong>
+    //                 </h6>
+    //             </div>
+    //             <div>
+    //                 <span class="badge bg-light text-dark me-3" style="font-size: 1rem;">
+    //                     <i class="fas fa-receipt me-1"></i>
+    //                     ${feesData.length} Payments
+    //                 </span>
+    //                 <span class="fs-4 fw-bold">
+    //                     <i class="fas fa-rupee-sign me-1"></i>
+    //                     ${grandTotal.toLocaleString()}
+    //                 </span>
+    //             </div>
+    //         </div>
+    //     </td>
+    // `;
+    // tbody.appendChild(totalRow);
 }
 
 // Toggle class fees visibility
@@ -7609,6 +7609,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
