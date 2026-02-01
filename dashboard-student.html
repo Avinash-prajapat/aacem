@@ -1860,125 +1860,146 @@
       }
     }
 
-    // Load Timetable - Course-based
+    // Load timetable with AM/PM format
     async function loadTimetable() {
       try {
-        // First get student profile to find their course
-        const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        const profileResult = await profileResponse.json();
+        // Get student profile for course
+        const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        if (!profileRes.ok) throw new Error('Failed to get student profile');
         
-        if (!profileResult.success || !profileResult.student) {
-          document.getElementById('timetableContent').innerHTML = `
-            <div class="alert alert-custom alert-warning">
-              <i class="fas fa-exclamation-triangle"></i>
-              <span>Please complete your profile to view timetable</span>
-            </div>
-          `;
-          return;
+        const profileData = await profileRes.json();
+        if (!profileData.success || !profileData.student) {
+          throw new Error('Invalid student profile');
         }
         
-        const student = profileResult.student;
-        const courseCode = student.course;
+        const course = profileData.student.course;
+        if (!course) throw new Error('Course not found in profile');
         
-        // Now fetch timetable for the student's course
-        const response = await fetch(`${API_BASE_URL}/timetable/course/${encodeURIComponent(courseCode)}`);
+        const response = await fetch(`${API_BASE_URL}/timetable/course/${encodeURIComponent(course)}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
         
         if (result.success && result.timetable && result.timetable.length > 0) {
-          // Group timetable by day
-          const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          const groupedByDay = {};
-          
-          result.timetable.forEach(item => {
-            if (item.is_active) {
-              const day = item.day_of_week;
-              if (!groupedByDay[day]) {
-                groupedByDay[day] = [];
+          // Filter active classes and sort by day and time
+          const activeClasses = result.timetable
+            .filter(item => item.is_active)
+            .sort((a, b) => {
+              // Sort by day order
+              const dayOrder = {
+                'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 
+                'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7
+              };
+              
+              if (dayOrder[a.day_of_week] !== dayOrder[b.day_of_week]) {
+                return dayOrder[a.day_of_week] - dayOrder[b.day_of_week];
               }
-              groupedByDay[day].push(item);
-            }
-          });
-          
-          // Sort items within each day by start time
-          Object.keys(groupedByDay).forEach(day => {
-            groupedByDay[day].sort((a, b) => {
+              
+              // Sort by start time
               return a.start_time.localeCompare(b.start_time);
             });
-          });
           
-          let tableHTML = `
+          let html = `
             <div class="mb-3">
               <h6 class="text-primary">
-                <i class="fas fa-graduation-cap me-2"></i>Course: ${courseCode}
+                <i class="fas fa-graduation-cap me-2"></i>Course: ${course}
               </h6>
             </div>
-            <div class="table-container">
-              <div class="table-title">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Weekly Timetable</span>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-custom">
-                  <thead>
-                    <tr>
-                      <th width="12%">Day</th>
-                      <th width="15%">Time</th>
-                      <th width="30%">Subject</th>
-                      <th width="25%">Teacher</th>
-                      <th width="10%" class="text-center">Room</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+            <div class="table-responsive">
+              <table class="table table-custom table-hover">
+                <thead class="table-dark">
+                  <tr>
+                    <th width="15%">Day</th>
+                    <th width="20%">Time</th>
+                    <th width="30%">Subject</th>
+                    <th width="25%">Teacher</th>
+                    <th width="10%">Room</th>
+                  </tr>
+                </thead>
+                <tbody>
           `;
           
-          // Display timetable day by day
-          daysOrder.forEach(day => {
-            if (groupedByDay[day]) {
-              groupedByDay[day].forEach((item, index) => {
-                tableHTML += `
-                  <tr>
-                    ${index === 0 ? `<td rowspan="${groupedByDay[day].length}"><strong class="text-primary">${day}</strong></td>` : ''}
-                    <td><small>${item.start_time} - ${item.end_time}</small></td>
-                    <td><strong>${item.subject}</strong></td>
-                    <td>${item.teacher_name || 'TBA'}</td>
-                    <td class="text-center">${item.room_number || '-'}</td>
-                  </tr>
-                `;
-              });
-            }
+          activeClasses.forEach(item => {
+            // Convert times to AM/PM format
+            const startTime12hr = formatTimeTo12Hour(item.start_time);
+            const endTime12hr = formatTimeTo12Hour(item.end_time);
+            
+            html += `
+              <tr>
+                <td><strong class="text-primary">${item.day_of_week || 'N/A'}</strong></td>
+                <td>
+                  <span class="badge bg-info text-dark">${startTime12hr}</span>
+                  <span class="mx-2">to</span>
+                  <span class="badge bg-info text-dark">${endTime12hr}</span>
+                </td>
+                <td><strong>${item.subject || 'N/A'}</strong></td>
+                <td><i class="fas fa-chalkboard-teacher me-2 text-muted"></i>${item.teacher_name || 'TBA'}</td>
+                <td><span class="badge bg-secondary">${item.room_number || '-'}</span></td>
+              </tr>
+            `;
           });
           
-          tableHTML += `
-                  </tbody>
-                </table>
-              </div>
+          html += `
+                </tbody>
+              </table>
             </div>
             
-            <div class="alert alert-custom alert-info mt-3">
-              <i class="fas fa-info-circle"></i>
-              <span>This is your weekly class schedule. Please arrive 5 minutes before class time.</span>
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Note:</strong> All times are displayed in 12-hour format (AM/PM). Please arrive 5 minutes before class time.
             </div>
           `;
           
-          document.getElementById('timetableContent').innerHTML = tableHTML;
+          document.getElementById('timetableContent').innerHTML = html;
         } else {
-          document.getElementById('timetableContent').innerHTML = `
-            <div class="text-center py-5">
-              <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-              <h5 class="text-muted mb-2">No Timetable Available</h5>
-              <p class="text-muted">The timetable for ${courseCode} will be available soon.</p>
-            </div>
-          `;
+          throw new Error(result.message || 'No timetable found');
         }
       } catch (error) {
         console.error('Error loading timetable:', error);
         document.getElementById('timetableContent').innerHTML = `
-          <div class="alert alert-custom alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Failed to load timetable. Please try again later.</span>
+          <div class="alert alert-warning">
+            <i class="fas fa-calendar-times me-2"></i>
+            <strong>No Timetable Available</strong>
+            <p class="mb-0 mt-2">The timetable for your course will be available soon.</p>
+            <small class="text-muted">Error: ${error.message}</small>
           </div>
         `;
       }
+    }
+    
+    // Time format converter function
+    function formatTimeTo12Hour(timeString) {
+      if (!timeString) return 'N/A';
+      
+      // Check if already in 12-hour format
+      if (/(AM|PM|am|pm)/i.test(timeString)) {
+        // Capitalize AM/PM
+        return timeString.toUpperCase().replace(/\s+/g, ' ');
+      }
+      
+      // Try to parse as 24-hour format
+      const timeRegex = /^(\d{1,2}):(\d{2})$/;
+      const match = timeString.match(timeRegex);
+      
+      if (match) {
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2];
+        
+        if (hours < 0 || hours > 23 || isNaN(hours)) {
+          return timeString;
+        }
+        
+        const period = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
+        
+        return `${hours}:${minutes} ${period}`;
+      }
+      
+      return timeString;
     }
 
     // Load Results
@@ -2278,3 +2299,4 @@
   </script>
 </body>
 </html>
+
