@@ -81,7 +81,7 @@
     window.logout = function() {
         if (confirm("Are you sure you want to log out?")) {
             sessionStorage.clear();
-            window.location.href = "index.html";
+            window.location.href = "admin-login.html";
         }
     };
     
@@ -150,7 +150,15 @@
     
 })();
 
+const API_URL = 'https://aacem-backend.onrender.com';
 
+// Global variables
+let sectionsData = [];
+
+let attendanceRecordsData = [];
+let sectionPdfsData = [];
+let sectionMarksData = [];
+let announcementsData = [];
 // Global variables
 let studentsData = [];
 let teachersData = [];
@@ -7582,6 +7590,1066 @@ console.log('Syllabus Management loaded!');
 console.log('PDF Management loaded!');
 
 
+
+
+
+// ==================== TIME TABLE MANAGEMENT ====================
+
+let allTimetable = [];
+
+// Initialize when timetable tab is clicked
+document.getElementById('timetable-tab')?.addEventListener('shown.bs.tab', function() {
+    initTimetableTab();
+});
+
+function initTimetableTab() {
+    populateTimetableCourseDropdowns();
+    loadTimetableData();
+}
+
+// Populate course dropdowns
+function populateTimetableCourseDropdowns() {
+    const filterSelect = document.getElementById('timetableCourseFilter');
+    const modalSelect = document.getElementById('timetableCourse');
+    
+    if (!filterSelect || !modalSelect) return;
+    
+    filterSelect.innerHTML = '<option value="">All Courses</option>';
+    modalSelect.innerHTML = '<option value="">Select course...</option>';
+    
+    coursesData.filter(c => c.is_active).forEach(course => {
+        const option1 = document.createElement('option');
+        option1.value = course.course_code;
+        option1.textContent = `${course.course_name} (${course.course_code})`;
+        filterSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = course.course_code;
+        option2.textContent = `${course.course_name} (${course.course_code})`;
+        modalSelect.appendChild(option2);
+    });
+}
+
+// Load timetable data
+async function loadTimetableData() {
+    try {
+        showLoading('Loading timetable...');
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/timetable/all');
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+            allTimetable = result.timetable || [];
+            filterTimetable();
+        } else {
+            showError('Failed to load timetable');
+        }
+    } catch (error) {
+        hideLoading();
+        showError('Network error');
+    }
+}
+
+// Filter timetable
+function filterTimetable() {
+    const courseFilter = document.getElementById('timetableCourseFilter').value;
+    const dayFilter = document.getElementById('timetableDayFilter').value;
+    const showActiveOnly = document.getElementById('showActiveTimetableOnly').checked;
+    
+    let filteredTimetable = allTimetable.filter(entry => {
+        if (courseFilter && entry.course_code !== courseFilter) return false;
+        if (dayFilter && entry.day_of_week !== dayFilter) return false;
+        if (showActiveOnly && !entry.is_active) return false;
+        return true;
+    });
+    
+    renderTimetableTable(filteredTimetable);
+}
+
+// Render timetable table
+function renderTimetableTable(timetableList) {
+    const tbody = document.getElementById('timetableTableBody');
+    const countBadge = document.getElementById('timetableCount');
+    
+    if (!tbody) return;
+    
+    countBadge.textContent = timetableList.length;
+    
+    if (timetableList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No timetable entries found.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Sort by day and time
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    timetableList.sort((a, b) => {
+        const dayCompare = dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
+        if (dayCompare !== 0) return dayCompare;
+        return a.start_time.localeCompare(b.start_time);
+    });
+    
+    let html = '';
+    timetableList.forEach((entry, index) => {
+        const statusClass = entry.is_active ? 'success' : 'danger';
+        const statusText = entry.is_active ? 'Active' : 'Inactive';
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${entry.day_of_week}</strong></td>
+                <td>
+                    <span class="badge bg-info">${entry.start_time}</span>
+                    -
+                    <span class="badge bg-info">${entry.end_time}</span>
+                </td>
+                <td>
+                    <strong>${entry.course_code}</strong><br>
+                    <small>${entry.course_name}</small>
+                </td>
+                <td>${entry.subject}</td>
+                <td>${entry.teacher_name || '-'}</td>
+                <td>${entry.room_number || '-'}</td>
+                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-warning" onclick="editTimetable('${entry.timetable_id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-${entry.is_active ? 'secondary' : 'success'}" 
+                                onclick="toggleTimetableStatus('${entry.timetable_id}')">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteTimetable('${entry.timetable_id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Show add modal
+function showAddTimetableModal() {
+    resetTimetableForm();
+    document.getElementById('editTimetableId').value = '';
+    document.querySelector('#timetableModal .modal-title').innerHTML = 
+        '<i class="fas fa-plus me-2"></i>Add Timetable Entry';
+    
+    const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
+    modal.show();
+}
+
+// Reset form
+function resetTimetableForm() {
+    document.getElementById('timetableForm').reset();
+    document.getElementById('timetableStatus').checked = true;
+}
+
+// Edit timetable
+async function editTimetable(timetableId) {
+    try {
+        const entry = allTimetable.find(t => t.timetable_id === timetableId);
+        if (!entry) {
+            showError('Entry not found');
+            return;
+        }
+        
+        document.getElementById('editTimetableId').value = entry.timetable_id;
+        document.getElementById('timetableCourse').value = entry.course_code;
+        document.getElementById('timetableDay').value = entry.day_of_week;
+        document.getElementById('timetableStartTime').value = entry.start_time;
+        document.getElementById('timetableEndTime').value = entry.end_time;
+        document.getElementById('timetableSubject').value = entry.subject;
+        document.getElementById('timetableTeacher').value = entry.teacher_name || '';
+        document.getElementById('timetableRoom').value = entry.room_number || '';
+        document.getElementById('timetableStatus').checked = entry.is_active;
+        
+        document.querySelector('#timetableModal .modal-title').innerHTML = 
+            '<i class="fas fa-edit me-2"></i>Edit Timetable Entry';
+        
+        const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
+        modal.show();
+    } catch (error) {
+        showError('Error loading entry');
+    }
+}
+
+// Save timetable
+async function saveTimetable() {
+    const timetableId = document.getElementById('editTimetableId').value;
+    const courseCode = document.getElementById('timetableCourse').value;
+    const dayOfWeek = document.getElementById('timetableDay').value;
+    const startTime = document.getElementById('timetableStartTime').value;
+    const endTime = document.getElementById('timetableEndTime').value;
+    const subject = document.getElementById('timetableSubject').value.trim();
+    
+    if (!courseCode || !dayOfWeek || !startTime || !endTime || !subject) {
+        showError('Please fill all required fields');
+        return;
+    }
+    
+    const data = {
+        timetable_id: timetableId || null,
+        course_code: courseCode,
+        day_of_week: dayOfWeek,
+        start_time: startTime,
+        end_time: endTime,
+        subject: subject,
+        teacher_name: document.getElementById('timetableTeacher').value.trim(),
+        room_number: document.getElementById('timetableRoom').value.trim(),
+        is_active: document.getElementById('timetableStatus').checked
+    };
+    
+    try {
+        const btn = document.querySelector('#timetableModal .btn-success');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        btn.disabled = true;
+        
+        const response = await fetch('https://aacem-backend.onrender.com/api/timetable/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+            showSuccess('Timetable entry saved!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('timetableModal'));
+            modal.hide();
+            await loadTimetableData();
+        } else {
+            showError('Save failed: ' + result.message);
+        }
+    } catch (error) {
+        showError('Network error');
+    }
+}
+
+// Delete timetable
+async function deleteTimetable(timetableId) {
+    if (!confirm('Delete this timetable entry?')) return;
+    
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/delete/${timetableId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Entry deleted');
+            await loadTimetableData();
+        }
+    } catch (error) {
+        showError('Error deleting');
+    }
+}
+
+// Toggle status
+async function toggleTimetableStatus(timetableId) {
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/toggle-status/${timetableId}`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Status updated');
+            await loadTimetableData();
+        }
+    } catch (error) {
+        showError('Error updating status');
+    }
+}
+
+// Export timetable
+function exportTimetable() {
+    const courseFilter = document.getElementById('timetableCourseFilter').value;
+    const dayFilter = document.getElementById('timetableDayFilter').value;
+    
+    let filteredData = allTimetable;
+    if (courseFilter) filteredData = filteredData.filter(t => t.course_code === courseFilter);
+    if (dayFilter) filteredData = filteredData.filter(t => t.day_of_week === dayFilter);
+    
+    let csv = 'Day,Start Time,End Time,Course,Subject,Teacher,Room,Status\n';
+    
+    filteredData.forEach(t => {
+        csv += `"${t.day_of_week}","${t.start_time}","${t.end_time}","${t.course_name}","${t.subject}","${t.teacher_name || ''}","${t.room_number || ''}","${t.is_active ? 'Active' : 'Inactive'}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'timetable.csv';
+    a.click();
+}
+
+// Refresh
+function refreshTimetable() {
+    loadTimetableData();
+}
+
+console.log('✅ Time Table Management loaded!');
+
+
+
+
+
+
+// =====================================================
+// SECTION MANAGEMENT - MODIFIED VERSION (NO TOAST)
+// =====================================================
+
+// ==================== GLOBAL VARIABLES ====================
+const SECTION_API_URL = 'https://aacem-backend.onrender.com';
+
+// ==================== SECTION MANAGEMENT FUNCTIONS ====================
+
+// 1. Load Sections Data
+async function loadSections() {
+    try {
+        showLoading('sectionsTableBody');
+        const response = await fetch(`${SECTION_API_URL}/api/sections/all`);
+        const data = await response.json();
+        
+        hideLoading('sectionsTableBody');
+        
+        if (data.success) {
+            displaySections(data.sections);
+            updateSectionStats(data.sections);
+            populateSectionCourseFilter(data.sections);
+        } else {
+            showError('Failed to load sections: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        hideLoading('sectionsTableBody');
+        showError('Error loading sections');
+    }
+}
+
+// 2. Load Teacher Mappings
+async function loadTeacherMappings() {
+    try {
+        showLoading('teacherMappingsTableBody');
+        const response = await fetch(`${SECTION_API_URL}/api/teacher-sections/all`);
+        const data = await response.json();
+        
+        hideLoading('teacherMappingsTableBody');
+        
+        if (data.success) {
+            displayTeacherMappings(data.mappings);
+            document.getElementById('mappingsCount').textContent = data.mappings.length;
+        } else {
+            showError('Failed to load teacher assignments: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading teacher mappings:', error);
+        hideLoading('teacherMappingsTableBody');
+        showError('Error loading teacher assignments');
+    }
+}
+
+// 3. Show Add Section Modal
+function showAddSectionModal() {
+    document.getElementById('sectionModalHeader').innerHTML = `
+        <h5 class="modal-title">
+            <i class="fas fa-plus me-2"></i>Add New Section
+        </h5>
+    `;
+    document.getElementById('editSectionId').value = '';
+    document.getElementById('sectionForm').reset();
+    document.getElementById('sectionStatus').value = 'true';
+    
+    // Load courses for dropdown
+    loadCoursesForSection();
+    
+    const modal = new bootstrap.Modal(document.getElementById('sectionModal'));
+    modal.show();
+}
+
+// 4. Show Edit Section Modal
+async function showEditSectionModal(sectionId) {
+    try {
+        showLoading('sectionModal');
+        const response = await fetch(`${SECTION_API_URL}/api/sections/all`);
+        const data = await response.json();
+        
+        hideLoading('sectionModal');
+        
+        if (data.success) {
+            const section = data.sections.find(s => s.section_id === sectionId);
+            if (section) {
+                document.getElementById('sectionModalHeader').innerHTML = `
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edit Section ${section.section_name}
+                    </h5>
+                `;
+                document.getElementById('editSectionId').value = section.section_id;
+                document.getElementById('sectionName').value = section.section_name;
+                document.getElementById('maxStudents').value = section.max_students;
+                document.getElementById('sectionStatus').value = section.is_active.toString();
+                
+                // Load courses and set selected
+                await loadCoursesForSection();
+                document.getElementById('sectionCourse').value = section.course_code;
+                
+                const modal = new bootstrap.Modal(document.getElementById('sectionModal'));
+                modal.show();
+            } else {
+                showError('Section not found');
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching section:', error);
+        hideLoading('sectionModal');
+        showError('Error loading section details');
+    }
+}
+
+// 5. Show Assign Teacher Modal
+function showAssignTeacherModal() {
+    document.getElementById('assignTeacherForm').reset();
+    document.getElementById('assignSectionId').innerHTML = '<option value="">Select course first...</option>';
+    
+    // Load teachers and courses for dropdowns
+    loadTeachersForAssignment();
+    loadCoursesForAssignment();
+    
+    const modal = new bootstrap.Modal(document.getElementById('assignTeacherModal'));
+    modal.show();
+}
+
+// 6. Load Courses for Section Dropdown
+async function loadCoursesForSection() {
+    try {
+        const response = await fetch(`${SECTION_API_URL}/api/courses`);
+        const data = await response.json();
+        
+        const select = document.getElementById('sectionCourse');
+        if (select && data.courses) {
+            const activeCourses = data.courses.filter(c => c.is_active !== false);
+            select.innerHTML = '<option value="">Select course...</option>' +
+                activeCourses.map(c => `<option value="${c.course_code}">${c.course_code} - ${c.course_name}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error loading courses:', error);
+        showError('Failed to load courses');
+    }
+}
+
+// 7. Load Teachers for Assignment Dropdown
+async function loadTeachersForAssignment() {
+    try {
+        const response = await fetch(`${SECTION_API_URL}/api/teachers`);
+        const data = await response.json();
+        
+        const select = document.getElementById('assignTeacherId');
+        if (select && data.teachers) {
+            select.innerHTML = '<option value="">Choose teacher...</option>' +
+                data.teachers.map(t => `<option value="${t.teacher_id}">${t.name} (${t.teacher_id})</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error loading teachers:', error);
+        showError('Failed to load teachers');
+    }
+}
+
+// 8. Load Courses for Assignment Dropdown
+async function loadCoursesForAssignment() {
+    try {
+        const response = await fetch(`${SECTION_API_URL}/api/courses`);
+        const data = await response.json();
+        
+        const select = document.getElementById('assignCourse');
+        if (select && data.courses) {
+            const activeCourses = data.courses.filter(c => c.is_active !== false);
+            select.innerHTML = '<option value="">Choose course...</option>' +
+                activeCourses.map(c => `<option value="${c.course_code}">${c.course_code} - ${c.course_name}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error loading courses:', error);
+        showError('Failed to load courses');
+    }
+}
+
+// 9. Load Sections for Assignment Dropdown
+async function loadSectionsForAssignment() {
+    try {
+        const courseCode = document.getElementById('assignCourse').value;
+        
+        if (!courseCode) {
+            document.getElementById('assignSectionId').innerHTML = '<option value="">Select course first...</option>';
+            return;
+        }
+        
+        showLoading('assignSectionId');
+        
+        const response = await fetch(`${SECTION_API_URL}/api/sections/course/${courseCode}`);
+        const data = await response.json();
+        
+        hideLoading('assignSectionId');
+        
+        const select = document.getElementById('assignSectionId');
+        if (select && data.sections) {
+            const activeSections = data.sections.filter(s => s.is_active !== false);
+            if (activeSections.length === 0) {
+                select.innerHTML = '<option value="">No active sections for this course</option>';
+            } else {
+                select.innerHTML = '<option value="">Select section...</option>' +
+                    activeSections.map(s => `<option value="${s.section_id}">${s.section_name} (${s.current_students}/${s.max_students})</option>`).join('');
+            }
+        } else {
+            select.innerHTML = '<option value="">No sections available</option>';
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        hideLoading('assignSectionId');
+        showError('Failed to load sections');
+    }
+}
+
+// 10. Save Section
+async function saveSection() {
+    try {
+        const sectionId = document.getElementById('editSectionId').value;
+        const courseCode = document.getElementById('sectionCourse').value;
+        const sectionName = document.getElementById('sectionName').value.trim().toUpperCase();
+        const maxStudents = document.getElementById('maxStudents').value;
+        const isActive = document.getElementById('sectionStatus').value === 'true';
+        
+        // Validation
+        if (!courseCode) {
+            showError('Please select a course');
+            return;
+        }
+        if (!sectionName) {
+            showError('Please enter section name');
+            return;
+        }
+        if (!maxStudents || maxStudents < 1 || maxStudents > 100) {
+            showError('Please enter a valid maximum students (1-100)');
+            return;
+        }
+        
+        const isEditMode = !!sectionId;
+        const url = isEditMode ? 
+            `${SECTION_API_URL}/api/sections/update/${sectionId}` : 
+            `${SECTION_API_URL}/api/sections/create`;
+        
+        const method = isEditMode ? 'PUT' : 'POST';
+        
+        const payload = {
+            course_code: courseCode,
+            section_name: sectionName,
+            max_students: parseInt(maxStudents),
+            is_active: isActive
+        };
+        
+        // Show loading on save button
+        const saveBtn = document.querySelector('#sectionModal .modal-footer .btn-success');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+        saveBtn.disabled = true;
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        // Reset button
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+        
+        if (data.success) {
+            showSuccess(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('sectionModal')).hide();
+            loadSections();
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error('Error saving section:', error);
+        
+        // Reset button
+        const saveBtn = document.querySelector('#sectionModal .modal-footer .btn-success');
+        if (saveBtn) {
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Section';
+            saveBtn.disabled = false;
+        }
+        
+        showError('Error saving section: ' + error.message);
+    }
+}
+
+// 11. Assign Teacher to Section
+async function assignTeacherToSection() {
+    try {
+        const teacherId = document.getElementById('assignTeacherId').value;
+        const sectionId = document.getElementById('assignSectionId').value;
+        const subject = document.getElementById('assignSubject').value.trim();
+        
+        // Validation
+        if (!teacherId) {
+            showError('Please select a teacher');
+            return;
+        }
+        if (!sectionId) {
+            showError('Please select a section');
+            return;
+        }
+        
+        const payload = {
+            teacher_id: teacherId,
+            section_id: sectionId,
+            subject: subject || 'General'
+        };
+        
+        // Show loading on assign button
+        const assignBtn = document.querySelector('#assignTeacherModal .modal-footer .btn-success');
+        const originalText = assignBtn.innerHTML;
+        assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Assigning...';
+        assignBtn.disabled = true;
+        
+        const response = await fetch(`${SECTION_API_URL}/api/teacher-sections/assign`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        // Reset button
+        assignBtn.innerHTML = originalText;
+        assignBtn.disabled = false;
+        
+        if (data.success) {
+            showSuccess(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('assignTeacherModal')).hide();
+            loadTeacherMappings();
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error('Error assigning teacher:', error);
+        
+        // Reset button
+        const assignBtn = document.querySelector('#assignTeacherModal .modal-footer .btn-success');
+        if (assignBtn) {
+            assignBtn.innerHTML = '<i class="fas fa-check me-1"></i>Assign Teacher';
+            assignBtn.disabled = false;
+        }
+        
+        showError('Error assigning teacher: ' + error.message);
+    }
+}
+
+// 12. Delete Section
+async function deleteSection(sectionId, sectionName) {
+    if (!confirm(`Are you sure you want to delete section "${sectionName}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        showLoading('sectionsTableBody');
+        
+        const response = await fetch(`${SECTION_API_URL}/api/sections/delete/${sectionId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        hideLoading('sectionsTableBody');
+        
+        if (data.success) {
+            showSuccess(data.message);
+            loadSections();
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting section:', error);
+        hideLoading('sectionsTableBody');
+        showError('Error deleting section: ' + error.message);
+    }
+}
+
+// 13. Remove Teacher Assignment
+async function removeTeacherAssignment(mappingId, teacherName) {
+    if (!confirm(`Are you sure you want to remove teacher "${teacherName}" from this section?`)) {
+        return;
+    }
+    
+    try {
+        showLoading('teacherMappingsTableBody');
+        
+        const response = await fetch(`${SECTION_API_URL}/api/teacher-sections/remove/${mappingId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        hideLoading('teacherMappingsTableBody');
+        
+        if (data.success) {
+            showSuccess(data.message);
+            loadTeacherMappings();
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error('Error removing teacher assignment:', error);
+        hideLoading('teacherMappingsTableBody');
+        showError('Error removing teacher assignment: ' + error.message);
+    }
+}
+
+// 14. Display Sections in Table
+function displaySections(sections) {
+    const tbody = document.getElementById('sectionsTableBody');
+    
+    if (!sections || sections.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No sections found</p>
+                    <button class="btn btn-sm btn-primary" onclick="showAddSectionModal()">
+                        <i class="fas fa-plus me-1"></i>Add First Section
+                    </button>
+                </td>
+            </tr>
+        `;
+        document.getElementById('sectionsCount').textContent = '0';
+        return;
+    }
+    
+    let html = '';
+    sections.forEach((section, index) => {
+        const utilization = section.max_students > 0 ? 
+            Math.round((section.current_students / section.max_students) * 100) : 0;
+        
+        let utilizationClass = 'bg-success';
+        if (utilization >= 90) utilizationClass = 'bg-danger';
+        else if (utilization >= 70) utilizationClass = 'bg-warning';
+        else if (utilization >= 50) utilizationClass = 'bg-info';
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <strong>${section.course_code}</strong>
+                    <div class="small text-muted">${section.course_name || ''}</div>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${section.section_name}</span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-users me-2 text-muted"></i>
+                        <div>
+                            <div class="small">Capacity: ${section.max_students}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-graduate me-2 text-muted"></i>
+                        <div>
+                            <div class="small">Students: ${section.current_students}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1 me-2" style="height: 10px;">
+                            <div class="progress-bar ${utilizationClass}" role="progressbar" 
+                                style="width: ${utilization}%" aria-valuenow="${utilization}" 
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <span class="small fw-bold">${utilization}%</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${section.is_active ? 'bg-success' : 'bg-secondary'}">
+                        <i class="fas fa-${section.is_active ? 'check-circle' : 'times-circle'} me-1"></i>
+                        ${section.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-primary" onclick="showEditSectionModal('${section.section_id}')" 
+                            title="Edit Section">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteSection('${section.section_id}', '${section.section_name}')" 
+                            title="Delete Section">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    document.getElementById('sectionsCount').textContent = sections.length;
+}
+
+// 15. Display Teacher Mappings
+function displayTeacherMappings(mappings) {
+    const tbody = document.getElementById('teacherMappingsTableBody');
+    
+    if (!mappings || mappings.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-chalkboard-user fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No teacher assignments found</p>
+                    <button class="btn btn-sm btn-primary" onclick="showAssignTeacherModal()">
+                        <i class="fas fa-plus me-1"></i>Assign First Teacher
+                    </button>
+                </td>
+            </tr>
+        `;
+        document.getElementById('mappingsCount').textContent = '0';
+        return;
+    }
+    
+    let html = '';
+    mappings.forEach((mapping, index) => {
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-tie text-primary me-2"></i>
+                        <div>
+                            <strong>${mapping.teacher_name || mapping.teacher_id}</strong>
+                            <div class="small text-muted">ID: ${mapping.teacher_id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-info">${mapping.course_code || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${mapping.section_name || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge bg-secondary">${mapping.subject || 'All Subjects'}</span>
+                </td>
+                <td>
+                    ${mapping.assigned_at ? new Date(mapping.assigned_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 'N/A'}
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger" 
+                        onclick="removeTeacherAssignment('${mapping.mapping_id}', '${mapping.teacher_name || mapping.teacher_id}')"
+                        title="Remove Assignment">
+                        <i class="fas fa-times me-1"></i> Remove
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    document.getElementById('mappingsCount').textContent = mappings.length;
+}
+
+// 16. Update Section Statistics
+function updateSectionStats(sections) {
+    const totalSections = sections.length;
+    const totalStudents = sections.reduce((sum, section) => sum + (section.current_students || 0), 0);
+    const coursesWithSections = [...new Set(sections.map(s => s.course_code))].length;
+    const avgCapacity = sections.length > 0 ? 
+        Math.round(sections.reduce((sum, section) => {
+            const capacity = section.max_students > 0 ? 
+                ((section.current_students || 0) / section.max_students * 100) : 0;
+            return sum + capacity;
+        }, 0) / sections.length) : 0;
+    
+    document.getElementById('totalSections').textContent = totalSections.toLocaleString();
+    document.getElementById('studentsInSections').textContent = totalStudents.toLocaleString();
+    document.getElementById('coursesWithSections').textContent = coursesWithSections.toLocaleString();
+    document.getElementById('avgCapacity').textContent = `${avgCapacity}%`;
+}
+
+// 17. Populate Section Course Filter
+function populateSectionCourseFilter(sections) {
+    const select = document.getElementById('sectionCourseFilter');
+    const courses = [...new Set(sections.map(s => s.course_code))];
+    
+    let html = '<option value="">All Courses</option>';
+    courses.forEach(course => {
+        const section = sections.find(s => s.course_code === course);
+        const courseName = section?.course_name || course;
+        html += `<option value="${course}">${course} - ${courseName}</option>`;
+    });
+    
+    select.innerHTML = html;
+}
+
+// 18. Filter Sections
+function filterSections() {
+    const courseFilter = document.getElementById('sectionCourseFilter').value;
+    const searchText = document.getElementById('searchSection').value.toLowerCase();
+    const showActiveOnly = document.getElementById('showActiveOnlySections').checked;
+    
+    showLoading('sectionsTableBody');
+    
+    fetch(`${SECTION_API_URL}/api/sections/all`)
+        .then(res => res.json())
+        .then(data => {
+            hideLoading('sectionsTableBody');
+            
+            if (data.success) {
+                let filtered = data.sections;
+                
+                // Apply course filter
+                if (courseFilter) {
+                    filtered = filtered.filter(s => s.course_code === courseFilter);
+                }
+                
+                // Apply active filter
+                if (showActiveOnly) {
+                    filtered = filtered.filter(s => s.is_active);
+                }
+                
+                // Apply search filter
+                if (searchText) {
+                    filtered = filtered.filter(s => 
+                        s.section_name.toLowerCase().includes(searchText) ||
+                        s.course_code.toLowerCase().includes(searchText) ||
+                        (s.course_name && s.course_name.toLowerCase().includes(searchText))
+                    );
+                }
+                
+                displaySections(filtered);
+            }
+        })
+        .catch(error => {
+            console.error('Error filtering sections:', error);
+            hideLoading('sectionsTableBody');
+            showError('Error filtering sections');
+        });
+}
+
+// 19. Search Sections
+function searchSections() {
+    filterSections();
+}
+
+// 20. Refresh Sections
+function refreshSections() {
+    loadSections();
+    showSuccess('Sections refreshed');
+}
+
+// 21. Refresh Teacher Mappings
+function refreshTeacherMappings() {
+    loadTeacherMappings();
+    showSuccess('Teacher assignments refreshed');
+}
+
+// 22. Export Sections (CSV)
+function exportSections() {
+    showSuccess('Export feature coming soon!');
+}
+
+// ==================== INITIALIZATION ====================
+
+// Initialize Section Management
+function initSectionManagement() {
+    console.log('Initializing Section Management...');
+    
+    // Load sections when the tab is shown
+    const sectionsTab = document.getElementById('sections-tab');
+    if (sectionsTab) {
+        sectionsTab.addEventListener('shown.bs.tab', function() {
+            console.log('Sections tab shown, loading data...');
+            loadSections();
+        });
+    }
+    
+    // Load teacher mappings when the tab is shown
+    const teacherSectionsTab = document.getElementById('teacher-sections-tab');
+    if (teacherSectionsTab) {
+        teacherSectionsTab.addEventListener('shown.bs.tab', function() {
+            console.log('Teacher Sections tab shown, loading data...');
+            loadTeacherMappings();
+        });
+    }
+    
+    // Add event listener for course selection in assign teacher modal
+    const assignCourseSelect = document.getElementById('assignCourse');
+    if (assignCourseSelect) {
+        assignCourseSelect.addEventListener('change', loadSectionsForAssignment);
+    }
+    
+    console.log('✅ Section Management initialized successfully');
+}
+
+// ==================== DOM READY ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize section management
+    setTimeout(() => {
+        initSectionManagement();
+    }, 1000); // Delay to ensure other components are loaded
+});
+
+// ==================== EXPORT FUNCTIONS FOR HTML ONCLICK ====================
+// Make functions globally available for HTML onclick attributes
+window.showAddSectionModal = showAddSectionModal;
+window.showAssignTeacherModal = showAssignTeacherModal;
+window.refreshSections = refreshSections;
+window.refreshTeacherMappings = refreshTeacherMappings;
+window.exportSections = exportSections;
+window.filterSections = filterSections;
+window.searchSections = searchSections;
+window.loadSectionsForAssignment = loadSectionsForAssignment;
+window.saveSection = saveSection;
+window.assignTeacherToSection = assignTeacherToSection;
+
+console.log('✅ Section Management JavaScript loaded successfully!');
+
+
+
+
+
+
 // Initialize contact messages when tab is shown
 document.addEventListener('DOMContentLoaded', function() {
     const contactTab = document.getElementById('contact-tab');
@@ -7606,10 +8674,6 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
-
-
-
-
 
 
 
