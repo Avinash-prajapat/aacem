@@ -9107,6 +9107,21 @@ function refreshAnnouncements() {
     showSuccess('Announcements refreshed');
 }
 
+function showLoadingSpinner(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.innerHTML = `
+            <tr>
+                <td colspan="20" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading data...</p>
+                </td>
+            </tr>
+        `;
+    }
+}
 // Export announcements
 function exportAnnouncements() {
     showInfo('Export functionality - Coming soon!');
@@ -9162,6 +9177,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
