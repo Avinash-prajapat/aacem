@@ -8647,6 +8647,494 @@ console.log('✅ Section Management JavaScript loaded successfully!');
 
 
 
+// announcements section
+function formatDateDisplay(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
+function hideLoadingSpinner(elementId) {
+    // Loading will be replaced by actual content
+}
+// ==================== ANNOUNCEMENTS MANAGEMENT ====================
+
+// Tab initialization
+document.getElementById('announcements-tab')?.addEventListener('shown.bs.tab', function() {
+    console.log('📢 Announcements tab shown');
+    loadAnnouncements();
+});
+
+// Load all announcements
+async function loadAnnouncements() {
+    try {
+        showLoadingSpinner('announcementsTableBody');
+        
+        const response = await fetch(`${API_URL}/api/announcements/all`);
+        const data = await response.json();
+        
+        hideLoadingSpinner('announcementsTableBody');
+        
+        if (data.success) {
+            announcementsData = data.announcements || [];
+            displayAnnouncements(announcementsData);
+            updateAnnouncementStats(announcementsData);
+        }
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+        hideLoadingSpinner('announcementsTableBody');
+        showError('Failed to load announcements');
+    }
+}
+
+// Display announcements
+function displayAnnouncements(announcements) {
+    const tbody = document.getElementById('announcementsTableBody');
+    
+    if (!tbody) {
+        console.error('announcementsTableBody not found!');
+        return;
+    }
+    
+    if (!announcements || announcements.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No announcements found</p>
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
+                        <i class="fas fa-plus me-1"></i>Create First Announcement
+                    </button>
+                </td>
+            </tr>
+        `;
+        const countEl = document.getElementById('announcementsCount');
+        if (countEl) countEl.textContent = '0';
+        return;
+    }
+
+    let html = '';
+    announcements.forEach((ann, index) => {
+        const priorityClass = getPriorityBadgeClass(ann.priority);
+        const targetBadge = getTargetBadge(ann.target_audience, ann.course_code, ann.section_id);
+        const statusBadge = ann.is_active 
+            ? '<span class="badge bg-success">Active</span>'
+            : '<span class="badge bg-secondary">Inactive</span>';
+        
+        const dateRange = ann.start_date && ann.end_date 
+            ? `${formatDateDisplay(ann.start_date)} - ${formatDateDisplay(ann.end_date)}`
+            : 'No limit';
+        
+        const messagePreview = ann.message.length > 50 
+            ? ann.message.substring(0, 50) + '...' 
+            : ann.message;
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${ann.title}</strong></td>
+                <td>${messagePreview}</td>
+                <td>${targetBadge}</td>
+                <td><span class="badge ${priorityClass}">${ann.priority.toUpperCase()}</span></td>
+                <td><small>${dateRange}</small></td>
+                <td>${statusBadge}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info" onclick="viewAnnouncementDetails('${ann.announcement_id}')" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning" onclick="editAnnouncement('${ann.announcement_id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn ${ann.is_active ? 'btn-secondary' : 'btn-success'}" 
+                            onclick="toggleAnnouncementStatus('${ann.announcement_id}')" 
+                            title="${ann.is_active ? 'Deactivate' : 'Activate'}">
+                            <i class="fas fa-${ann.is_active ? 'times' : 'check'}"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAnnouncement('${ann.announcement_id}', '${ann.title}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    const countEl = document.getElementById('announcementsCount');
+    if (countEl) countEl.textContent = announcements.length;
+}
+
+// Update announcement stats
+function updateAnnouncementStats(announcements) {
+    const total = announcements.length;
+    const active = announcements.filter(a => a.is_active).length;
+    const urgent = announcements.filter(a => a.priority === 'urgent').length;
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const recent = announcements.filter(a => new Date(a.created_at) > oneWeekAgo).length;
+    
+    const totalEl = document.getElementById('totalAnnouncements');
+    const activeEl = document.getElementById('activeAnnouncements');
+    const urgentEl = document.getElementById('urgentAnnouncements');
+    const recentEl = document.getElementById('recentAnnouncements');
+    
+    if (totalEl) totalEl.textContent = total;
+    if (activeEl) activeEl.textContent = active;
+    if (urgentEl) urgentEl.textContent = urgent;
+    if (recentEl) recentEl.textContent = recent;
+}
+
+// Handle target audience selection
+function handleAnnouncementTarget() {
+    const target = document.getElementById('announcementTarget').value;
+    const detailsDiv = document.getElementById('announcementTargetDetails');
+    const sectionDiv = document.getElementById('announcementSectionDiv');
+    
+    if (target === 'all') {
+        detailsDiv.style.display = 'none';
+    } else if (target === 'course') {
+        detailsDiv.style.display = 'block';
+        sectionDiv.style.display = 'none';
+    } else if (target === 'section') {
+        detailsDiv.style.display = 'block';
+        sectionDiv.style.display = 'block';
+    }
+}
+
+// Load sections for announcement
+async function loadSectionsForAnnouncement(courseCode) {
+    const sectionSelect = document.getElementById('announcementSection');
+    
+    if (!courseCode) {
+        sectionSelect.innerHTML = '<option value="">Choose section...</option>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${SECTION_API_URL}/api/sections/by-course/${courseCode}`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            let options = '<option value="">Choose section...</option>';
+            data.sections.forEach(section => {
+                options += `<option value="${section.section_id}">${section.section_name}</option>`;
+            });
+            sectionSelect.innerHTML = options;
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+    }
+}
+
+// Create announcement
+async function createAnnouncement() {
+    try {
+        const title = document.getElementById('announcementTitle').value;
+        const message = document.getElementById('announcementMessage').value;
+        const target = document.getElementById('announcementTarget').value;
+        const priority = document.getElementById('announcementPriority').value;
+        const courseCode = document.getElementById('announcementCourse').value;
+        const sectionId = document.getElementById('announcementSection').value;
+        const startDate = document.getElementById('announcementStartDate').value;
+        const endDate = document.getElementById('announcementEndDate').value;
+        
+        if (!title || !message) {
+            showError('Please fill title and message');
+            return;
+        }
+        
+        const payload = {
+            title: title,
+            message: message,
+            target_audience: target,
+            priority: priority,
+            course_code: target !== 'all' ? courseCode : null,
+            section_id: target === 'section' ? sectionId : null,
+            start_date: startDate || null,
+            end_date: endDate || null
+        };
+        
+        const createBtn = document.querySelector('#createAnnouncementModal .btn-success');
+        const originalText = createBtn.innerHTML;
+        createBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+        createBtn.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/announcements/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        createBtn.innerHTML = originalText;
+        createBtn.disabled = false;
+        
+        if (result.success) {
+            showSuccess(result.message);
+            bootstrap.Modal.getInstance(document.getElementById('createAnnouncementModal')).hide();
+            document.getElementById('createAnnouncementForm').reset();
+            document.getElementById('announcementTargetDetails').style.display = 'none';
+            loadAnnouncements();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        showError('Failed to create announcement');
+    }
+}
+
+// View announcement details
+async function viewAnnouncementDetails(announcementId) {
+    try {
+        const response = await fetch(`${API_URL}/api/announcements/${announcementId}`);
+        const data = await response.json();
+        
+        if (data.success && data.announcement) {
+            const ann = data.announcement;
+            
+            const detailsHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h5><i class="fas fa-bullhorn me-2"></i>${ann.title}</h5>
+                        <hr>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><th>Priority:</th><td><span class="badge ${getPriorityBadgeClass(ann.priority)}">${ann.priority.toUpperCase()}</span></td></tr>
+                            <tr><th>Target:</th><td>${getTargetBadge(ann.target_audience, ann.course_code, ann.section_id)}</td></tr>
+                            <tr><th>Status:</th><td>${ann.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><th>Start Date:</th><td>${ann.start_date ? formatDateDisplay(ann.start_date) : 'Not set'}</td></tr>
+                            <tr><th>End Date:</th><td>${ann.end_date ? formatDateDisplay(ann.end_date) : 'Not set'}</td></tr>
+                            <tr><th>Created:</th><td>${formatDateDisplay(ann.created_at)}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>Message:</h6>
+                        <div class="alert alert-info">
+                            ${ann.message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('announcementDetailsContent').innerHTML = detailsHTML;
+            const modal = new bootstrap.Modal(document.getElementById('viewAnnouncementModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Error viewing announcement:', error);
+        showError('Failed to load announcement details');
+    }
+}
+
+// Edit announcement
+async function editAnnouncement(announcementId) {
+    try {
+        const response = await fetch(`${API_URL}/api/announcements/${announcementId}`);
+        const data = await response.json();
+        
+        if (data.success && data.announcement) {
+            const ann = data.announcement;
+            
+            document.getElementById('editAnnouncementId').value = ann.announcement_id;
+            document.getElementById('editAnnouncementTitle').value = ann.title;
+            document.getElementById('editAnnouncementMessage').value = ann.message;
+            document.getElementById('editAnnouncementTarget').value = ann.target_audience;
+            document.getElementById('editAnnouncementPriority').value = ann.priority;
+            document.getElementById('editAnnouncementStartDate').value = ann.start_date || '';
+            document.getElementById('editAnnouncementEndDate').value = ann.end_date || '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('editAnnouncementModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Error loading announcement:', error);
+        showError('Failed to load announcement');
+    }
+}
+
+// Update announcement
+async function updateAnnouncement() {
+    try {
+        const announcementId = document.getElementById('editAnnouncementId').value;
+        const title = document.getElementById('editAnnouncementTitle').value;
+        const message = document.getElementById('editAnnouncementMessage').value;
+        const target = document.getElementById('editAnnouncementTarget').value;
+        const priority = document.getElementById('editAnnouncementPriority').value;
+        const startDate = document.getElementById('editAnnouncementStartDate').value;
+        const endDate = document.getElementById('editAnnouncementEndDate').value;
+        
+        const payload = {
+            title: title,
+            message: message,
+            target_audience: target,
+            priority: priority,
+            start_date: startDate || null,
+            end_date: endDate || null
+        };
+        
+        const response = await fetch(`${API_URL}/api/announcements/update/${announcementId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(result.message);
+            bootstrap.Modal.getInstance(document.getElementById('editAnnouncementModal')).hide();
+            loadAnnouncements();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error updating announcement:', error);
+        showError('Failed to update announcement');
+    }
+}
+
+// Toggle announcement status
+async function toggleAnnouncementStatus(announcementId) {
+    try {
+        const response = await fetch(`${API_URL}/api/announcements/toggle-status/${announcementId}`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(result.message);
+            loadAnnouncements();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error toggling status:', error);
+        showError('Failed to toggle status');
+    }
+}
+
+// Delete announcement
+async function deleteAnnouncement(announcementId, title) {
+    if (!confirm(`Delete announcement "${title}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/announcements/delete/${announcementId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(result.message);
+            loadAnnouncements();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error deleting announcement:', error);
+        showError('Failed to delete announcement');
+    }
+}
+
+// Filter announcements
+function filterAnnouncements() {
+    const targetFilter = document.getElementById('announcementTargetFilter').value;
+    const priorityFilter = document.getElementById('announcementPriorityFilter').value;
+    const statusFilter = document.getElementById('announcementStatusFilter').value;
+    
+    let filtered = announcementsData;
+    
+    if (targetFilter) {
+        filtered = filtered.filter(a => a.target_audience === targetFilter);
+    }
+    
+    if (priorityFilter) {
+        filtered = filtered.filter(a => a.priority === priorityFilter);
+    }
+    
+    if (statusFilter === 'active') {
+        filtered = filtered.filter(a => a.is_active === true);
+    } else if (statusFilter === 'inactive') {
+        filtered = filtered.filter(a => a.is_active === false);
+    }
+    
+    displayAnnouncements(filtered);
+}
+
+// Search announcements
+function searchAnnouncements() {
+    const searchTerm = document.getElementById('searchAnnouncement').value.toLowerCase();
+    
+    if (!searchTerm) {
+        displayAnnouncements(announcementsData);
+        return;
+    }
+    
+    const filtered = announcementsData.filter(ann => 
+        ann.title.toLowerCase().includes(searchTerm) ||
+        ann.message.toLowerCase().includes(searchTerm)
+    );
+    
+    displayAnnouncements(filtered);
+}
+
+// Refresh announcements
+function refreshAnnouncements() {
+    loadAnnouncements();
+    showSuccess('Announcements refreshed');
+}
+
+// Export announcements
+function exportAnnouncements() {
+    showInfo('Export functionality - Coming soon!');
+}
+
+// Helper functions
+function getPriorityBadgeClass(priority) {
+    switch(priority) {
+        case 'urgent': return 'bg-danger';
+        case 'high': return 'bg-warning';
+        case 'normal': return 'bg-primary';
+        case 'low': return 'bg-secondary';
+        default: return 'bg-secondary';
+    }
+}
+
+function getTargetBadge(target, courseCode, sectionId) {
+    if (target === 'all') {
+        return '<span class="badge bg-success">All Students</span>';
+    } else if (target === 'course') {
+        return `<span class="badge bg-info">Course: ${courseCode || 'N/A'}</span>`;
+    } else if (target === 'section') {
+        return `<span class="badge bg-warning">Section: ${sectionId || 'N/A'}</span>`;
+    }
+    return '<span class="badge bg-secondary">Unknown</span>';
+}
+
+console.log('✅ Announcements Management loaded!');
 
 
 
@@ -8674,6 +9162,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
