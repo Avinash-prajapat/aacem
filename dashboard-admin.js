@@ -6958,10 +6958,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
+
 // ==================== SYLLABUS MANAGEMENT ====================
 
 let allSyllabus = [];
 let filteredSyllabus = [];
+let currentExpandedSyllabusCourse = null;
 
 // Initialize when syllabus tab is clicked
 document.getElementById('syllabus-tab')?.addEventListener('shown.bs.tab', function() {
@@ -6983,17 +6986,19 @@ function populateCourseDropdowns() {
     filterSelect.innerHTML = '<option value="">All Courses</option>';
     modalSelect.innerHTML = '<option value="">Select course...</option>';
     
-    coursesData.filter(c => c.is_active).forEach(course => {
-        const option1 = document.createElement('option');
-        option1.value = course.course_code;
-        option1.textContent = `${course.course_name} (${course.course_code})`;
-        filterSelect.appendChild(option1);
-        
-        const option2 = document.createElement('option');
-        option2.value = course.course_code;
-        option2.textContent = `${course.course_name} (${course.course_code})`;
-        modalSelect.appendChild(option2);
-    });
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        coursesData.filter(c => c.is_active).forEach(course => {
+            const option1 = document.createElement('option');
+            option1.value = course.course_code;
+            option1.textContent = `${course.course_name} (${course.course_code})`;
+            filterSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = course.course_code;
+            option2.textContent = `${course.course_name} (${course.course_code})`;
+            modalSelect.appendChild(option2);
+        });
+    }
 }
 
 // Load syllabus data
@@ -7012,10 +7017,14 @@ async function loadSyllabusData() {
             filterSyllabus();
         } else {
             showError('Failed to load syllabus');
+            allSyllabus = [];
+            renderSyllabusTable([]);
         }
     } catch (error) {
         hideLoading();
         showError('Network error');
+        allSyllabus = [];
+        renderSyllabusTable([]);
     }
 }
 
@@ -7032,17 +7041,22 @@ function updateStatistics(syllabusList) {
         totalHours += s.total_duration || 0;
     });
     
-    document.getElementById('totalSyllabus').textContent = totalSyllabus;
-    document.getElementById('coursesWithSyllabus').textContent = uniqueCourses;
-    document.getElementById('totalSubjects').textContent = totalSubjects;
-    document.getElementById('totalHours').textContent = totalHours;
+    const totalSyllabusEl = document.getElementById('totalSyllabus');
+    const coursesWithSyllabusEl = document.getElementById('coursesWithSyllabus');
+    const totalSubjectsEl = document.getElementById('totalSubjects');
+    const totalHoursEl = document.getElementById('totalHours');
+    
+    if (totalSyllabusEl) totalSyllabusEl.textContent = totalSyllabus;
+    if (coursesWithSyllabusEl) coursesWithSyllabusEl.textContent = uniqueCourses;
+    if (totalSubjectsEl) totalSubjectsEl.textContent = totalSubjects;
+    if (totalHoursEl) totalHoursEl.textContent = totalHours;
 }
 
 // Filter syllabus
 function filterSyllabus() {
-    const courseFilter = document.getElementById('syllabusCourseFilter').value;
-    const searchText = document.getElementById('searchSyllabus').value.toLowerCase();
-    const showActiveOnly = document.getElementById('showActiveOnly').checked;
+    const courseFilter = document.getElementById('syllabusCourseFilter')?.value || '';
+    const searchText = document.getElementById('searchSyllabus')?.value.toLowerCase() || '';
+    const showActiveOnly = document.getElementById('showActiveOnly')?.checked || false;
     
     filteredSyllabus = allSyllabus.filter(syllabus => {
         if (courseFilter && syllabus.course_code !== courseFilter) return false;
@@ -7050,8 +7064,8 @@ function filterSyllabus() {
         if (searchText) {
             const searchIn = (
                 syllabus.syllabus_title + ' ' + 
-                syllabus.description + ' ' + 
-                syllabus.course_name
+                (syllabus.description || '') + ' ' + 
+                (syllabus.course_name || '')
             ).toLowerCase();
             if (!searchIn.includes(searchText)) return false;
         }
@@ -7066,14 +7080,14 @@ function searchSyllabus() {
     filterSyllabus();
 }
 
-// Render syllabus table
+// ============ RENDER SYLLABUS WITH COURSE-WISE GROUPING AND TOGGLE ============
 function renderSyllabusTable() {
     const tbody = document.getElementById('syllabusTableBody');
     const countBadge = document.getElementById('syllabusCount');
     
     if (!tbody) return;
     
-    countBadge.textContent = filteredSyllabus.length;
+    if (countBadge) countBadge.textContent = filteredSyllabus.length;
     
     if (filteredSyllabus.length === 0) {
         tbody.innerHTML = `
@@ -7081,55 +7095,239 @@ function renderSyllabusTable() {
                 <td colspan="8" class="text-center py-5">
                     <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No syllabus found.</p>
+                    <button class="btn btn-primary btn-sm" onclick="showAddSyllabusModal()">
+                        <i class="fas fa-plus me-1"></i> Add First Syllabus
+                    </button>
                 </td>
             </tr>
         `;
         return;
     }
     
+    // Group syllabus by course
+    const syllabusByCourse = {};
+    filteredSyllabus.forEach(syllabus => {
+        const courseKey = `${syllabus.course_code}|${syllabus.course_name || syllabus.course_code}`;
+        if (!syllabusByCourse[courseKey]) {
+            syllabusByCourse[courseKey] = [];
+        }
+        syllabusByCourse[courseKey].push(syllabus);
+    });
+    
     let html = '';
-    filteredSyllabus.forEach((syllabus, index) => {
-        const statusClass = syllabus.is_active ? 'success' : 'danger';
-        const statusText = syllabus.is_active ? 'Active' : 'Inactive';
+    
+    // Sort courses alphabetically
+    const sortedCourses = Object.keys(syllabusByCourse).sort();
+    
+    sortedCourses.forEach(courseKey => {
+        const entries = syllabusByCourse[courseKey];
+        const [courseCode, courseName] = courseKey.split('|');
+        const totalSyllabus = entries.length;
         
+        // Count active syllabus
+        const activeSyllabus = entries.filter(e => e.is_active === true).length;
+        const inactiveSyllabus = totalSyllabus - activeSyllabus;
+        
+        // Calculate total subjects and hours for this course
+        let courseSubjects = 0;
+        let courseHours = 0;
+        entries.forEach(s => {
+            courseSubjects += s.subjects_count || 0;
+            courseHours += s.total_duration || 0;
+        });
+        
+        // Create unique course ID for toggle
+        const courseId = 'syllabus-course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
+        
+        // ============ COURSE HEADER ROW ============
         html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>
-                    <strong>${syllabus.course_code}</strong><br>
-                    <small>${syllabus.course_name}</small>
-                </td>
-                <td>
-                    <strong>${syllabus.syllabus_title}</strong><br>
-                    <small>ID: ${syllabus.syllabus_id}</small>
-                </td>
-                <td>${syllabus.description ? syllabus.description.substring(0, 50) + '...' : '-'}</td>
-                <td><span class="badge bg-info">${syllabus.total_duration} hrs</span></td>
-                <td><span class="badge bg-secondary">${syllabus.subjects_count || 0}</span></td>
-                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
-                <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-info" onclick="viewSyllabus('${syllabus.syllabus_id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-warning" onclick="editSyllabus('${syllabus.syllabus_id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-${syllabus.is_active ? 'secondary' : 'success'}" 
-                                onclick="toggleStatus('${syllabus.syllabus_id}')">
-                            <i class="fas fa-power-off"></i>
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteSyllabus('${syllabus.syllabus_id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+            <tr class="syllabus-course-header-row bg-light" style="cursor: pointer;" onclick="toggleSyllabusCourseDetails('${courseId}', event)">
+                <td colspan="8" class="py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="fas fa-book me-2 text-primary"></i>
+                                <strong>${escapeHtml(courseCode)}</strong> - ${escapeHtml(courseName || courseCode)}
+                                <span class="badge bg-primary ms-2">${totalSyllabus} Syllabus</span>
+                            </h6>
+                            <small class="text-muted">
+                                <i class="fas fa-check-circle text-success me-1"></i> Active: ${activeSyllabus}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-ban text-danger me-1"></i> Inactive: ${inactiveSyllabus}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-book-open me-1"></i> Subjects: ${courseSubjects}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-clock me-1"></i> Hours: ${courseHours}
+                            </small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="addSyllabusForCourse('${escapeHtml(courseCode)}', event)" title="Add New Syllabus">
+                                <i class="fas fa-plus me-1"></i> Add Syllabus
+                            </button>
+                            <button class="btn btn-outline-info" onclick="toggleSyllabusCourseDetails('${courseId}', event)" title="Toggle Syllabus">
+                                <i class="fas fa-chevron-down" id="toggle-syllabus-course-icon-${courseId}"></i>
+                            </button>
+                        </div>
                     </div>
                 </td>
             </tr>
         `;
+        
+        // ============ COURSE DETAILS ROW (Initially Hidden) ============
+        html += `<tr class="syllabus-course-details-row ${courseId}" style="display: none;">`;
+        html += `<td colspan="8" class="p-0" style="background: #f8f9fa;">`;
+        html += `<div class="syllabus-course-details-container p-3">`;
+        
+        // ============ SYLLABUS ENTRIES FOR THIS COURSE ============
+        if (entries.length === 0) {
+            html += `
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No syllabus found for this course.
+                    <button class="btn btn-sm btn-primary ms-3" onclick="addSyllabusForCourse('${escapeHtml(courseCode)}', event)">
+                        <i class="fas fa-plus me-1"></i> Add Syllabus
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50">#</th>
+                                <th>Syllabus Title</th>
+                                <th>Description</th>
+                                <th>Duration</th>
+                                <th>Subjects</th>
+                                <th>Status</th>
+                                <th width="150">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            entries.forEach((syllabus, index) => {
+                const isActive = syllabus.is_active === true;
+                const statusClass = isActive ? 'success' : 'danger';
+                const statusText = isActive ? 'Active' : 'Inactive';
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <strong>${escapeHtml(syllabus.syllabus_title)}</strong><br>
+                            <small class="text-muted">ID: ${syllabus.syllabus_id}</small>
+                        </td>
+                        <td>${escapeHtml(syllabus.description ? (syllabus.description.substring(0, 50) + (syllabus.description.length > 50 ? '...' : '')) : '-')}</td>
+                        <td><span class="badge bg-info">${syllabus.total_duration || 0} hrs</span></td>
+                        <td><span class="badge bg-secondary">${syllabus.subjects_count || 0}</span></td>
+                        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-info" onclick="viewSyllabus('${syllabus.syllabus_id}', event)" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-warning" onclick="editSyllabus('${syllabus.syllabus_id}', event)" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-${isActive ? 'secondary' : 'success'}" 
+                                        onclick="toggleSyllabusStatus('${syllabus.syllabus_id}', event)" title="Toggle Status">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteSyllabus('${syllabus.syllabus_id}', event)" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        html += `</div>`; // Close syllabus-course-details-container
+        html += `</td>`;
+        html += `</tr>`; // Close syllabus-course-details-row
     });
     
     tbody.innerHTML = html;
 }
+
+// ============ SYLLABUS TOGGLE FUNCTIONS ============
+
+// Toggle course details (show/hide entire course section)
+function toggleSyllabusCourseDetails(courseId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const courseDetailsRow = document.querySelector(`tr.syllabus-course-details-row.${courseId}`);
+    const toggleIcon = document.getElementById(`toggle-syllabus-course-icon-${courseId}`);
+    
+    if (courseDetailsRow) {
+        const isHidden = courseDetailsRow.style.display === 'none';
+        
+        // Hide all other expanded courses first
+        if (isHidden) {
+            // Close all other course details
+            document.querySelectorAll('tr.syllabus-course-details-row').forEach(row => {
+                row.style.display = 'none';
+            });
+            
+            // Reset all toggle icons
+            document.querySelectorAll('[id^="toggle-syllabus-course-icon-"]').forEach(icon => {
+                icon.className = 'fas fa-chevron-down';
+            });
+        }
+        
+        // Toggle current course
+        courseDetailsRow.style.display = isHidden ? '' : 'none';
+        
+        if (toggleIcon) {
+            toggleIcon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+        
+        // Set current expanded course
+        currentExpandedSyllabusCourse = isHidden ? courseId : null;
+    }
+}
+
+// ============ COURSE CLICK HANDLER - FILTER BY COURSE AND EXPAND ============
+function filterSyllabusByCourse(courseCode) {
+    if (!allSyllabus || allSyllabus.length === 0) {
+        showError('No syllabus data available');
+        return;
+    }
+    
+    // Filter entries for selected course
+    const filtered = allSyllabus.filter(entry => 
+        entry.course_code && entry.course_code.toString() === courseCode.toString()
+    );
+    
+    // Set filter dropdown
+    const courseFilter = document.getElementById('syllabusCourseFilter');
+    if (courseFilter) {
+        courseFilter.value = courseCode;
+    }
+    
+    // Render filtered syllabus
+    filteredSyllabus = filtered;
+    renderSyllabusTable();
+    
+    // Auto-expand this course
+    setTimeout(() => {
+        const courseId = 'syllabus-course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
+        toggleSyllabusCourseDetails(courseId);
+    }, 100);
+}
+
+// ============ SYLLABUS CRUD OPERATIONS ============
 
 // Show add syllabus modal
 function showAddSyllabusModal() {
@@ -7165,6 +7363,48 @@ function showAddSyllabusModal() {
     modal.show();
 }
 
+// Add syllabus for specific course
+function addSyllabusForCourse(courseCode, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    // Check if modal exists
+    const modalElement = document.getElementById('syllabusModal');
+    if (!modalElement) {
+        showError('Syllabus modal not found');
+        return;
+    }
+    
+    // Reset form
+    resetSyllabusForm();
+    document.getElementById('editSyllabusId').value = '';
+    
+    // Set course in modal
+    const courseSelect = document.getElementById('syllabusCourse');
+    if (courseSelect) {
+        Array.from(courseSelect.options).forEach(option => {
+            if (option.value === courseCode || option.text.includes(courseCode)) {
+                option.selected = true;
+            }
+        });
+    }
+    
+    // Set modal title
+    const modalTitle = document.querySelector('#syllabusModal .modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-plus me-2"></i>Add Syllabus - ${escapeHtml(courseCode)}`;
+    }
+    
+    const modalHeader = document.getElementById('syllabusModalHeader');
+    if (modalHeader) {
+        modalHeader.className = 'modal-header bg-success text-white';
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+}
+
 // Reset syllabus form
 function resetSyllabusForm() {
     const form = document.getElementById('syllabusForm');
@@ -7172,7 +7412,8 @@ function resetSyllabusForm() {
         form.reset();
     }
     
-    document.getElementById('syllabusStatus').value = 'active';
+    const statusSelect = document.getElementById('syllabusStatus');
+    if (statusSelect) statusSelect.value = 'active';
     
     // Reset subjects table
     const tbody = document.getElementById('subjectsTableBody');
@@ -7200,37 +7441,6 @@ function resetSyllabusForm() {
             </tr>
         `;
     }
-}
-
-// Reset form
-function resetSyllabusForm() {
-    document.getElementById('syllabusForm').reset();
-    document.getElementById('syllabusStatus').value = 'active';
-    
-    // Reset subjects table
-    const tbody = document.getElementById('subjectsTableBody');
-    tbody.innerHTML = `
-        <tr class="subject-row">
-            <td>1</td>
-            <td>
-                <input type="text" class="form-control form-control-sm subject-name" 
-                       placeholder="Enter subject name" required>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm subject-duration" 
-                       min="1" max="100" value="4">
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm subject-topics" 
-                       placeholder="e.g., Basics, Theory, Practical">
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)" disabled>
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `;
 }
 
 // Add subject row
@@ -7293,7 +7503,9 @@ function removeSubjectRow(button) {
 }
 
 // View syllabus
-async function viewSyllabus(syllabusId) {
+async function viewSyllabus(syllabusId, event) {
+    if (event) event.stopPropagation();
+    
     try {
         showLoading('Loading...');
         const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/${syllabusId}`);
@@ -7302,72 +7514,9 @@ async function viewSyllabus(syllabusId) {
         
         if (result.success) {
             const syllabus = result.syllabus;
-            let content = `
-                <div class="alert alert-info">
-                    <h4>${syllabus.syllabus_title}</h4>
-                    <p><strong>Course:</strong> ${syllabus.course_name} (${syllabus.course_code})</p>
-                    <p><strong>Duration:</strong> ${syllabus.total_duration} hours</p>
-                    <p><strong>Status:</strong> <span class="badge bg-${syllabus.is_active ? 'success' : 'danger'}">${syllabus.is_active ? 'Active' : 'Inactive'}</span></p>
-                    ${syllabus.description ? `<p>${syllabus.description}</p>` : ''}
-                </div>
-                <h5>Subjects:</h5>
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Subject</th>
-                            <th>Duration</th>
-                            <th>Topics</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            if (syllabus.subjects && syllabus.subjects.length > 0) {
-                syllabus.subjects.forEach((subject, index) => {
-                    content += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${subject.subject_name}</td>
-                            <td>${subject.duration_hours} hrs</td>
-                            <td>${subject.topics || '-'}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                content += `<tr><td colspan="4" class="text-center">No subjects</td></tr>`;
-            }
-            
-            content += `</tbody></table>`;
-            
-            // Create a simple modal to show
-            const modalHtml = `
-                <div class="modal fade" id="viewModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header bg-info text-white">
-                                <h5 class="modal-title">Syllabus Details</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                ${content}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Add modal to page
-            let modalDiv = document.getElementById('viewModalTemp');
-            if (modalDiv) modalDiv.remove();
-            
-            modalDiv = document.createElement('div');
-            modalDiv.id = 'viewModalTemp';
-            modalDiv.innerHTML = modalHtml;
-            document.body.appendChild(modalDiv);
-            
-            const modal = new bootstrap.Modal(document.getElementById('viewModal'));
-            modal.show();
+            showSyllabusDetailsModal(syllabus);
+        } else {
+            showError('Failed to load syllabus details');
         }
     } catch (error) {
         hideLoading();
@@ -7375,8 +7524,125 @@ async function viewSyllabus(syllabusId) {
     }
 }
 
+// Show syllabus details modal
+function showSyllabusDetailsModal(syllabus) {
+    // Create modal if not exists
+    let modalEl = document.getElementById('syllabusDetailsModal');
+    
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'syllabusDetailsModal';
+        modalEl.className = 'modal fade';
+        modalEl.setAttribute('tabindex', '-1');
+        document.body.appendChild(modalEl);
+    }
+    
+    const isActive = syllabus.is_active === true;
+    const statusClass = isActive ? 'success' : 'danger';
+    const statusText = isActive ? 'Active' : 'Inactive';
+    
+    let subjectsHtml = '';
+    if (syllabus.subjects && syllabus.subjects.length > 0) {
+        syllabus.subjects.forEach((subject, index) => {
+            subjectsHtml += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${escapeHtml(subject.subject_name)}</strong></td>
+                    <td><span class="badge bg-info">${subject.duration_hours || 0} hrs</span></td>
+                    <td>${escapeHtml(subject.topics || '-')}</td>
+                </tr>
+            `;
+        });
+    } else {
+        subjectsHtml = `
+            <tr>
+                <td colspan="4" class="text-center py-3">
+                    <i class="fas fa-info-circle text-muted me-2"></i>
+                    No subjects added
+                </td>
+            </tr>
+        `;
+    }
+    
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-book-open me-2"></i>
+                        Syllabus Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Syllabus Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Course:</strong><br> ${escapeHtml(syllabus.course_name)} (${escapeHtml(syllabus.course_code)})</p>
+                                    <p><strong>Title:</strong><br> ${escapeHtml(syllabus.syllabus_title)}</p>
+                                    <p><strong>Syllabus ID:</strong><br> ${escapeHtml(syllabus.syllabus_id)}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Duration:</strong><br> <span class="badge bg-info fs-6">${syllabus.total_duration || 0} hours</span></p>
+                                    <p><strong>Total Subjects:</strong><br> <span class="badge bg-secondary fs-6">${syllabus.subjects_count || 0}</span></p>
+                                    <p><strong>Status:</strong><br> <span class="badge bg-${statusClass} fs-6">${statusText}</span></p>
+                                </div>
+                            </div>
+                            ${syllabus.description ? `
+                            <div class="mt-2">
+                                <p><strong>Description:</strong></p>
+                                <p class="text-muted">${escapeHtml(syllabus.description)}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Subjects</h6>
+                            <span class="badge bg-primary">${syllabus.subjects_count || 0} Subjects</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="50">#</th>
+                                            <th>Subject Name</th>
+                                            <th>Duration</th>
+                                            <th>Topics</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${subjectsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" onclick="editSyllabus('${syllabus.syllabus_id}')" data-bs-dismiss="modal">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
 // Edit syllabus
-async function editSyllabus(syllabusId) {
+async function editSyllabus(syllabusId, event) {
+    if (event) event.stopPropagation();
+    
     try {
         showLoading('Loading...');
         const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/${syllabusId}`);
@@ -7391,14 +7657,19 @@ async function editSyllabus(syllabusId) {
             document.getElementById('syllabusCourse').value = syllabus.course_code;
             document.getElementById('syllabusTitle').value = syllabus.syllabus_title;
             document.getElementById('syllabusDescription').value = syllabus.description || '';
-            document.getElementById('syllabusDuration').value = syllabus.total_duration;
+            document.getElementById('syllabusDuration').value = syllabus.total_duration || 40;
             document.getElementById('syllabusStatus').value = syllabus.is_active ? 'active' : 'inactive';
             
             // Update modal
-            document.getElementById('syllabusModalHeader').className = 'modal-header bg-warning text-dark';
-            document.querySelector('#syllabusModal .modal-title').innerHTML = `
-                <i class="fas fa-edit me-2"></i>Edit Syllabus
-            `;
+            const modalHeader = document.getElementById('syllabusModalHeader');
+            if (modalHeader) {
+                modalHeader.className = 'modal-header bg-warning text-dark';
+            }
+            
+            const modalTitle = document.querySelector('#syllabusModal .modal-title');
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-edit me-2"></i>Edit Syllabus - ${escapeHtml(syllabus.course_code)}`;
+            }
             
             // Fill subjects
             const tbody = document.getElementById('subjectsTableBody');
@@ -7412,15 +7683,15 @@ async function editSyllabus(syllabusId) {
                         <td>${index + 1}</td>
                         <td>
                             <input type="text" class="form-control form-control-sm subject-name" 
-                                   value="${subject.subject_name}" required>
+                                   value="${escapeHtml(subject.subject_name)}" required>
                         </td>
                         <td>
                             <input type="number" class="form-control form-control-sm subject-duration" 
-                                   value="${subject.duration_hours}" min="1" max="100">
+                                   value="${subject.duration_hours || 4}" min="1" max="100">
                         </td>
                         <td>
                             <input type="text" class="form-control form-control-sm subject-topics" 
-                                   value="${subject.topics || ''}">
+                                   value="${escapeHtml(subject.topics || '')}">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger" onclick="removeSubjectRow(this)"
@@ -7481,7 +7752,7 @@ async function saveSyllabus() {
         syllabus_title: syllabusTitle,
         description: description,
         total_duration: duration,
-        status: status,
+        status: status === 'active',
         created_by: 'admin',
         subjects: subjects
     };
@@ -7504,20 +7775,23 @@ async function saveSyllabus() {
         btn.disabled = false;
         
         if (result.success) {
-            showSuccess('Syllabus saved!');
+            showSuccess('Syllabus saved successfully!');
             const modal = bootstrap.Modal.getInstance(document.getElementById('syllabusModal'));
-            modal.hide();
+            if (modal) modal.hide();
             await loadSyllabusData();
         } else {
-            showError('Save failed: ' + result.message);
+            showError('Save failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
+        console.error('Save error:', error);
         showError('Network error');
     }
 }
 
-// Toggle status
-async function toggleStatus(syllabusId) {
+// Toggle syllabus status
+async function toggleSyllabusStatus(syllabusId, event) {
+    if (event) event.stopPropagation();
+    
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/toggle-status/${syllabusId}`, {
             method: 'PUT'
@@ -7526,8 +7800,10 @@ async function toggleStatus(syllabusId) {
         const result = await response.json();
         
         if (result.success) {
-            showSuccess('Status updated');
+            showSuccess('Status updated successfully');
             await loadSyllabusData();
+        } else {
+            showError('Update failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         showError('Error updating status');
@@ -7535,8 +7811,10 @@ async function toggleStatus(syllabusId) {
 }
 
 // Delete syllabus
-async function deleteSyllabus(syllabusId) {
-    if (!confirm('Delete this syllabus?')) return;
+async function deleteSyllabus(syllabusId, event) {
+    if (event) event.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this syllabus?')) return;
     
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/syllabus/delete/${syllabusId}`, {
@@ -7546,28 +7824,51 @@ async function deleteSyllabus(syllabusId) {
         const result = await response.json();
         
         if (result.success) {
-            showSuccess('Syllabus deleted');
+            showSuccess('Syllabus deleted successfully');
             await loadSyllabusData();
+        } else {
+            showError('Delete failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
-        showError('Error deleting');
+        showError('Error deleting syllabus');
     }
 }
 
-// Export
+// ============ UTILITY FUNCTIONS ============
+
+// Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Export syllabus
 function exportSyllabus() {
-    let csv = 'Course,Syllabus Title,Description,Duration,Subjects,Status\n';
+    const data = filteredSyllabus.length > 0 ? filteredSyllabus : allSyllabus;
     
-    filteredSyllabus.forEach(s => {
-        csv += `"${s.course_name}","${s.syllabus_title}","${s.description || ''}",${s.total_duration},${s.subjects_count || 0},"${s.is_active ? 'Active' : 'Inactive'}"\n`;
+    if (data.length === 0) {
+        showError('No data to export');
+        return;
+    }
+    
+    let csv = 'Course Code,Course Name,Syllabus Title,Description,Duration (hrs),Subjects Count,Status\n';
+    
+    data.forEach(s => {
+        csv += `"${s.course_code || ''}","${s.course_name || ''}","${s.syllabus_title || ''}",`;
+        csv += `"${s.description || ''}",${s.total_duration || 0},${s.subjects_count || 0},"${s.is_active ? 'Active' : 'Inactive'}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'syllabus.csv';
+    a.download = `syllabus_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Syllabus exported successfully');
 }
 
 // Refresh
@@ -7577,19 +7878,22 @@ function refreshSyllabus() {
 
 // Helper functions
 function showLoading(msg) {
-    // You can implement a loading spinner
     console.log('Loading:', msg);
 }
 
 function hideLoading() {
-    // Hide loading
+    console.log('Loading hidden');
 }
 
-console.log('Syllabus Management loaded!');
+function showError(message) {
+    alert('Error: ' + message);
+}
 
-console.log('PDF Management loaded!');
+function showSuccess(message) {
+    alert('Success: ' + message);
+}
 
-
+console.log('✅ Syllabus Management loaded with Course-wise grouping and Toggle!');
 
 
 
@@ -9699,6 +10003,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
