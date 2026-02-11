@@ -7596,6 +7596,9 @@ console.log('PDF Management loaded!');
 // ==================== TIME TABLE MANAGEMENT ====================
 
 let allTimetable = [];
+let filteredTimetableData = [];
+let currentExpandedCourse = null;
+let currentExpandedDay = null;
 
 // Initialize when timetable tab is clicked
 document.getElementById('timetable-tab')?.addEventListener('shown.bs.tab', function() {
@@ -7617,17 +7620,19 @@ function populateTimetableCourseDropdowns() {
     filterSelect.innerHTML = '<option value="">All Courses</option>';
     modalSelect.innerHTML = '<option value="">Select course...</option>';
     
-    coursesData.filter(c => c.is_active).forEach(course => {
-        const option1 = document.createElement('option');
-        option1.value = course.course_code;
-        option1.textContent = `${course.course_name} (${course.course_code})`;
-        filterSelect.appendChild(option1);
-        
-        const option2 = document.createElement('option');
-        option2.value = course.course_code;
-        option2.textContent = `${course.course_name} (${course.course_code})`;
-        modalSelect.appendChild(option2);
-    });
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        coursesData.filter(c => c.is_active).forEach(course => {
+            const option1 = document.createElement('option');
+            option1.value = course.course_code;
+            option1.textContent = `${course.course_name} (${course.course_code})`;
+            filterSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = course.course_code;
+            option2.textContent = `${course.course_name} (${course.course_code})`;
+            modalSelect.appendChild(option2);
+        });
+    }
 }
 
 // Load timetable data
@@ -7645,30 +7650,35 @@ async function loadTimetableData() {
             filterTimetable();
         } else {
             showError('Failed to load timetable');
+            allTimetable = [];
+            renderTimetableTable([]);
         }
     } catch (error) {
         hideLoading();
         showError('Network error');
+        allTimetable = [];
+        renderTimetableTable([]);
     }
 }
 
 // Filter timetable
 function filterTimetable() {
-    const courseFilter = document.getElementById('timetableCourseFilter').value;
-    const dayFilter = document.getElementById('timetableDayFilter').value;
-    const showActiveOnly = document.getElementById('showActiveTimetableOnly').checked;
+    const courseFilter = document.getElementById('timetableCourseFilter')?.value || '';
+    const dayFilter = document.getElementById('timetableDayFilter')?.value || '';
+    const showActiveOnly = document.getElementById('showActiveTimetableOnly')?.checked || false;
     
-    let filteredTimetable = allTimetable.filter(entry => {
+    let filtered = allTimetable.filter(entry => {
         if (courseFilter && entry.course_code !== courseFilter) return false;
         if (dayFilter && entry.day_of_week !== dayFilter) return false;
         if (showActiveOnly && !entry.is_active) return false;
         return true;
     });
     
-    renderTimetableTable(filteredTimetable);
+    filteredTimetableData = filtered;
+    renderTimetableTable(filtered);
 }
 
-// Render timetable table
+// ============ MAIN RENDER FUNCTION WITH DAY-WISE TOGGLE INSIDE COURSE ============
 function renderTimetableTable(timetableList) {
     const tbody = document.getElementById('timetableTableBody');
     const countBadge = document.getElementById('timetableCount');
@@ -7683,62 +7693,513 @@ function renderTimetableTable(timetableList) {
                 <td colspan="9" class="text-center py-5">
                     <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No timetable entries found.</p>
+                    <button class="btn btn-primary btn-sm" onclick="showAddTimetableModal()">
+                        <i class="fas fa-plus me-1"></i> Add First Timetable
+                    </button>
                 </td>
             </tr>
         `;
         return;
     }
     
-    // Sort by day and time
-    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    timetableList.sort((a, b) => {
-        const dayCompare = dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
-        if (dayCompare !== 0) return dayCompare;
-        return a.start_time.localeCompare(b.start_time);
+    // Group timetable by course
+    const timetableByCourse = {};
+    timetableList.forEach(entry => {
+        const courseKey = `${entry.course_code}|${entry.course_name || entry.course_code}`;
+        if (!timetableByCourse[courseKey]) {
+            timetableByCourse[courseKey] = [];
+        }
+        timetableByCourse[courseKey].push(entry);
     });
     
+    // Day order
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
     let html = '';
-    timetableList.forEach((entry, index) => {
-        const statusClass = entry.is_active ? 'success' : 'danger';
-        const statusText = entry.is_active ? 'Active' : 'Inactive';
+    
+    // Sort courses alphabetically
+    const sortedCourses = Object.keys(timetableByCourse).sort();
+    
+    sortedCourses.forEach(courseKey => {
+        const entries = timetableByCourse[courseKey];
+        const [courseCode, courseName] = courseKey.split('|');
+        const totalClasses = entries.length;
         
+        // Count active classes
+        const activeClasses = entries.filter(e => 
+            e.is_active === true || e.is_active === 1 || e.is_active === '1' || e.is_active === 'true'
+        ).length;
+        
+        const inactiveClasses = totalClasses - activeClasses;
+        
+        // Group entries by day for this course
+        const entriesByDay = {};
+        dayOrder.forEach(day => {
+            entriesByDay[day] = entries.filter(e => e.day_of_week === day);
+        });
+        
+        // Sort each day's entries by time
+        dayOrder.forEach(day => {
+            entriesByDay[day].sort((a, b) => {
+                return (a.start_time || '').localeCompare(b.start_time || '');
+            });
+        });
+        
+        // Create unique course ID
+        const courseId = 'course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
+        
+        // ============ COURSE HEADER ROW ============
         html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${entry.day_of_week}</strong></td>
-                <td>
-                    <span class="badge bg-info">${entry.start_time}</span>
-                    -
-                    <span class="badge bg-info">${entry.end_time}</span>
-                </td>
-                <td>
-                    <strong>${entry.course_code}</strong><br>
-                    <small>${entry.course_name}</small>
-                </td>
-                <td>${entry.subject}</td>
-                <td>${entry.teacher_name || '-'}</td>
-                <td>${entry.room_number || '-'}</td>
-                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
-                <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-warning" onclick="editTimetable('${entry.timetable_id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-${entry.is_active ? 'secondary' : 'success'}" 
-                                onclick="toggleTimetableStatus('${entry.timetable_id}')">
-                            <i class="fas fa-power-off"></i>
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteTimetable('${entry.timetable_id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+            <tr class="course-header-row bg-light" style="cursor: pointer;" onclick="toggleCourseDetails('${courseId}', event)">
+                <td colspan="9" class="py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="fas fa-book me-2 text-primary"></i>
+                                <strong>${escapeHtml(courseCode)}</strong> - ${escapeHtml(courseName || courseCode)}
+                                <span class="badge bg-primary ms-2">${totalClasses} Classes</span>
+                            </h6>
+                            <small class="text-muted">
+                                <i class="fas fa-check-circle text-success me-1"></i> Active: ${activeClasses}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-ban text-danger me-1"></i> Inactive: ${inactiveClasses}
+                            </small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="addTimetableForCourse('${escapeHtml(courseCode)}', event)" title="Add New Class">
+                                <i class="fas fa-plus me-1"></i> Add Class
+                            </button>
+                            <button class="btn btn-outline-info" onclick="toggleCourseDetails('${courseId}', event)" title="Toggle Course Details">
+                                <i class="fas fa-chevron-down" id="toggle-course-icon-${courseId}"></i>
+                            </button>
+                        </div>
                     </div>
                 </td>
             </tr>
         `;
+        
+        // ============ COURSE DETAILS ROW (Initially Hidden) ============
+        html += `<tr class="course-details-row ${courseId}" style="display: none;">`;
+        html += `<td colspan="9" class="p-0" style="background: #f8f9fa;">`;
+        html += `<div class="course-details-container p-3">`;
+        
+        // ============ DAY BUTTONS FOR THIS COURSE ============
+        html += `<div class="day-buttons-container mb-3">`;
+        html += `<div class="btn-group w-100" role="group">`;
+        
+        dayOrder.forEach(day => {
+            const dayEntries = entriesByDay[day];
+            const classCount = dayEntries.length;
+            const dayId = `${courseId}-${day}`;
+            const isActive = currentExpandedCourse === courseId && currentExpandedDay === day;
+            
+            html += `
+                <button type="button" 
+                        class="btn ${classCount > 0 ? 'btn-outline-primary' : 'btn-outline-secondary'} day-toggle-btn 
+                               ${isActive ? 'active' : ''}"
+                        onclick="toggleDayTimetable('${courseId}', '${day}', event)"
+                        id="day-btn-${dayId}">
+                    <i class="fas fa-calendar-day me-1"></i> ${day}
+                    ${classCount > 0 ? `<span class="badge bg-primary ms-1">${classCount}</span>` : ''}
+                </button>
+            `;
+        });
+        
+        html += `</div>`;
+        html += `</div>`;
+        
+        // ============ DAY WISE TIMETABLE TABLES (Initially Hidden) ============
+        dayOrder.forEach(day => {
+            const dayEntries = entriesByDay[day];
+            const dayId = `${courseId}-${day}`;
+            const displayStyle = (currentExpandedCourse === courseId && currentExpandedDay === day) ? 'block' : 'none';
+            
+            html += `<div id="day-timetable-${dayId}" class="day-timetable-container" style="display: ${displayStyle};">`;
+            
+            if (dayEntries.length === 0) {
+                html += `
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No classes scheduled on ${day} for this course.
+                        <button class="btn btn-sm btn-primary ms-3" onclick="addTimetableForCourse('${escapeHtml(courseCode)}', '${day}', event)">
+                            <i class="fas fa-plus me-1"></i> Add Class
+                        </button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50">#</th>
+                                    <th>Time</th>
+                                    <th>Subject</th>
+                                    <th>Teacher</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th width="120">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                dayEntries.forEach((entry, index) => {
+                    const isActive = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1' || entry.is_active === 'true';
+                    const statusClass = isActive ? 'success' : 'danger';
+                    const statusText = isActive ? 'Active' : 'Inactive';
+                    
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>
+                                <span class="badge bg-info">${formatTime(entry.start_time)}</span>
+                                -
+                                <span class="badge bg-info">${formatTime(entry.end_time)}</span>
+                            </td>
+                            <td>${escapeHtml(entry.subject || '-')}</td>
+                            <td>${escapeHtml(entry.teacher_name || '-')}</td>
+                            <td>${escapeHtml(entry.room_number || '-')}</td>
+                            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editTimetable('${entry.timetable_id || ''}', event)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-${isActive ? 'secondary' : 'success'}" 
+                                            onclick="toggleTimetableStatus('${entry.timetable_id || ''}', event)">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteTimetable('${entry.timetable_id || ''}', event)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`; // Close day-timetable-container
+        });
+        
+        html += `</div>`; // Close course-details-container
+        html += `</td>`;
+        html += `</tr>`; // Close course-details-row
     });
     
     tbody.innerHTML = html;
 }
+
+// ============ TOGGLE FUNCTIONS ============
+
+// Toggle course details (show/hide entire course section)
+function toggleCourseDetails(courseId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const courseDetailsRow = document.querySelector(`tr.course-details-row.${courseId}`);
+    const toggleIcon = document.getElementById(`toggle-course-icon-${courseId}`);
+    
+    if (courseDetailsRow) {
+        const isHidden = courseDetailsRow.style.display === 'none';
+        
+        // Hide all other expanded courses first
+        if (isHidden) {
+            // Close all other course details
+            document.querySelectorAll('tr.course-details-row').forEach(row => {
+                row.style.display = 'none';
+            });
+            
+            // Reset all toggle icons
+            document.querySelectorAll('[id^="toggle-course-icon-"]').forEach(icon => {
+                icon.className = 'fas fa-chevron-down';
+            });
+        }
+        
+        // Toggle current course
+        courseDetailsRow.style.display = isHidden ? '' : 'none';
+        
+        if (toggleIcon) {
+            toggleIcon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+        
+        // Reset expanded day when toggling course
+        if (isHidden) {
+            currentExpandedCourse = courseId;
+            currentExpandedDay = null;
+        } else {
+            currentExpandedCourse = null;
+            currentExpandedDay = null;
+        }
+    }
+}
+
+// Toggle day timetable (show/hide specific day's timetable)
+function toggleDayTimetable(courseId, day, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const dayTimetableDiv = document.getElementById(`day-timetable-${courseId}-${day}`);
+    const dayBtn = document.getElementById(`day-btn-${courseId}-${day}`);
+    
+    if (dayTimetableDiv) {
+        const isHidden = dayTimetableDiv.style.display === 'none' || dayTimetableDiv.style.display === '';
+        
+        // Hide all other day timetables for this course
+        const allDayDivs = document.querySelectorAll(`[id^="day-timetable-${courseId}-"]`);
+        allDayDivs.forEach(div => {
+            div.style.display = 'none';
+        });
+        
+        // Remove active class from all day buttons
+        const allDayBtns = document.querySelectorAll(`[id^="day-btn-${courseId}-"]`);
+        allDayBtns.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected day
+        if (isHidden) {
+            dayTimetableDiv.style.display = 'block';
+            if (dayBtn) {
+                dayBtn.classList.add('active');
+            }
+            currentExpandedDay = day;
+        } else {
+            dayTimetableDiv.style.display = 'none';
+            currentExpandedDay = null;
+        }
+    }
+}
+
+// ============ COURSE CLICK HANDLER - FILTER BY COURSE AND EXPAND ============
+function filterTimetableByCourse(courseCode) {
+    if (!allTimetable || allTimetable.length === 0) {
+        showError('No timetable data available');
+        return;
+    }
+    
+    // Filter entries for selected course
+    const filtered = allTimetable.filter(entry => 
+        entry.course_code && entry.course_code.toString() === courseCode.toString()
+    );
+    
+    // Set filter dropdown
+    const courseFilter = document.getElementById('timetableCourseFilter');
+    if (courseFilter) {
+        courseFilter.value = courseCode;
+    }
+    
+    // Render filtered timetable
+    filteredTimetableData = filtered;
+    renderTimetableTable(filtered);
+    
+    // Auto-expand this course
+    setTimeout(() => {
+        const courseId = 'course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
+        toggleCourseDetails(courseId);
+    }, 100);
+}
+
+// ============ VIEW COURSE TIMETABLE IN MODAL ============
+function viewCourseTimetableDetails(courseCode, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    if (!allTimetable || allTimetable.length === 0) {
+        showError('No timetable data available');
+        return;
+    }
+    
+    // Filter timetable for this course
+    const courseTimetable = allTimetable.filter(entry => 
+        entry.course_code && entry.course_code.toString() === courseCode.toString()
+    );
+    
+    if (courseTimetable.length === 0) {
+        showError(`No timetable found for course: ${courseCode}`);
+        return;
+    }
+    
+    // Group by day
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const groupedByDay = {};
+    
+    dayOrder.forEach(day => {
+        groupedByDay[day] = courseTimetable.filter(e => e.day_of_week === day);
+    });
+    
+    // Show in modal
+    showCourseTimetableModal(courseCode, groupedByDay);
+}
+
+// ============ SHOW COURSE TIMETABLE MODAL WITH DAY WISE TABS ============
+function showCourseTimetableModal(courseCode, groupedByDay) {
+    // Create modal if not exists
+    let modalEl = document.getElementById('courseTimetableModal');
+    
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'courseTimetableModal';
+        modalEl.className = 'modal fade';
+        modalEl.setAttribute('tabindex', '-1');
+        document.body.appendChild(modalEl);
+    }
+    
+    // Create tabs
+    let tabsNav = '';
+    let tabsContent = '';
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    dayOrder.forEach((day, index) => {
+        const dayEntries = groupedByDay[day] || [];
+        const activeClass = index === 0 ? 'active' : '';
+        const showClass = index === 0 ? 'show active' : '';
+        
+        tabsNav += `
+            <li class="nav-item" role="presentation">
+                <button class="nav-link ${activeClass}" 
+                        id="${day}-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#${day}" 
+                        type="button" 
+                        role="tab">
+                    <i class="fas fa-calendar-day me-1"></i> ${day}
+                    <span class="badge bg-primary ms-1">${dayEntries.length}</span>
+                </button>
+            </li>
+        `;
+        
+        let tableRows = '';
+        if (dayEntries.length === 0) {
+            tableRows = `
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <i class="fas fa-info-circle text-muted me-2"></i>
+                        No classes scheduled on ${day}
+                    </td>
+                </tr>
+            `;
+        } else {
+            dayEntries.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+            
+            dayEntries.forEach((entry, idx) => {
+                const isActive = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
+                const statusClass = isActive ? 'success' : 'danger';
+                const statusText = isActive ? 'Active' : 'Inactive';
+                
+                tableRows += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</td>
+                        <td>${escapeHtml(entry.subject || '-')}</td>
+                        <td>${escapeHtml(entry.teacher_name || '-')}</td>
+                        <td>${escapeHtml(entry.room_number || '-')}</td>
+                        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+        }
+        
+        tabsContent += `
+            <div class="tab-pane fade ${showClass}" id="${day}" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Time</th>
+                                <th>Subject</th>
+                                <th>Teacher</th>
+                                <th>Room</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
+    
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Complete Timetable: ${escapeHtml(courseCode)}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        ${tabsNav}
+                    </ul>
+                    <div class="tab-content">
+                        ${tabsContent}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addTimetableForCourse('${escapeHtml(courseCode)}')">
+                        <i class="fas fa-plus me-1"></i> Add New Class
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+// ============ ADD TIMETABLE FOR SPECIFIC COURSE/DAY ============
+function addTimetableForCourse(courseCode, day = null, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    resetTimetableForm();
+    document.getElementById('editTimetableId').value = '';
+    
+    // Set course in modal
+    const courseSelect = document.getElementById('timetableCourse');
+    if (courseSelect) {
+        Array.from(courseSelect.options).forEach(option => {
+            if (option.value === courseCode || option.text.includes(courseCode)) {
+                option.selected = true;
+            }
+        });
+    }
+    
+    // Set day if provided
+    if (day) {
+        const daySelect = document.getElementById('timetableDay');
+        if (daySelect) {
+            daySelect.value = day;
+        }
+    }
+    
+    document.querySelector('#timetableModal .modal-title').innerHTML = 
+        `<i class="fas fa-plus me-2"></i>Add Timetable Entry - ${escapeHtml(courseCode)}${day ? ` (${day})` : ''}`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
+    modal.show();
+}
+
+// ============ CRUD OPERATIONS ============
 
 // Show add modal
 function showAddTimetableModal() {
@@ -7753,12 +8214,19 @@ function showAddTimetableModal() {
 
 // Reset form
 function resetTimetableForm() {
-    document.getElementById('timetableForm').reset();
-    document.getElementById('timetableStatus').checked = true;
+    const form = document.getElementById('timetableForm');
+    if (form) form.reset();
+    
+    const statusCheck = document.getElementById('timetableStatus');
+    if (statusCheck) statusCheck.checked = true;
 }
 
 // Edit timetable
-async function editTimetable(timetableId) {
+async function editTimetable(timetableId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
     try {
         const entry = allTimetable.find(t => t.timetable_id === timetableId);
         if (!entry) {
@@ -7771,10 +8239,10 @@ async function editTimetable(timetableId) {
         document.getElementById('timetableDay').value = entry.day_of_week;
         document.getElementById('timetableStartTime').value = entry.start_time;
         document.getElementById('timetableEndTime').value = entry.end_time;
-        document.getElementById('timetableSubject').value = entry.subject;
+        document.getElementById('timetableSubject').value = entry.subject || '';
         document.getElementById('timetableTeacher').value = entry.teacher_name || '';
         document.getElementById('timetableRoom').value = entry.room_number || '';
-        document.getElementById('timetableStatus').checked = entry.is_active;
+        document.getElementById('timetableStatus').checked = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
         
         document.querySelector('#timetableModal .modal-title').innerHTML = 
             '<i class="fas fa-edit me-2"></i>Edit Timetable Entry';
@@ -7835,7 +8303,7 @@ async function saveTimetable() {
             modal.hide();
             await loadTimetableData();
         } else {
-            showError('Save failed: ' + result.message);
+            showError('Save failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         showError('Network error');
@@ -7843,8 +8311,12 @@ async function saveTimetable() {
 }
 
 // Delete timetable
-async function deleteTimetable(timetableId) {
-    if (!confirm('Delete this timetable entry?')) return;
+async function deleteTimetable(timetableId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    if (!confirm('Are you sure you want to delete this timetable entry?')) return;
     
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/delete/${timetableId}`, {
@@ -7854,16 +8326,22 @@ async function deleteTimetable(timetableId) {
         const result = await response.json();
         
         if (result.success) {
-            showSuccess('Entry deleted');
+            showSuccess('Entry deleted successfully');
             await loadTimetableData();
+        } else {
+            showError('Delete failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
-        showError('Error deleting');
+        showError('Error deleting entry');
     }
 }
 
 // Toggle status
-async function toggleTimetableStatus(timetableId) {
+async function toggleTimetableStatus(timetableId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/toggle-status/${timetableId}`, {
             method: 'PUT'
@@ -7872,35 +8350,65 @@ async function toggleTimetableStatus(timetableId) {
         const result = await response.json();
         
         if (result.success) {
-            showSuccess('Status updated');
+            showSuccess('Status updated successfully');
             await loadTimetableData();
+        } else {
+            showError('Update failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         showError('Error updating status');
     }
 }
 
+// ============ UTILITY FUNCTIONS ============
+
+// Format time
+function formatTime(timeString) {
+    if (!timeString) return '-';
+    try {
+        if (timeString.includes(':')) {
+            const parts = timeString.split(':');
+            return `${parts[0]}:${parts[1]}`;
+        }
+        return timeString;
+    } catch {
+        return timeString;
+    }
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Export timetable
 function exportTimetable() {
-    const courseFilter = document.getElementById('timetableCourseFilter').value;
-    const dayFilter = document.getElementById('timetableDayFilter').value;
+    const data = filteredTimetableData.length > 0 ? filteredTimetableData : allTimetable;
     
-    let filteredData = allTimetable;
-    if (courseFilter) filteredData = filteredData.filter(t => t.course_code === courseFilter);
-    if (dayFilter) filteredData = filteredData.filter(t => t.day_of_week === dayFilter);
+    if (data.length === 0) {
+        showError('No data to export');
+        return;
+    }
     
-    let csv = 'Day,Start Time,End Time,Course,Subject,Teacher,Room,Status\n';
+    let csv = 'Course,Day,Start Time,End Time,Subject,Teacher,Room,Status\n';
     
-    filteredData.forEach(t => {
-        csv += `"${t.day_of_week}","${t.start_time}","${t.end_time}","${t.course_name}","${t.subject}","${t.teacher_name || ''}","${t.room_number || ''}","${t.is_active ? 'Active' : 'Inactive'}"\n`;
+    data.forEach(t => {
+        csv += `"${t.course_code || ''}","${t.day_of_week || ''}","${t.start_time || ''}","${t.end_time || ''}",`;
+        csv += `"${t.subject || ''}","${t.teacher_name || ''}","${t.room_number || ''}","${t.is_active ? 'Active' : 'Inactive'}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'timetable.csv';
+    a.download = `timetable_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showSuccess('Timetable exported successfully');
 }
 
 // Refresh
@@ -7908,10 +8416,24 @@ function refreshTimetable() {
     loadTimetableData();
 }
 
-console.log('✅ Time Table Management loaded!');
+// Loading/Error/Success UI functions
+function showLoading(message) {
+    console.log(message);
+}
 
+function hideLoading() {
+    console.log('Loading hidden');
+}
 
+function showError(message) {
+    alert('Error: ' + message);
+}
 
+function showSuccess(message) {
+    alert('Success: ' + message);
+}
+
+console.log('✅ Time Table Management loaded with Course + Day-wise Toggle!');
 
 
 
@@ -9177,6 +9699,7 @@ function showInfo(message) {
 }
 
 console.log('Dashboard JavaScript loaded successfully');
+
 
 
 
