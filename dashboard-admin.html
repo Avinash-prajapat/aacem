@@ -1276,7 +1276,13 @@
                                 <i class="fas fa-layer-group me-2"></i>Sections
                             </button>
                         </li>
-
+                        <!-- Student Sections Tab -->
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="student-sections-tab" data-bs-toggle="tab" 
+                                data-bs-target="#student-sections" type="button" role="tab">
+                                <i class="fas fa-users-cog me-2"></i>Student Sections
+                            </button>
+                        </li>
                         <!-- Teacher-Section Mapping Tab -->
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="teacher-sections-tab" data-bs-toggle="tab" data-bs-target="#teacher-sections" type="button" role="tab">
@@ -1422,28 +1428,130 @@
                             </div>
                         </div>
 
-                        <!-- Fees Tab -->
+                        <!-- Fee Records Tab - Section Wise -->
                         <div class="tab-pane fade" id="fees" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h4><i class="fas fa-money-bill-wave me-2 text-success"></i>Section-wise Fee Records</h4>
+                                    <p class="text-muted mb-0">View and manage fee collections by course and section</p>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#feeModal">
+                                        <i class="fas fa-plus me-2"></i>Record Payment
+                                    </button>
+                                    <button class="btn btn-success" onclick="exportSectionFees()">
+                                        <i class="fas fa-download me-2"></i>Export
+                                    </button>
+                                    <button class="btn btn-info" onclick="refreshSectionFees()">
+                                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Statistics Cards - UPDATED (Total Fee hata diya) -->
+                            <div class="row mb-4">
+                                <div class="col-md-4"> <!-- Pehle 3 columns the, ab 4 mein se 3 kar diye -->
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-rupee-sign fa-2x text-success mb-2"></i>
+                                            <h3 class="mb-0" id="totalFeeCollected">₹0</h3>
+                                            <small class="text-muted">Total Collected</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-receipt fa-2x text-primary mb-2"></i>
+                                            <h3 class="mb-0" id="totalFeePayments">0</h3>
+                                            <small class="text-muted">Total Payments</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-layer-group fa-2x text-info mb-2"></i>
+                                            <h3 class="mb-0" id="feeSectionsCount">0</h3>
+                                            <small class="text-muted">Sections</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filters -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-book me-1"></i>Filter by Course
+                                            </label>
+                                            <select class="form-select" id="feeCourseFilter" onchange="handleFeeCourseChange()">
+                                                <option value="">All Courses</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-layer-group me-1"></i>Filter by Section
+                                            </label>
+                                            <select class="form-select" id="feeSectionFilter" onchange="filterSectionFees()" disabled>
+                                                <option value="">All Sections</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-calendar me-1"></i>Date Range
+                                            </label>
+                                            <select class="form-select" id="feeDateFilter" onchange="filterSectionFees()">
+                                                <option value="">All Time</option>
+                                                <option value="today">Today</option>
+                                                <option value="week">This Week</option>
+                                                <option value="month">This Month</option>
+                                                <option value="year">This Year</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-search me-1"></i>Search
+                                            </label>
+                                            <input type="text" class="form-control" id="feeSearch" 
+                                                placeholder="Receipt No, Student..." onkeyup="searchSectionFees()">
+                                        </div>
+                                        
+                                        <div class="col-md-12 text-end mt-3">
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="resetFeeFilters()">
+                                                <i class="fas fa-undo me-1"></i> Reset Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fee Records Table -->
                             <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Fee Management</h5>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#feeModal">
-                                            <i class="fas fa-plus me-1"></i> Record Payment
-                                        </button>
-                                        <button class="btn btn-success btn-sm" onclick="exportData('fees')">
-                                            <i class="fas fa-download me-1"></i> Export
-                                        </button>
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list me-2"></i>Fee Records
+                                        <span class="badge bg-success ms-2" id="feeRecordsCount">0</span>
+                                    </h5>
+                                    <div>
+                                        <span class="badge bg-primary me-2" id="totalAmountDisplay">Total: ₹0</span>
                                     </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
                                         <table class="table table-hover">
-                                            <thead>
+                                            <thead class="table-light">
                                                 <tr>
+                                                    <th>#</th>
                                                     <th>Receipt No</th>
-                                                    <th>Student (with UID)</th>
-                                                    <th>Class</th>
+                                                    <th>Student</th>
+                                                    <th>Course</th>
+                                                    <th>Section</th>
                                                     <th>Amount</th>
                                                     <th>Date</th>
                                                     <th>Mode</th>
@@ -1451,10 +1559,47 @@
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="feesTableBody">
-                                                <!-- Fees data will be loaded here -->
+                                            <tbody id="feeRecordsTableBody">
+                                                <tr>
+                                                    <td colspan="10" class="text-center py-5">
+                                                        <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                                                        <p class="text-muted">Loading fee records...</p>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Showing <span id="feeShowingCount">0</span> of <span id="feeTotalCount">0</span> records
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Total: <strong id="footerTotalAmount">₹0</strong>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- View Fee Details Modal -->
+                        <div class="modal fade" id="viewFeeModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-receipt me-2"></i>Fee Receipt Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body" id="viewFeeContent">
+                                        <!-- Content will be loaded here -->
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-success" onclick="printReceipt()">Print Receipt</button>
                                     </div>
                                 </div>
                             </div>
@@ -1697,35 +1842,63 @@
                             </div>
                         </div>
 
-                        <!-- Attendance Tab -->
+                        <!-- Attendance Tab - Replace this entire tab content -->
                         <div class="tab-pane fade" id="attendance" role="tabpanel">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Attendance Records</h5>
+                                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Section Attendance Records</h5>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
                                             <i class="fas fa-plus me-1"></i> Mark Attendance
                                         </button>
-                                        <button class="btn btn-success btn-sm" onclick="exportData('attendance')">
+                                        <button class="btn btn-success btn-sm" onclick="exportSectionAttendance()">
                                             <i class="fas fa-download me-1"></i> Export
+                                        </button>
+                                        <button class="btn btn-info btn-sm" onclick="loadSectionAttendanceRecords()">
+                                            <i class="fas fa-sync-alt me-1"></i> Refresh
                                         </button>
                                     </div>
                                 </div>
                                 <div class="card-body">
+                                    <!-- Filters -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="filterCourse" onchange="filterAttendanceByCourse()">
+                                                <option value="">All Courses</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="filterSection" onchange="filterAttendanceBySection()">
+                                                <option value="">All Sections</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="date" class="form-control" id="filterDate" onchange="filterAttendanceByDate()">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Table -->
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr>
-                                                    <th>Date / Class</th>
-                                                    <th>Present</th>
-                                                    <th>Absent</th>
+                                                    <th>#</th>
+                                                    <th>Course</th>
+                                                    <th>Section</th>
+                                                    <th>Date</th>
+                                                    <th>Subject</th>
+                                                    <th>Present/Absent</th>
                                                     <th>Percentage</th>
-                                                    <th>Details</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="attendanceTableBody">
-                                                <!-- Attendance data will be loaded here -->
+                                                <tr>
+                                                    <td colspan="8" class="text-center py-4">
+                                                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                                        <p>No attendance records found</p>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -1877,12 +2050,12 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Course PDFs Tab Content -->
+                        <!-- PDFs Tab Content - Section Wise -->
                         <div class="tab-pane fade" id="pdfs" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <div>
-                                    <h4><i class="fas fa-file-pdf me-2 text-danger"></i>Course Study Materials</h4>
-                                    <p class="text-muted mb-0">Upload and manage course PDFs for students</p>
+                                    <h4><i class="fas fa-file-pdf me-2 text-danger"></i>Section Study Materials</h4>
+                                    <p class="text-muted mb-0">Upload and manage section-wise PDFs for students</p>
                                 </div>
                                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadPdfModal">
                                     <i class="fas fa-upload me-2"></i>Upload PDF
@@ -1903,46 +2076,52 @@
                                 <div class="col-md-3">
                                     <div class="card border-info">
                                         <div class="card-body text-center">
-                                            <i class="fas fa-graduation-cap fa-2x text-info mb-2"></i>
+                                            <i class="fas fa-layer-group fa-2x text-info mb-2"></i>
                                             <h3 class="mb-0" id="coursesWithPdfsCount">0</h3>
                                             <small class="text-muted">Courses with PDFs</small>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="card border-warning">
+                                    <div class="card border-success">
                                         <div class="card-body text-center">
-                                            <i class="fas fa-database fa-2x text-warning mb-2"></i>
-                                            <h3 class="mb-0" id="totalStorageSize">0 MB</h3>
-                                            <small class="text-muted">Total Storage</small>
+                                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                            <h3 class="mb-0" id="sectionsWithPdfsCount">0</h3>
+                                            <small class="text-muted">Sections with PDFs</small>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="card border-success">
+                                    <div class="card border-warning">
                                         <div class="card-body text-center">
-                                            <i class="fas fa-clock fa-2x text-success mb-2"></i>
-                                            <h3 class="mb-0" id="recentUploadsCount">0</h3>
-                                            <small class="text-muted">Recent Uploads</small>
+                                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                            <h3 class="mb-0" id="recentPdfsCount">0</h3>
+                                            <small class="text-muted">Last 7 Days</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Filter by Course -->
+                            <!-- Filters -->
                             <div class="card mb-4">
                                 <div class="card-body">
                                     <div class="row align-items-center">
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <label class="form-label">Filter by Course:</label>
-                                            <select class="form-select" id="pdfCourseFilter" onchange="filterPdfsByCourse()">
+                                            <select class="form-select" id="pdfCourseFilter" onchange="filterSectionPdfs()">
                                                 <option value="">All Courses</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-6 text-end">
-                                            <button class="btn btn-outline-primary" onclick="refreshPdfList()">
-                                                <i class="fas fa-sync-alt me-1"></i> Refresh
-                                            </button>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Filter by Section:</label>
+                                            <select class="form-select" id="pdfSectionFilter" onchange="filterSectionPdfs()" disabled>
+                                                <option value="">All Sections</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Search:</label>
+                                            <input type="text" class="form-control" id="pdfSearch" 
+                                                placeholder="Search by title..." onkeyup="searchSectionPdfs()">
                                         </div>
                                     </div>
                                 </div>
@@ -1950,16 +2129,21 @@
 
                             <!-- PDFs List -->
                             <div class="card">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">
-                                        <i class="fas fa-list me-2"></i>Uploaded PDFs
+                                        <i class="fas fa-list me-2"></i>Section-wise PDFs
                                         <span class="badge bg-primary ms-2" id="pdfListCount">0</span>
                                     </h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshSectionPdfs()">
+                                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="card-body">
-                                    <div id="pdfListContainer">
+                                    <div id="pdfListContainer" class="row">
                                         <!-- PDFs will be loaded here -->
-                                        <div class="text-center py-5">
+                                        <div class="col-12 text-center py-5">
                                             <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
                                             <p class="text-muted">No PDFs uploaded yet. Click "Upload PDF" to get started.</p>
                                         </div>
@@ -2139,6 +2323,467 @@
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ==================== STUDENT SECTIONS TAB - PRODUCTION READY ==================== -->
+                        <div class="tab-pane fade" id="student-sections" role="tabpanel">
+                            
+                            <!-- Page Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h3 class="mb-1">
+                                        <i class="fas fa-users-cog me-2 text-primary"></i>
+                                        Student Section Assignment
+                                    </h3>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Assign students to sections for organized management of PDFs, Marks, and Attendance
+                                    </p>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-success" onclick="openBulkAssignModal()">
+                                        <i class="fas fa-users-cog me-1"></i> Bulk Assign
+                                    </button>
+                                    <button class="btn btn-info" onclick="openSectionWiseView()">
+                                        <i class="fas fa-layer-group me-1"></i> View by Section
+                                    </button>
+                                    <button class="btn btn-warning" onclick="showUnassignedOnly()">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Unassigned
+                                    </button>
+                                    <button class="btn btn-primary" onclick="refreshStudentSections()">
+                                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Statistics Cards -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-users fa-3x text-primary"></i>
+                                            </div>
+                                            <h2 class="mb-1 fw-bold" id="totalStudentsForSections">0</h2>
+                                            <p class="text-muted mb-0">Total Students</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-check-circle fa-3x text-success"></i>
+                                            </div>
+                                            <h2 class="mb-1 fw-bold text-success" id="assignedStudents">0</h2>
+                                            <p class="text-muted mb-0">Assigned to Sections</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-exclamation-circle fa-3x text-warning"></i>
+                                            </div>
+                                            <h2 class="mb-1 fw-bold text-warning" id="unassignedStudents">0</h2>
+                                            <p class="text-muted mb-0">Not Assigned</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-chart-pie fa-3x text-info"></i>
+                                            </div>
+                                            <h2 class="mb-1 fw-bold text-info" id="assignmentPercentage">0%</h2>
+                                            <p class="text-muted mb-0">Assignment Rate</p>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-info" id="assignmentProgressBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Course-wise Breakdown -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-bottom">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>Course-wise Assignment Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="courseBreakdownContainer">
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            <span class="ms-2 text-muted">Loading breakdown...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filters Row -->
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-book me-1"></i>Filter by Course
+                                    </label>
+                                    <select class="form-select" id="studentSectionCourseFilter">
+                                        <option value="">All Courses</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- NEW: Section Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-layer-group me-1"></i>Filter by Section
+                                    </label>
+                                    <select class="form-select" id="studentSectionSectionFilter">
+                                        <option value="">All Sections</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-filter me-1"></i>Status
+                                    </label>
+                                    <select class="form-select" id="studentSectionStatusFilter">
+                                        <option value="">All Students</option>
+                                        <option value="assigned">✓ Assigned</option>
+                                        <option value="unassigned">✗ Not Assigned</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-search me-1"></i>Search
+                                    </label>
+                                    <input type="text" class="form-control" id="searchStudentSections" 
+                                        placeholder="Search by name, ID, email...">
+                                </div>
+                                
+                                <!-- Reset Button -->
+                                <div class="col-md-12 text-end mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary" id="resetFiltersBtn" onclick="resetAllFilters()">
+                                        <i class="fas fa-undo me-1"></i> Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Students Table -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-list me-2"></i>Student List
+                                            <span class="badge bg-primary ms-2" id="studentSectionsCount">0</span>
+                                        </h6>
+                                        <div>
+                                            <span class="badge bg-success me-2">
+                                                <i class="fas fa-check me-1"></i>
+                                                <span id="displayedAssigned">0</span> Assigned
+                                            </span>
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-times me-1"></i>
+                                                <span id="displayedUnassigned">0</span> Unassigned
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="5%">#</th>
+                                                    <th width="12%">
+                                                        <i class="fas fa-id-badge me-1"></i>Student ID
+                                                    </th>
+                                                    <th width="20%">
+                                                        <i class="fas fa-user me-1"></i>Name
+                                                    </th>
+                                                    <th width="18%">
+                                                        <i class="fas fa-envelope me-1"></i>Email
+                                                    </th>
+                                                    <th width="12%">
+                                                        <i class="fas fa-phone me-1"></i>Phone
+                                                    </th>
+                                                    <th width="10%">
+                                                        <i class="fas fa-book me-1"></i>Course
+                                                    </th>
+                                                    <th width="13%">
+                                                        <i class="fas fa-layer-group me-1"></i>Section
+                                                    </th>
+                                                    <th width="10%" class="text-center">
+                                                        <i class="fas fa-cog me-1"></i>Actions
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="studentSectionsTableBody">
+                                                <tr>
+                                                    <td colspan="8" class="text-center py-5">
+                                                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                                                        <p class="text-muted">Loading students...</p>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Showing <strong id="showingCount">0</strong> of <strong id="totalCount">0</strong> students
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Click on "Assign" to assign students to sections
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- ==================== ASSIGN SECTION MODAL ==================== -->
+                        <div class="modal fade" id="assignSectionModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-user-plus me-2"></i>Assign Student to Section
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="assignSectionForm">
+                                            <input type="hidden" id="assignStudentId">
+                                            
+                                            <!-- Student Info Card -->
+                                            <div class="alert alert-info border-info">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-user me-2"></i>Student Information
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p class="mb-2">
+                                                            <strong>Name:</strong> 
+                                                            <span id="assignStudentNameDisplay"></span>
+                                                        </p>
+                                                        <p class="mb-0">
+                                                            <strong>Student ID:</strong> 
+                                                            <span id="assignStudentIdDisplay" class="badge bg-dark"></span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p class="mb-2">
+                                                            <strong>Course:</strong> 
+                                                            <span id="assignStudentCourseDisplay" class="badge bg-primary"></span>
+                                                        </p>
+                                                        <p class="mb-0">
+                                                            <strong>Current Section:</strong> 
+                                                            <span id="assignStudentCurrentSection" class="badge bg-warning">Not Assigned</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <input type="hidden" id="assignStudentName">
+                                            <input type="hidden" id="assignStudentCourse">
+                                            
+                                            <!-- Section Selection -->
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="fas fa-layer-group me-1"></i>
+                                                    Select Section *
+                                                </label>
+                                                <select class="form-select form-select-lg" id="studentSectionSelect" required>
+                                                    <option value="">Choose section...</option>
+                                                </select>
+                                                <div class="form-text">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    Available sections for this course. Full sections are disabled.
+                                                </div>
+                                            </div>
+
+                                            <!-- Section Info (shown when section selected) -->
+                                            <div id="selectedSectionInfo" style="display: none;" class="card bg-light border-0 mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">
+                                                        <i class="fas fa-info-circle me-2"></i>Section Details
+                                                    </h6>
+                                                    <div class="row small">
+                                                        <div class="col-md-6">
+                                                            <p class="mb-1"><strong>Section:</strong> <span id="sectionNameInfo"></span></p>
+                                                            <p class="mb-0"><strong>Teacher:</strong> <span id="sectionTeacherInfo"></span></p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <p class="mb-1"><strong>Capacity:</strong> <span id="sectionCapacityInfo"></span></p>
+                                                            <p class="mb-0"><strong>Schedule:</strong> <span id="sectionScheduleInfo"></span></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Important Notes -->
+                                            <div class="alert alert-warning border-warning mb-0">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-lightbulb me-2"></i>Important
+                                                </h6>
+                                                <ul class="mb-0 small">
+                                                    <li>Student will appear in this section's attendance, marks, and PDFs</li>
+                                                    <li>Student will receive section-specific announcements</li>
+                                                    <li>Can be reassigned to a different section anytime</li>
+                                                    <li>Section teacher can manage this student (if assigned)</li>
+                                                </ul>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-lg" onclick="saveStudentSectionAssignment()">
+                                            <i class="fas fa-save me-1"></i>Assign to Section
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== BULK ASSIGN MODAL ==================== -->
+                        <div class="modal fade" id="bulkAssignModal" tabindex="-1">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-users-cog me-2"></i>Bulk Section Assignment
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-info border-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Bulk Assignment:</strong> Automatically assign all unassigned students from a course to the selected section (respects section capacity).
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="fas fa-book me-1"></i>Select Course *
+                                                </label>
+                                                <select class="form-select form-select-lg" id="bulkAssignCourse" onchange="loadSectionsForBulkAssign(this.value)">
+                                                    <option value="">Choose course...</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="fas fa-layer-group me-1"></i>Select Section *
+                                                </label>
+                                                <select class="form-select form-select-lg" id="bulkAssignSection" onchange="showBulkPreview()">
+                                                    <option value="">Choose course first...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Preview Container -->
+                                        <div id="bulkAssignPreview">
+                                            <div class="text-center text-muted py-5">
+                                                <i class="fas fa-hand-pointer fa-4x mb-3 opacity-50"></i>
+                                                <p class="lead">Select course and section to see preview</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Students Preview Table -->
+                                        <div id="bulkAssignStudentsTable" style="display: none;">
+                                            <hr>
+                                            <h6 class="mb-3">
+                                                <i class="fas fa-list me-2"></i>Students to be Assigned:
+                                                <span class="badge bg-primary ms-2" id="bulkStudentCount">0</span>
+                                            </h6>
+                                            <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                                                <table class="table table-sm table-hover table-bordered">
+                                                    <thead class="table-light sticky-top">
+                                                        <tr>
+                                                            <th width="5%">#</th>
+                                                            <th width="20%">Student ID</th>
+                                                            <th width="30%">Name</th>
+                                                            <th width="30%">Email</th>
+                                                            <th width="15%">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="bulkAssignStudentsList">
+                                                        <!-- Students loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-lg" onclick="executeBulkAssign()" id="bulkAssignBtn" disabled>
+                                            <i class="fas fa-users-cog me-1"></i>Assign All Students
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== SECTION-WISE VIEW MODAL ==================== -->
+                        <div class="modal fade" id="sectionWiseViewModal" tabindex="-1">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-info text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-layer-group me-2"></i>Section-wise Student View
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="sectionWiseContent">
+                                            <div class="text-center py-5">
+                                                <div class="spinner-border text-primary mb-3" role="status"></div>
+                                                <p class="text-muted">Loading section-wise data...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== REMOVE CONFIRMATION MODAL ==================== -->
+                        <div class="modal fade" id="removeConfirmModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Confirm Removal
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="removeStudentId">
+                                        <p class="mb-0">
+                                            Are you sure you want to remove <strong id="removeStudentName"></strong> from their current section?
+                                        </p>
+                                        <div class="alert alert-warning mt-3 mb-0">
+                                            <small>
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                This will remove the student from section-specific attendance, marks, and PDFs access.
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-danger" onclick="confirmRemoveFromSection()">
+                                            <i class="fas fa-trash me-1"></i>Remove from Section
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2447,16 +3092,101 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Marks Tab -->
+                        <!-- Marks Tab Content - Section Wise -->
                         <div class="tab-pane fade" id="marks" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h4><i class="fas fa-chart-bar me-2 text-info"></i>Section-wise Exam Results</h4>
+                                    <p class="text-muted mb-0">Manage marks and results section-wise</p>
+                                </div>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#marksModal">
+                                    <i class="fas fa-plus me-2"></i>Enter Marks
+                                </button>
+                            </div>
+
+                            <!-- Statistics Cards -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-alt fa-2x text-primary mb-2"></i>
+                                            <h3 class="mb-0" id="totalMarksRecords">0</h3>
+                                            <small class="text-muted">Total Records</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
+                                            <h3 class="mb-0" id="marksCoursesCount">0</h3>
+                                            <small class="text-muted">Courses</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-layer-group fa-2x text-info mb-2"></i>
+                                            <h3 class="mb-0" id="marksSectionsCount">0</h3>
+                                            <small class="text-muted">Sections</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                                            <h3 class="mb-0" id="avgMarksPercentage">0%</h3>
+                                            <small class="text-muted">Average</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filters -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filter by Course:</label>
+                                            <select class="form-select" id="marksCourseFilter" onchange="filterSectionMarks()">
+                                                <option value="">All Courses</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filter by Section:</label>
+                                            <select class="form-select" id="marksSectionFilter" onchange="filterSectionMarks()" disabled>
+                                                <option value="">All Sections</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filter by Exam:</label>
+                                            <select class="form-select" id="marksExamFilter" onchange="filterSectionMarks()">
+                                                <option value="">All Exams</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Search Student:</label>
+                                            <input type="text" class="form-control" id="marksSearch" 
+                                                placeholder="Search..." onkeyup="searchSectionMarks()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Marks Table -->
                             <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Student Performance</h5>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#marksModal">
-                                            <i class="fas fa-plus me-1"></i> Enter Marks
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list me-2"></i>Marks Records
+                                        <span class="badge bg-primary ms-2" id="marksCount">0</span>
+                                    </h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshSectionMarks()">
+                                            <i class="fas fa-sync-alt me-1"></i> Refresh
                                         </button>
-                                        <button class="btn btn-success btn-sm" onclick="exportData('marks')">
+                                        <button class="btn btn-sm btn-outline-success ms-2" onclick="exportSectionMarks()">
                                             <i class="fas fa-download me-1"></i> Export
                                         </button>
                                     </div>
@@ -2466,9 +3196,11 @@
                                         <table class="table table-hover">
                                             <thead>
                                                 <tr>
+                                                    <th>#</th>
                                                     <th>Exam</th>
                                                     <th>Student</th>
                                                     <th>Course</th>
+                                                    <th>Section</th>
                                                     <th>Subject</th>
                                                     <th>Marks</th>
                                                     <th>Percentage</th>
@@ -2477,9 +3209,35 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="marksTableBody">
-                                                <!-- Marks data will be loaded here -->
+                                                <tr>
+                                                    <td colspan="10" class="text-center py-4">
+                                                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                                        <p>No marks records found</p>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- View Marks Details Modal -->
+                        <div class="modal fade" id="viewMarksModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-info text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-eye me-2"></i>Marks Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body" id="viewMarksContent">
+                                        <!-- Content will be loaded here -->
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-warning" onclick="editFromViewModal()">Edit</button>
                                     </div>
                                 </div>
                             </div>
@@ -2609,57 +3367,68 @@
         </div>
     </div>
 
-    <!-- Fee Modal - UPDATED VERSION -->
+    <!-- Fee Modal - Update karo -->
     <div class="modal fade" id="feeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Fee Collection</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Record Section Payment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="feeForm">
-                        <!-- NEW: Course Filter -->
+                        <!-- Course Filter -->
                         <div class="mb-3">
-                            <label class="form-label">Select Course First *</label>
-                            <select class="form-select" name="course" required onchange="loadStudentsForFee(this.value)">
+                            <label class="form-label fw-bold">Select Course *</label>
+                            <select class="form-select" id="feeModalCourse" required onchange="loadSectionsForFeeModal()">
                                 <option value="">Select Course</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Section Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Section *</label>
+                            <select class="form-select" id="feeModalSection" required disabled onchange="loadStudentsForFeeModal()">
+                                <option value="">-- Select Course First --</option>
                             </select>
                         </div>
                         
                         <!-- Student Dropdown -->
                         <div class="mb-3">
-                            <label class="form-label">Select Student *</label>
-                            <select class="form-select" name="studentId" required onchange="updateFeeDetails(this.value)">
-                                <option value="">Select Course First</option>
+                            <label class="form-label fw-bold">Select Student *</label>
+                            <select class="form-select" name="studentId" id="feeModalStudent" required onchange="updateFeeDetails()">
+                                <option value="">-- Select Section First --</option>
                             </select>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Total Fee</label>
-                                <input type="number" class="form-control" name="totalFee" readonly>
+                                <input type="number" class="form-control" id="totalFee" readonly>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Paid Amount</label>
-                                <input type="number" class="form-control" name="paidAmount" readonly>
+                                <input type="number" class="form-control" id="paidAmount" readonly>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Due Amount</label>
-                                <input type="number" class="form-control" name="dueAmount" readonly>
+                                <input type="number" class="form-control" id="dueAmount" readonly>
                             </div>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label">Amount Paying Now *</label>
-                            <input type="number" class="form-control" name="payingNow" required min="1" placeholder="Enter amount">
+                            <label class="form-label fw-bold">Amount Paying Now *</label>
+                            <input type="number" class="form-control" name="payingNow" id="payingNow" required min="1" placeholder="Enter amount">
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label">Payment Date *</label>
-                            <input type="date" class="form-control" name="paymentDate" required>
+                            <label class="form-label fw-bold">Payment Date *</label>
+                            <input type="date" class="form-control" name="paymentDate" id="paymentDate" required>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label">Payment Mode *</label>
-                            <select class="form-select" name="paymentMode" required>
+                            <label class="form-label fw-bold">Payment Mode *</label>
+                            <select class="form-select" name="paymentMode" id="paymentMode" required>
                                 <option value="">Select Mode</option>
                                 <option value="cash">Cash</option>
                                 <option value="bank">Bank Transfer</option>
@@ -2671,7 +3440,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="recordPayment()">
+                    <button type="button" class="btn btn-success" onclick="recordSectionPayment()">
                         <i class="fas fa-receipt me-1"></i> Record Payment
                     </button>
                 </div>
@@ -2729,79 +3498,95 @@
         </div>
     </div>
 
-    <!-- Marks Modal -->
+    <!-- Marks Modal - Section Wise -->
     <div class="modal fade" id="marksModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="marksModalTitle"><i class="fas fa-chart-line me-2"></i>Enter Student Marks</h5>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-chart-line me-2"></i>Enter Section Marks
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="marksForm">
-                        <div class="mb-3">
-                            <label class="form-label">Select Exam *</label>
-                            <select class="form-select" name="exam" required>
-                                <option value="">Select Exam</option>
-                                <option value="Class Test-1">Class Test-1</option>
-                                <option value="Class Test-2">Class Test-2</option>
-                                <option value="Class Test-3">Class Test-3</option>
-                                <option value="Class Test-4">Class Test-4</option>
-                                <option value="Class Test-5">Class Test-5</option>
-                                <option value="Final Exam">Final Exam</option>                    
-                                <option value="Quiz-1">Quiz-1</option>
-                                <option value="Quiz-2">Quiz-2</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Course Selection -->
-                        <div class="mb-3">
-                            <label class="form-label">Select Course *</label>
-                            <select class="form-select" name="course" required onchange="loadStudentsForMarks(this.value)">
-                                <option value="">Select Course</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Student Search -->
-                        <div class="mb-3">
-                            <label class="form-label">Search Student by UID</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="studentSearchMarks" placeholder="Enter Student UID" onkeyup="searchStudentForMarks(this.value)">
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearStudentSearch()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                        <!-- Exam Type -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Exam Type *</label>
+                                <select class="form-select" name="exam" id="marksExam" required>
+                                    <option value="">Select Exam</option>
+                                    <option value="Class Test-1">Class Test-1</option>
+                                    <option value="Class Test-2">Class Test-2</option>
+                                    <option value="Class Test-3">Class Test-3</option>
+                                    <option value="Class Test-4">Class Test-4</option>
+                                    <option value="Class Test-5">Class Test-5</option>
+                                    <option value="Mid Term">Mid Term</option>
+                                    <option value="Final Exam">Final Exam</option>                    
+                                    <option value="Quiz-1">Quiz-1</option>
+                                    <option value="Quiz-2">Quiz-2</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Exam Date *</label>
+                                <input type="date" class="form-control" name="examDate" id="marksExamDate" required>
                             </div>
                         </div>
                         
-                        <!-- Student Selection -->
-                        <div class="mb-3">
-                            <label class="form-label">Select Student *</label>
-                            <select class="form-select" name="studentId" required id="marksStudentSelect">
-                                <option value="">Select Student</option>
-                            </select>
+                        <!-- Course Selection -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Select Course *</label>
+                                <select class="form-select" id="marksCourse" required onchange="loadStudentsForMarks()">
+                                    <option value="">Select Course</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Section Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Select Section *</label>
+                                <select class="form-select" id="marksSection" required disabled onchange="loadStudentsForMarks()">
+                                    <option value="">-- Select Course First --</option>
+                                </select>
+                            </div>
                         </div>
                         
+                        <!-- Subject -->
                         <div class="mb-3">
-                            <label class="form-label">Subject *</label>
-                            <input type="text" class="form-control" name="subject" required placeholder="Enter subject name">
+                            <label class="form-label fw-bold">Subject *</label>
+                            <input type="text" class="form-control" name="subject" id="marksSubject" 
+                                required placeholder="Enter subject name">
                         </div>
+                        
+                        <!-- Total Marks -->
                         <div class="mb-3">
-                            <label class="form-label">Marks Obtained *</label>
-                            <input type="number" class="form-control" name="marks" required min="0" max="100" step="0.01" placeholder="Enter marks obtained">
+                            <label class="form-label fw-bold">Total Marks</label>
+                            <input type="number" class="form-control" name="totalMarks" id="marksTotalMarks" value="100" readonly>
                         </div>
+                        
+                        <!-- Hidden edit ID -->
+                        <input type="hidden" id="editMarksId">
+                        
+                        <!-- Students Marks Table -->
                         <div class="mb-3">
-                            <label class="form-label">Total Marks</label>
-                            <input type="number" class="form-control" name="totalMarks" value="100" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Exam Date *</label>
-                            <input type="date" class="form-control" name="examDate" required>
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-users me-1 text-secondary"></i> Student Marks
+                            </label>
+                            <div id="marksStudentsList" class="border rounded p-3" 
+                                style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                    <p class="mb-0">Select course and section to load students</p>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="marksSaveBtn" onclick="saveMarks()">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveSectionMarks()">
                         <i class="fas fa-save me-1"></i> Save Marks
                     </button>
                 </div>
@@ -2809,45 +3594,87 @@
         </div>
     </div>
 
-    <!-- Attendance Modal -->
+    <!-- Attendance Modal - Section Wise - NEW -->
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Mark Attendance</h5>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Mark Section Attendance
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="attendanceForm">
+                        <!-- Course Selection -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Select Class *</label>
-                                <select class="form-select" name="class" required onchange="loadClassStudents(this.value)">
-                                    <option value="">Select Class</option>
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-book me-1 text-primary"></i> Select Course *
+                                </label>
+                                <select class="form-select" id="attendanceCourse" required>
+                                    <option value="">-- Choose Course --</option>
                                 </select>
                             </div>
+                            
+                            <!-- Section Selection -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Date *</label>
-                                <input type="date" class="form-control" name="date" required>
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-layer-group me-1 text-success"></i> Select Section *
+                                </label>
+                                <select class="form-select" id="attendanceSection" required disabled>
+                                    <option value="">-- Select Course First --</option>
+                                </select>
                             </div>
                         </div>
+
+                        <!-- Date and Subject -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-1 text-info"></i> Date *
+                                </label>
+                                <input type="date" class="form-control" id="attendanceDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-tag me-1 text-warning"></i> Subject
+                                </label>
+                                <input type="text" class="form-control" id="attendanceSubject" 
+                                    placeholder="e.g., Mathematics">
+                            </div>
+                        </div>
+
+                        <!-- Attendance ID for editing -->
+                        <input type="hidden" id="editAttendanceId">
+
+                        <!-- Students List -->
                         <div class="mb-3">
-                            <label class="form-label">Student Attendance</label>
-                            <div id="attendanceStudentsList" class="border rounded p-3" style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
-                                <!-- Students will be populated here -->
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-users me-1 text-secondary"></i> Student Attendance
+                            </label>
+                            <div id="attendanceStudentsList" class="border rounded p-3" 
+                                style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                    <p class="mb-0">Select course and section to load students</p>
+                                </div>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveAttendance()">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveSectionAttendance()">
                         <i class="fas fa-save me-1"></i> Save Attendance
                     </button>
                 </div>
             </div>
         </div>
-    </div>z
+    </div>
     <!-- View Contact Message Modal - Add this at the end of your modals -->
     <div class="modal fade" id="viewContactModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -2920,34 +3747,62 @@
         </div>
     </div>
 
-    <!-- Upload PDF Modal -->
+    <!-- Upload PDF Modal - Section Wise (FIXED) -->
     <div class="modal fade" id="uploadPdfModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-upload me-2"></i>Upload Course PDF
+                        <i class="fas fa-upload me-2"></i>Upload Section PDF
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="uploadPdfForm">
-                        <div class="mb-3">
-                            <label class="form-label">Select Course *</label>
-                            <select class="form-select" name="course_code" id="uploadCourseSelect" required>
-                                <option value="">Choose a course...</option>
-                            </select>
+                        <!-- Course Selection -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-book me-1 text-primary"></i> Select Course *
+                                </label>
+                                <select class="form-select" id="pdfCourseSelect" required onchange="loadSectionsForPdf()">
+                                    <option value="">-- Choose Course --</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Section Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-layer-group me-1 text-success"></i> Select Section *
+                                </label>
+                                <select class="form-select" id="pdfSectionSelect" required disabled>
+                                    <option value="">-- Select Course First --</option>
+                                </select>
+                            </div>
                         </div>
+
+                        <!-- PDF Title -->
                         <div class="mb-3">
-                            <label class="form-label">PDF Title *</label>
-                            <input type="text" class="form-control" name="pdf_title" placeholder="e.g., Chapter 1" required>
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-heading me-1 text-info"></i> PDF Title *
+                            </label>
+                            <input type="text" class="form-control" name="pdf_title" 
+                                placeholder="e.g., Chapter 1 - Introduction" required>
                         </div>
+
+                        <!-- Description -->
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-align-left me-1 text-secondary"></i> Description
+                            </label>
                             <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
+
+                        <!-- PDF File -->
                         <div class="mb-3">
-                            <label class="form-label">Select PDF File *</label>
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-file-pdf me-1 text-danger"></i> Select PDF File *
+                            </label>
                             <input type="file" class="form-control" name="pdf_file" id="pdfFileInput" accept=".pdf" required>
                             <small class="text-muted">Max: 10MB</small>
                             <div id="filePreview" class="mt-2" style="display: none;">
@@ -2961,9 +3816,11 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="uploadCoursePdf()">
-                        <i class="fas fa-upload me-1"></i> Upload
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveSectionPdf()">
+                        <i class="fas fa-save me-1"></i> Upload PDF
                     </button>
                 </div>
             </div>
@@ -2976,27 +3833,34 @@
             <div class="modal-content">
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title">
-                        <i class="fas fa-edit me-2"></i>Edit PDF
+                        <i class="fas fa-edit me-2"></i>Edit PDF Details
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editPdfForm">
                         <input type="hidden" id="editPdfId">
+                        
                         <div class="mb-3">
-                            <label class="form-label">PDF Title *</label>
+                            <label class="form-label fw-bold">PDF Title *</label>
                             <input type="text" class="form-control" id="editPdfTitle" required>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
+                            <label class="form-label fw-bold">Description</label>
                             <textarea class="form-control" id="editPdfDescription" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Course and section cannot be edited. Delete and re-upload if needed.
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-warning" onclick="saveEditedPdf()">
-                        <i class="fas fa-save me-1"></i> Save
+                    <button type="button" class="btn btn-warning" onclick="updateSectionPdf()">
+                        <i class="fas fa-save me-1"></i> Update
                     </button>
                 </div>
             </div>
@@ -3004,94 +3868,94 @@
     </div>
 
     <!-- Add Syllabus Modal -->
-<div class="modal fade" id="syllabusModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white" id="syllabusModalHeader">
-                <h5 class="modal-title">
-                    <i class="fas fa-plus me-2"></i>Add New Syllabus
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="syllabusForm">
-                    <input type="hidden" id="editSyllabusId">
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Course *</label>
-                            <select class="form-select" id="syllabusCourse" required>
-                                <option value="">Select course...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Syllabus Title *</label>
-                            <input type="text" class="form-control" id="syllabusTitle" 
-                                   placeholder="e.g., Complete Course Syllabus" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" id="syllabusDescription" rows="2" 
-                                  placeholder="Brief description of the syllabus..."></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Total Duration (Hours) *</label>
-                            <input type="number" class="form-control" id="syllabusDuration" 
-                                   min="1" max="500" value="40" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" id="syllabusStatus">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Subjects Section -->
-                    <div class="card mb-3">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">
-                                <i class="fas fa-list me-2"></i>Subjects & Topics
-                            </h6>
-                            <button type="button" class="btn btn-sm btn-success" onclick="addSubjectRow()">
-                                <i class="fas fa-plus me-1"></i> Add Subject
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="subjectsTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="5%">#</th>
-                                            <th width="40%">Subject Name *</th>
-                                            <th width="20%">Duration (Hrs)</th>
-                                            <th width="30%">Topics</th>
-                                            <th width="5%">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="subjectsTableBody">
-                                        <!-- Subjects will be added here -->
-                                    </tbody>
-                                </table>
+    <div class="modal fade" id="syllabusModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white" id="syllabusModalHeader">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Add New Syllabus
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="syllabusForm">
+                        <input type="hidden" id="editSyllabusId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Course *</label>
+                                <select class="form-select" id="syllabusCourse" required>
+                                    <option value="">Select course...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Syllabus Title *</label>
+                                <input type="text" class="form-control" id="syllabusTitle" 
+                                    placeholder="e.g., Complete Course Syllabus" required>
                             </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="saveSyllabus()">
-                    <i class="fas fa-save me-1"></i> Save Syllabus
-                </button>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="syllabusDescription" rows="2" 
+                                    placeholder="Brief description of the syllabus..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Duration (Hours) *</label>
+                                <input type="number" class="form-control" id="syllabusDuration" 
+                                    min="1" max="500" value="40" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="syllabusStatus">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Subjects Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>Subjects & Topics
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-success" onclick="addSubjectRow()">
+                                    <i class="fas fa-plus me-1"></i> Add Subject
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="subjectsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="5%">#</th>
+                                                <th width="40%">Subject Name *</th>
+                                                <th width="20%">Duration (Hrs)</th>
+                                                <th width="30%">Topics</th>
+                                                <th width="5%">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="subjectsTableBody">
+                                            <!-- Subjects will be added here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveSyllabus()">
+                        <i class="fas fa-save me-1"></i> Save Syllabus
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
@@ -3378,7 +4242,6 @@
 </body>
 
 </html>
-
 
 
 
