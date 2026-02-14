@@ -213,67 +213,129 @@ async function checkAttendanceExists(sectionId, date, subject) {
     }
 }
 
-// ==================== NOTIFICATIONS ====================
+// ==================== TEACHER NOTIFICATIONS - FIXED ====================
 async function loadNotifications() {
     try {
-        const response = await fetch(`${API_BASE_URL}/student-notices`);
+        // ✅ FIXED: Use teacher-notices API instead of student-notices
+        const response = await fetch(`${API_BASE_URL}/teacher-notices`);
         const data = await response.json();
+        
+        console.log('Teacher notifications loaded:', data);
+        
         if (data.success) {
             notifications = data.notices || [];
             updateNotificationBadges();
             displayNotifications();
+        } else {
+            console.error('Failed to load notifications:', data.message);
         }
     } catch (error) {
         console.error('Error loading notifications:', error);
     }
 }
 
+// ==================== UPDATE NOTIFICATION BADGES ====================
 function updateNotificationBadges() {
     const unread = notifications.filter(n => !n.read).length;
     const badge = document.getElementById('notificationBadge');
     const count = document.getElementById('notificationCount');
-    if (badge) badge.textContent = unread;
+    
+    if (badge) {
+        badge.textContent = unread;
+        // Hide badge if 0
+        badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
     if (count) count.textContent = unread;
 }
 
+// ==================== DISPLAY NOTIFICATIONS ====================
 function displayNotifications() {
     const list = document.getElementById('notificationList');
     if (!list) return;
     
     if (notifications.length === 0) {
-        list.innerHTML = '<div class="text-center py-4"><i class="fas fa-bell-slash fa-3x text-muted mb-3"></i><p>No notifications</p></div>';
+        list.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No notifications</p>
+            </div>
+        `;
         return;
     }
     
     let html = '';
     notifications.slice(0, 5).forEach(n => {
-        html += `<div class="notification-item-modern" style="padding:15px;border-bottom:1px solid #eee;display:flex;gap:15px;cursor:pointer">
-            <div class="notification-icon" style="width:45px;height:45px;border-radius:12px;background:#e3f2fd;color:#1e90ff;display:flex;align-items:center;justify-content:center">
-                <i class="fas fa-bell"></i>
+        // Priority-based icon and color
+        let iconColor = '#1e90ff';
+        let bgColor = '#e3f2fd';
+        let icon = 'fa-bell';
+        
+        if (n.priority === 'high') {
+            iconColor = '#dc3545';
+            bgColor = '#fee';
+            icon = 'fa-exclamation-circle';
+        } else if (n.priority === 'medium') {
+            iconColor = '#ffc107';
+            bgColor = '#fff3cd';
+            icon = 'fa-exclamation-triangle';
+        } else if (n.priority === 'low') {
+            iconColor = '#6c757d';
+            bgColor = '#e9ecef';
+            icon = 'fa-arrow-down';
+        }
+        
+        // Audience badge
+        let audienceBadge = '';
+        if (n.audience === 'all') {
+            audienceBadge = '<span class="badge bg-success ms-2">All</span>';
+        } else if (n.audience === 'teachers') {
+            audienceBadge = '<span class="badge bg-warning ms-2">Teachers</span>';
+        }
+        
+        html += `
+            <div class="notification-item-modern" style="padding:15px;border-bottom:1px solid #eee;display:flex;gap:15px;cursor:pointer">
+                <div class="notification-icon" style="width:45px;height:45px;border-radius:12px;background:${bgColor};color:${iconColor};display:flex;align-items:center;justify-content:center">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="notification-content" style="flex:1;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 style="margin:0 0 5px 0;font-weight:600;">${n.title || 'Notification'}</h6>
+                        ${audienceBadge}
+                    </div>
+                    <p style="margin:0 0 5px 0;color:#666;font-size:0.9rem;">${(n.message || '').substring(0,60)}${(n.message || '').length > 60 ? '...' : ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size:0.7rem;color:#999;">${getTimeAgo(n.created_at)}</span>
+                        <span class="badge bg-${n.priority === 'high' ? 'danger' : n.priority === 'medium' ? 'warning' : 'secondary'}" 
+                              style="font-size:0.6rem;">
+                            ${n.priority || 'normal'}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="notification-content">
-                <h6>${n.title || 'Notification'}</h6>
-                <p>${(n.message || '').substring(0,60)}...</p>
-                <span style="font-size:0.7rem;color:#999">${getTimeAgo(n.created_at)}</span>
-            </div>
-        </div>`;
+        `;
     });
+    
     list.innerHTML = html;
 }
 
+// ==================== GET TIME AGO ====================
 function getTimeAgo(date) {
     if (!date) return 'recently';
     try {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        
         if (seconds < 60) return 'just now';
         if (seconds < 3600) return `${Math.floor(seconds/60)} minutes ago`;
         if (seconds < 86400) return `${Math.floor(seconds/3600)} hours ago`;
-        return `${Math.floor(seconds/86400)} days ago`;
+        if (seconds < 2592000) return `${Math.floor(seconds/86400)} days ago`;
+        
+        return new Date(date).toLocaleDateString();
     } catch {
         return 'recently';
     }
 }
 
+// ==================== TOGGLE NOTIFICATIONS ====================
 function toggleNotifications() {
     const drop = document.getElementById('notificationDropdown');
     if (drop) {
@@ -281,11 +343,92 @@ function toggleNotifications() {
     }
 }
 
+// ==================== MARK ALL NOTIFICATIONS READ ====================
 function markAllNotificationsRead() {
     notifications.forEach(n => n.read = true);
     updateNotificationBadges();
     displayNotifications();
     showAlert('All notifications marked as read', 'success');
+}
+
+// ==================== SHOW ALL NOTIFICATIONS ====================
+function showAllNotifications() {
+    // This function will be called when clicking "View All" in notification dropdown
+    hideAllContent();
+    const notificationsContent = document.getElementById('notificationsContent');
+    if (notificationsContent) {
+        notificationsContent.style.display = 'block';
+        displayAllNotifications();
+    }
+}
+
+// ==================== DISPLAY ALL NOTIFICATIONS ====================
+function displayAllNotifications() {
+    const list = document.getElementById('allNotificationsList');
+    if (!list) return;
+    
+    if (notifications.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <p class="text-muted">No notifications</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    notifications.forEach(n => {
+        const date = new Date(n.created_at).toLocaleString();
+        const unreadClass = !n.read ? 'unread' : '';
+        
+        // Priority-based icon and color
+        let iconColor = '#1e90ff';
+        let bgColor = '#e3f2fd';
+        let icon = 'fa-bell';
+        
+        if (n.priority === 'high') {
+            iconColor = '#dc3545';
+            bgColor = '#fee';
+            icon = 'fa-exclamation-circle';
+        } else if (n.priority === 'medium') {
+            iconColor = '#ffc107';
+            bgColor = '#fff3cd';
+            icon = 'fa-exclamation-triangle';
+        } else if (n.priority === 'low') {
+            iconColor = '#6c757d';
+            bgColor = '#e9ecef';
+            icon = 'fa-arrow-down';
+        }
+        
+        html += `
+            <div class="notification-item-modern ${unreadClass}" style="padding:15px;border-bottom:1px solid #eee;display:flex;gap:15px;background:${!n.read ? '#f0f9ff' : 'white'};">
+                <div class="notification-icon" style="width:50px;height:50px;border-radius:12px;background:${bgColor};color:${iconColor};display:flex;align-items:center;justify-content:center">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="notification-content" style="flex:1;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 style="margin:0;font-weight:600;">${n.title || 'Notification'}</h6>
+                        <span class="badge bg-${n.priority === 'high' ? 'danger' : n.priority === 'medium' ? 'warning' : 'secondary'}">
+                            ${n.priority || 'normal'}
+                        </span>
+                    </div>
+                    <p style="margin:0 0 10px 0;color:#666;">${n.message || ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> ${date}
+                        </small>
+                        ${n.audience === 'all' ? 
+                            '<span class="badge bg-success">All</span>' : 
+                            '<span class="badge bg-warning">Teachers</span>'
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
 }
 
 // ==================== NAVIGATION ====================
