@@ -13,7 +13,59 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <!-- ==================== LOGIN PROTECTION - FIRST! ==================== -->
+    <script>
+        (function() {
+            // Prevent iframe embedding
+            if (window.self !== window.top) {
+                window.top.location = window.self.location;
+            }
+            
+            console.log('🔒 Checking authentication...');
+            
+            const token = localStorage.getItem('teacherToken');
+            const teacherData = localStorage.getItem('teacherData');
+            const loginTime = localStorage.getItem('teacherLoginTime');
+            
+            if (!token || !teacherData) {
+                console.log('⛔ No login data found!');
+                alert('🔐 Please login first to access teacher dashboard');
+                window.location.href = 'teacher-login.html';
+                return;
+            }
+            
+            // Check session expiry
+            if (loginTime) {
+                const currentTime = new Date().getTime();
+                const eightHours = 8 * 60 * 60 * 1000;
+                
+                if (currentTime - parseInt(loginTime) > eightHours) {
+                    console.log('⛔ Session expired!');
+                    localStorage.clear();
+                    alert('⏰ Your session has expired. Please login again.');
+                    window.location.href = 'teacher-login.html';
+                    return;
+                }
+            }
+            
+            // Validate teacher data
+            try {
+                const teacher = JSON.parse(teacherData);
+                if (!teacher || !teacher.teacher_id) {
+                    throw new Error('Invalid teacher data');
+                }
+                console.log('✅ Welcome,', teacher.name);
+                window.currentTeacher = teacher;
+            } catch (e) {
+                console.log('⚠️ Invalid teacher data');
+                localStorage.clear();
+                window.location.href = 'teacher-login.html';
+                return;
+            }
+            
+            console.log('✅ Authentication successful!');
+        })();
+    </script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" href="logo.png" type="image/png">
@@ -794,71 +846,185 @@
             padding: 30px;
         }
 
-        /* ==================== PDF GRID ==================== */
-        .pdf-grid-modern {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+        /* PDF Section Styles */
+        .subject-section {
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
         }
 
+        .subject-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 0;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .subject-header h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .subject-body {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 15px 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-top: none;
+        }
+
+        /* PDF Card Styles */
         .pdf-card-modern {
             background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 15px;
+            padding: 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
-            border: 1px solid rgba(0,0,0,0.02);
+            height: 100%;
+            border: 1px solid rgba(0,0,0,0.03);
+            overflow: hidden;
         }
 
         .pdf-card-modern:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.15);
         }
 
-        .pdf-icon-modern {
-            font-size: 3rem;
+        .pdf-card-modern .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 15px 15px 10px;
+        }
+
+        .pdf-card-modern .card-body {
+            padding: 10px 15px;
+        }
+
+        .pdf-card-modern .card-footer {
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 15px;
+        }
+
+        .pdf-icon {
+            font-size: 2.5rem;
             color: #ef476f;
-            margin-bottom: 15px;
         }
 
-        .pdf-title-modern {
-            font-size: 1.1rem;
+        .pdf-title {
+            font-size: 1rem;
             font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 10px;
+            color: #2d3436;
+            margin: 10px 0 5px;
         }
 
-        .pdf-meta-modern {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .pdf-actions-modern {
+        .pdf-meta {
+            font-size: 0.85rem;
+            color: #636e72;
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 5px;
         }
 
-        .pdf-btn-modern {
+        .pdf-meta i {
+            font-size: 0.8rem;
+        }
+
+        /* Button Group */
+        .btn-group.w-100 {
+            gap: 5px;
+        }
+
+        .btn-group.w-100 .btn {
             flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
+            border-radius: 8px !important;
+            padding: 8px 5px;
+            font-size: 0.85rem;
             transition: all 0.3s ease;
         }
 
-        .pdf-btn-modern.view {
-            background: #e0f2fe;
-            color: #0284c7;
+        .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
         }
-        .pdf-btn-modern.download {
-            background: #dcfce7;
-            color: #16a34a;
+
+        .btn-outline-primary:hover {
+            background: #667eea;
+            color: white;
         }
-        .pdf-btn-modern:hover {
-            transform: scale(1.05);
+
+        .btn-outline-success {
+            border-color: #06d6a0;
+            color: #06d6a0;
+        }
+
+        .btn-outline-success:hover {
+            background: #06d6a0;
+            color: white;
+        }
+
+        .btn-outline-danger {
+            border-color: #ef476f;
+            color: #ef476f;
+        }
+
+        .btn-outline-danger:hover {
+            background: #ef476f;
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #dfe6e9;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h5 {
+            color: #2d3436;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #636e72;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .subject-header h4 {
+                font-size: 1rem;
+            }
+            
+            .btn-group.w-100 {
+                flex-direction: column;
+            }
+            
+            .btn-group.w-100 .btn {
+                width: 100%;
+                margin: 2px 0;
+            }
         }
 
         /* ==================== LOADING ==================== */
@@ -1058,6 +1224,77 @@
             text-decoration: none;
             font-weight: 600;
             cursor: pointer;
+        }
+        /* Subject badges in teacher dashboard */
+        .subject-badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .subject-badge {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(23, 162, 184, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .subject-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(23, 162, 184, 0.4);
+        }
+
+        .subject-badge i {
+            font-size: 0.8rem;
+        }
+
+        /* Section stats update */
+        .section-stats-modern {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #e2e8f0;
+        }
+
+        .stat-item-modern {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item-modern .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-item-modern .label {
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Subject dropdown in modals */
+        .subject-dropdown {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .subject-dropdown:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            outline: none;
         }
     </style>
 </head>
@@ -1368,7 +1605,7 @@
     <!-- Alert Container -->
     <div class="alert-container" id="alertContainer"></div>
 
-    <!-- Modals -->
+    <!-- Attendance Modal - With Subject Dropdown -->
     <div class="modal fade" id="attendanceModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content modal-content-modern">
@@ -1378,10 +1615,18 @@
                 </div>
                 <div class="modal-body modal-body-modern">
                     <form id="attendanceForm">
+                        <!-- Add this in attendance content section -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="filterSubject" onchange="filterAttendanceBySubject()">
+                                    <option value="">All Subjects</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Section *</label>
-                                <select class="form-select" id="attendanceSectionSelect" required>
+                                <select class="form-select" id="attendanceSectionSelect" required onchange="loadTeacherSubjectForAttendance()">
                                     <option value="">Loading sections...</option>
                                 </select>
                             </div>
@@ -1390,10 +1635,16 @@
                                 <input type="date" class="form-control" id="attendanceDate">
                             </div>
                         </div>
+                        
+                        <!-- Subject Dropdown - Automatically Loaded -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Subject</label>
-                            <input type="text" class="form-control" id="attendanceSubject" placeholder="e.g., Mathematics">
+                            <label class="form-label fw-semibold">Subject <span class="text-muted">(Your Teaching Subject)</span></label>
+                            <select class="form-select" id="attendanceSubjectSelect" required>
+                                <option value="">Select section first...</option>
+                            </select>
+                            <small class="text-muted">Subject automatically loaded from your assignment</small>
                         </div>
+                        
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <label class="form-label fw-semibold">Student Attendance</label>
@@ -1420,6 +1671,7 @@
         </div>
     </div>
 
+    <!-- Marks Modal - With Subject Dropdown -->
     <div class="modal fade" id="marksModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content modal-content-modern">
@@ -1432,7 +1684,7 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Section *</label>
-                                <select class="form-select" id="marksSectionSelect" required>
+                                <select class="form-select" id="marksSectionSelect" required onchange="loadTeacherSubjectForMarks()">
                                     <option value="">Loading sections...</option>
                                 </select>
                             </div>
@@ -1440,10 +1692,16 @@
                                 <label class="form-label fw-semibold">Exam Type *</label>
                                 <select class="form-select" id="examType" required>
                                     <option value="">Select Exam</option>
-                                    <option value="Mid-Term">Mid-Term</option>
-                                    <option value="End-Term">End-Term</option>
-                                    <option value="Class Test">Class Test</option>
-                                    <option value="Quiz">Quiz</option>
+                                    <option value="Class Test-1">Class Test-1</option>
+                                    <option value="Class Test-2">Class Test-2</option>
+                                    <option value="Class Test-3">Class Test-3</option>
+                                    <option value="Class Test-4">Class Test-4</option>
+                                    <option value="Class Test-5">Class Test-5</option>
+                                    <option value="Quiz-1">Quiz-1</option>
+                                    <option value="Quiz-2">Quiz-2</option>
+                                    <option value="Quiz-3">Quiz-3</option>
+                                    <option value="Quiz-4">Quiz-4</option>
+                                    <option value="Final">Final</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -1451,16 +1709,20 @@
                                 <input type="date" class="form-control" id="examDate">
                             </div>
                         </div>
+                        
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Subject *</label>
-                                <input type="text" class="form-control" id="marksSubject" required>
+                                <label class="form-label fw-semibold">Subject <span class="text-muted">(Your Teaching Subject)</span></label>
+                                <select class="form-select" id="marksSubjectSelect" required>
+                                    <option value="">Select section first...</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Total Marks *</label>
                                 <input type="number" class="form-control" id="totalMarks" value="100" min="1">
                             </div>
                         </div>
+                        
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Student Marks</label>
                             <div id="marksStudentsList" class="border rounded p-3" style="max-height: 400px; overflow-y: auto;"></div>
