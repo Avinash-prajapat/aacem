@@ -7321,40 +7321,24 @@ let filteredTimetableData = [];
 let currentExpandedCourse = null;
 let currentExpandedDay = null;
 
-// Initialize when timetable tab is clicked
+// Add to your DOMContentLoaded event
 document.getElementById('timetable-tab')?.addEventListener('shown.bs.tab', function() {
     initTimetableTab();
+    loadTeachersForTimetable(); // Pre-load teachers
 });
+
+function initTimetableTab() {
+    populateTimetableCourseDropdown();
+    loadTimetableData();
+    loadTeachersForTimetable(); // Load teachers when tab opens
+}
 
 function initTimetableTab() {
     populateTimetableCourseDropdowns();
     loadTimetableData();
 }
 
-// Populate course dropdowns
-function populateTimetableCourseDropdowns() {
-    const filterSelect = document.getElementById('timetableCourseFilter');
-    const modalSelect = document.getElementById('timetableCourse');
-    
-    if (!filterSelect || !modalSelect) return;
-    
-    filterSelect.innerHTML = '<option value="">All Courses</option>';
-    modalSelect.innerHTML = '<option value="">Select course...</option>';
-    
-    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
-        coursesData.filter(c => c.is_active).forEach(course => {
-            const option1 = document.createElement('option');
-            option1.value = course.course_code;
-            option1.textContent = `${course.course_name} (${course.course_code})`;
-            filterSelect.appendChild(option1);
-            
-            const option2 = document.createElement('option');
-            option2.value = course.course_code;
-            option2.textContent = `${course.course_name} (${course.course_code})`;
-            modalSelect.appendChild(option2);
-        });
-    }
-}
+
 
 // Load timetable data
 async function loadTimetableData() {
@@ -7922,16 +7906,7 @@ function addTimetableForCourse(courseCode, day = null, event) {
 
 // ============ CRUD OPERATIONS ============
 
-// Show add modal
-function showAddTimetableModal() {
-    resetTimetableForm();
-    document.getElementById('editTimetableId').value = '';
-    document.querySelector('#timetableModal .modal-title').innerHTML = 
-        '<i class="fas fa-plus me-2"></i>Add Timetable Entry';
-    
-    const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
-    modal.show();
-}
+
 
 // Reset form
 function resetTimetableForm() {
@@ -7942,11 +7917,125 @@ function resetTimetableForm() {
     if (statusCheck) statusCheck.checked = true;
 }
 
-// Edit timetable
-async function editTimetable(timetableId, event) {
-    if (event) {
-        event.stopPropagation();
+// ==================== GLOBAL VARIABLES ====================
+let teacherSubjectsCache = {}; // Cache for teacher subjects
+
+// ==================== LOAD TEACHERS FOR TIMETABLE ====================
+async function loadTeachersForTimetable() {
+    try {
+        const response = await fetch(`${API_URL}/api/teachers/all`);
+        const data = await response.json();
+        
+        if (data.success) {
+            teachersData = data.teachers || [];
+            
+            const teacherSelect = document.getElementById('timetableTeacher');
+            let options = '<option value="">Choose teacher...</option>';
+            
+            teachersData.forEach(teacher => {
+                options += `<option value="${teacher.teacher_id}">${teacher.name} (${teacher.teacher_id})</option>`;
+            });
+            
+            teacherSelect.innerHTML = options;
+        }
+    } catch (error) {
+        console.error('Error loading teachers:', error);
+        showError('Failed to load teachers');
     }
+}
+
+// ==================== LOAD TEACHER SUBJECTS FOR TIMETABLE ====================
+async function loadTeacherSubjectsForTimetable() {
+    const teacherSelect = document.getElementById('timetableTeacher');
+    const subjectSelect = document.getElementById('timetableSubject');
+    const teacherId = teacherSelect.value;
+    
+    if (!teacherId) {
+        subjectSelect.innerHTML = '<option value="">Select teacher first...</option>';
+        return;
+    }
+    
+    // Show loading
+    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+    subjectSelect.disabled = true;
+    
+    try {
+        // Check cache first
+        if (teacherSubjectsCache[teacherId]) {
+            populateSubjectDropdown(teacherSubjectsCache[teacherId], subjectSelect);
+            subjectSelect.disabled = false;
+            return;
+        }
+        
+        // Fetch from API
+        const response = await fetch(`${API_URL}/api/teacher-subjects/${teacherId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            // Store in cache
+            teacherSubjectsCache[teacherId] = data.subjects;
+            populateSubjectDropdown(data.subjects, subjectSelect);
+        } else {
+            subjectSelect.innerHTML = '<option value="">No subjects found</option>';
+        }
+    } catch (error) {
+        console.error('Error loading teacher subjects:', error);
+        subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+    } finally {
+        subjectSelect.disabled = false;
+    }
+}
+
+// ==================== POPULATE SUBJECT DROPDOWN ====================
+function populateSubjectDropdown(subjects, subjectSelect) {
+    if (!subjects || subjects.length === 0) {
+        subjectSelect.innerHTML = '<option value="">No subjects assigned</option>';
+        return;
+    }
+    
+    let options = '<option value="">Select subject...</option>';
+    
+    // Show all subjects
+    subjects.forEach(item => {
+        options += `<option value="${item.subject}">${item.subject} (${item.course_code} - ${item.section_name})</option>`;
+    });
+    
+    // Also add option to show all subjects without section (if needed)
+    const uniqueSubjects = [...new Set(subjects.map(s => s.subject))];
+    if (uniqueSubjects.length > 0) {
+        options += '<option value="" disabled>━━━━━━━━━━━━━━━━━━</option>';
+        uniqueSubjects.forEach(subj => {
+            options += `<option value="${subj}">${subj} (All Sections)</option>`;
+        });
+    }
+    
+    subjectSelect.innerHTML = options;
+}
+
+// ==================== UPDATED: Show Add Timetable Modal ====================
+function showAddTimetableModal() {
+    resetTimetableForm();
+    document.getElementById('editTimetableId').value = '';
+    
+    // Load courses
+    populateTimetableCourseDropdown();
+    
+    // Load teachers
+    loadTeachersForTimetable();
+    
+    // Reset subject dropdown
+    document.getElementById('timetableSubject').innerHTML = '<option value="">Select teacher first...</option>';
+    
+    document.querySelector('#timetableModal .modal-title').innerHTML = 
+        '<i class="fas fa-plus me-2"></i>Add Timetable Entry';
+    
+    const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
+    modal.show();
+}
+
+// ==================== UPDATED: Edit Timetable ====================
+async function editTimetable(timetableId, event) {
+    if (event) event.stopPropagation();
     
     try {
         const entry = allTimetable.find(t => t.timetable_id === timetableId);
@@ -7955,39 +8044,83 @@ async function editTimetable(timetableId, event) {
             return;
         }
         
+        // Set form values
         document.getElementById('editTimetableId').value = entry.timetable_id;
         document.getElementById('timetableCourse').value = entry.course_code;
         document.getElementById('timetableDay').value = entry.day_of_week;
         document.getElementById('timetableStartTime').value = entry.start_time;
         document.getElementById('timetableEndTime').value = entry.end_time;
-        document.getElementById('timetableSubject').value = entry.subject || '';
-        document.getElementById('timetableTeacher').value = entry.teacher_name || '';
         document.getElementById('timetableRoom').value = entry.room_number || '';
         document.getElementById('timetableStatus').checked = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
+        
+        // Load teachers first
+        await loadTeachersForTimetable();
+        
+        // Set teacher
+        const teacherSelect = document.getElementById('timetableTeacher');
+        if (entry.teacher_name) {
+            // Find teacher by name (approximate)
+            const teacher = teachersData.find(t => t.name === entry.teacher_name);
+            if (teacher) {
+                teacherSelect.value = teacher.teacher_id;
+                
+                // Load subjects for this teacher
+                await loadTeacherSubjectsForTimetable();
+                
+                // Set subject after a delay
+                setTimeout(() => {
+                    document.getElementById('timetableSubject').value = entry.subject || '';
+                }, 500);
+            }
+        }
         
         document.querySelector('#timetableModal .modal-title').innerHTML = 
             '<i class="fas fa-edit me-2"></i>Edit Timetable Entry';
         
         const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
         modal.show();
+        
     } catch (error) {
+        console.error('Error loading entry for edit:', error);
         showError('Error loading entry');
     }
 }
 
-// Save timetable
+// ==================== POPULATE TIMETABLE COURSE DROPDOWN ====================
+function populateTimetableCourseDropdown() {
+    const select = document.getElementById('timetableCourse');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Select course...</option>';
+    
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        coursesData.filter(c => c.is_active).forEach(course => {
+            select.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
+        });
+    }
+}
+
+// ==================== UPDATED: Save Timetable ====================
 async function saveTimetable() {
     const timetableId = document.getElementById('editTimetableId').value;
     const courseCode = document.getElementById('timetableCourse').value;
     const dayOfWeek = document.getElementById('timetableDay').value;
     const startTime = document.getElementById('timetableStartTime').value;
     const endTime = document.getElementById('timetableEndTime').value;
-    const subject = document.getElementById('timetableSubject').value.trim();
+    const teacherId = document.getElementById('timetableTeacher').value;
+    const subject = document.getElementById('timetableSubject').value;
+    const roomNumber = document.getElementById('timetableRoom').value.trim();
+    const isActive = document.getElementById('timetableStatus').checked;
     
-    if (!courseCode || !dayOfWeek || !startTime || !endTime || !subject) {
+    // Validation
+    if (!courseCode || !dayOfWeek || !startTime || !endTime || !teacherId || !subject) {
         showError('Please fill all required fields');
         return;
     }
+    
+    // Get teacher name
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const teacherName = teacher ? teacher.name : '';
     
     const data = {
         timetable_id: timetableId || null,
@@ -7996,9 +8129,10 @@ async function saveTimetable() {
         start_time: startTime,
         end_time: endTime,
         subject: subject,
-        teacher_name: document.getElementById('timetableTeacher').value.trim(),
-        room_number: document.getElementById('timetableRoom').value.trim(),
-        is_active: document.getElementById('timetableStatus').checked
+        teacher_id: teacherId,
+        teacher_name: teacherName,
+        room_number: roomNumber,
+        is_active: isActive
     };
     
     try {
@@ -8007,7 +8141,7 @@ async function saveTimetable() {
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
         btn.disabled = true;
         
-        const response = await fetch('https://aacem-backend.onrender.com/api/timetable/save', {
+        const response = await fetch(`${API_URL}/api/timetable/save`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -8027,9 +8161,15 @@ async function saveTimetable() {
             showError('Save failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
+        console.error('Error saving timetable:', error);
         showError('Network error');
+        
+        const btn = document.querySelector('#timetableModal .btn-success');
+        btn.innerHTML = '<i class="fas fa-save me-1"></i> Save Entry';
+        btn.disabled = false;
     }
 }
+
 
 // Delete timetable
 async function deleteTimetable(timetableId, event) {
@@ -8190,18 +8330,20 @@ async function loadSections() {
     }
 }
 
-// 2. Load Teacher Mappings
+// ==================== LOAD TEACHER MAPPINGS ====================
 async function loadTeacherMappings() {
     try {
         showLoading('teacherMappingsTableBody');
-        const response = await fetch(`${SECTION_API_URL}/api/teacher-sections/all`);
+        
+        const response = await fetch(`${API_URL}/api/teacher-sections/all`);
         const data = await response.json();
         
         hideLoading('teacherMappingsTableBody');
         
         if (data.success) {
-            displayTeacherMappings(data.mappings);
-            document.getElementById('mappingsCount').textContent = data.mappings.length;
+            allMappings = data.mappings || [];
+            displayTeacherMappings(allMappings);
+            document.getElementById('mappingsCount').textContent = allMappings.length;
         } else {
             showError('Failed to load teacher assignments: ' + data.message);
         }
@@ -8667,7 +8809,7 @@ function displaySections(sections) {
     document.getElementById('sectionsCount').textContent = sections.length;
 }
 
-// 15. Display Teacher Mappings
+// ==================== UPDATED: Display Teacher Mappings with Multiple Subjects ====================
 function displayTeacherMappings(mappings) {
     const tbody = document.getElementById('teacherMappingsTableBody');
     
@@ -8687,42 +8829,86 @@ function displayTeacherMappings(mappings) {
         return;
     }
     
+    // Group by teacher and section to show multiple subjects
+    const groupedMappings = {};
+    
+    mappings.forEach(mapping => {
+        const key = `${mapping.teacher_id}|${mapping.section_id}`;
+        
+        if (!groupedMappings[key]) {
+            groupedMappings[key] = {
+                teacher_id: mapping.teacher_id,
+                teacher_name: mapping.teacher_name || 'Unknown',
+                section_id: mapping.section_id,
+                section_name: mapping.section_name || 'N/A',
+                course_code: mapping.course_code || 'N/A',
+                subjects: [],
+                mapping_ids: [],
+                first_assigned: mapping.assigned_at
+            };
+        }
+        
+        groupedMappings[key].subjects.push(mapping.subject || 'General');
+        groupedMappings[key].mapping_ids.push(mapping.mapping_id);
+    });
+    
     let html = '';
-    mappings.forEach((mapping, index) => {
+    let index = 1;
+    
+    Object.values(groupedMappings).forEach(group => {
+        // Sort subjects alphabetically
+        group.subjects.sort();
+        
+        // Create subject badges
+        const subjectsHtml = group.subjects.map(subj => 
+            `<span class="badge bg-info me-1 mb-1" style="font-size: 0.85rem; padding: 5px 10px;">
+                ${subj}
+            </span>`
+        ).join('');
+        
+        const assignedDate = group.first_assigned ? 
+            new Date(group.first_assigned).toLocaleDateString('en-IN') : 'N/A';
+        
         html += `
             <tr>
-                <td>${index + 1}</td>
+                <td>${index++}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <i class="fas fa-user-tie text-primary me-2"></i>
+                        <i class="fas fa-user-tie text-primary me-2 fa-lg"></i>
                         <div>
-                            <strong>${mapping.teacher_name || mapping.teacher_id}</strong>
-                            <div class="small text-muted">ID: ${mapping.teacher_id}</div>
+                            <strong>${group.teacher_name}</strong>
+                            <div class="small text-muted">${group.teacher_id}</div>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <span class="badge bg-info">${mapping.course_code || 'N/A'}</span>
+                    <span class="badge bg-primary" style="font-size: 0.9rem;">${group.course_code}</span>
                 </td>
                 <td>
-                    <span class="badge bg-primary">${mapping.section_name || 'N/A'}</span>
+                    <span class="badge bg-success" style="font-size: 0.9rem;">${group.section_name}</span>
                 </td>
                 <td>
-                    <span class="badge bg-secondary">${mapping.subject || 'All Subjects'}</span>
+                    <div style="max-width: 300px;">
+                        ${subjectsHtml}
+                        <span class="badge bg-secondary ms-1" title="Total Subjects">${group.subjects.length}</span>
+                    </div>
                 </td>
-                <td>
-                    ${mapping.assigned_at ? new Date(mapping.assigned_at).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }) : 'N/A'}
-                </td>
+                <td>${assignedDate}</td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger" 
-                        onclick="removeTeacherAssignment('${mapping.mapping_id}', '${mapping.teacher_name || mapping.teacher_id}')"
-                        title="Remove Assignment">
-                        <i class="fas fa-times me-1"></i> Remove
-                    </button>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-info" onclick="viewTeacherSubjects('${group.teacher_id}', '${group.section_id}')" 
+                                title="View All Subjects">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning" onclick="addMoreSubject('${group.teacher_id}', '${group.section_id}')" 
+                                title="Add Another Subject">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="removeTeacherFromSection('${group.teacher_id}', '${group.section_id}')" 
+                                title="Remove All Subjects">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -8730,6 +8916,195 @@ function displayTeacherMappings(mappings) {
     
     tbody.innerHTML = html;
     document.getElementById('mappingsCount').textContent = mappings.length;
+}
+// ==================== VIEW TEACHER SUBJECTS ====================
+function viewTeacherSubjects(teacherId, sectionId) {
+    // Filter mappings for this teacher and section
+    const teacherMappings = allMappings.filter(m => 
+        m.teacher_id === teacherId && m.section_id === sectionId
+    );
+    
+    if (teacherMappings.length === 0) {
+        showInfo('No subjects found for this teacher in this section');
+        return;
+    }
+    
+    const teacherName = teacherMappings[0].teacher_name || teacherId;
+    const sectionName = teacherMappings[0].section_name || sectionId;
+    
+    let subjectsList = '<ul class="list-group" style="max-height: 300px; overflow-y: auto;">';
+    
+    teacherMappings.forEach((m, idx) => {
+        const statusClass = m.is_active ? 'success' : 'secondary';
+        const statusText = m.is_active ? 'Active' : 'Inactive';
+        const assignedDate = m.assigned_at ? new Date(m.assigned_at).toLocaleDateString() : 'N/A';
+        
+        subjectsList += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${idx + 1}.</strong> ${m.subject || 'General'}
+                    <br>
+                    <small class="text-muted">Assigned: ${assignedDate}</small>
+                </div>
+                <div>
+                    <span class="badge bg-${statusClass} me-2">${statusText}</span>
+                    <button class="btn btn-sm btn-danger" onclick="removeSubject('${m.mapping_id}', '${m.subject}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </li>
+        `;
+    });
+    
+    subjectsList += '</ul>';
+    
+    // Show in modal
+    const modalHtml = `
+        <div class="modal fade" id="viewSubjectsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-book-open me-2"></i>
+                            Subjects for ${teacherName}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Section:</strong> ${sectionName}</p>
+                        <p><strong>Total Subjects:</strong> ${teacherMappings.length}</p>
+                        <hr>
+                        ${subjectsList}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-warning" onclick="addMoreSubject('${teacherId}', '${sectionId}')">
+                            <i class="fas fa-plus me-1"></i> Add Subject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('viewSubjectsModal');
+    if (existingModal) existingModal.remove();
+    
+    // Add and show modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('viewSubjectsModal'));
+    modal.show();
+}
+
+// ==================== REMOVE TEACHER FROM SECTION (ALL SUBJECTS) ====================
+async function removeTeacherFromSection(teacherId, sectionId) {
+    if (!confirm(`Remove ALL subjects for this teacher from this section?`)) return;
+    
+    try {
+        // Get all mappings for this teacher and section
+        const mappings = allMappings.filter(m => 
+            m.teacher_id === teacherId && m.section_id === sectionId
+        );
+        
+        if (mappings.length === 0) {
+            showInfo('No assignments found');
+            return;
+        }
+        
+        let deletedCount = 0;
+        let failedCount = 0;
+        
+        for (const mapping of mappings) {
+            try {
+                const response = await fetch(`${API_URL}/api/teacher-sections/remove/${mapping.mapping_id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    deletedCount++;
+                } else {
+                    failedCount++;
+                }
+            } catch {
+                failedCount++;
+            }
+        }
+        
+        if (deletedCount > 0) {
+            showSuccess(`Removed ${deletedCount} subject(s) successfully` + 
+                       (failedCount > 0 ? `, ${failedCount} failed` : ''));
+            loadTeacherMappings();
+        } else {
+            showError('Failed to remove assignments');
+        }
+        
+    } catch (error) {
+        console.error('Error removing teacher:', error);
+        showError('Failed to remove teacher assignments');
+    }
+}
+// ==================== REMOVE SINGLE SUBJECT ====================
+async function removeSubject(mappingId, subject) {
+    if (!confirm(`Are you sure you want to remove subject "${subject}"?`)) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/teacher-sections/remove-subject/${mappingId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(`Subject "${subject}" removed successfully`);
+            
+            // Close current modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('viewSubjectsModal'));
+            if (modal) modal.hide();
+            
+            // Reload mappings
+            loadTeacherMappings();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error removing subject:', error);
+        showError('Failed to remove subject');
+    }
+}
+
+// ==================== ADD MORE SUBJECT ====================
+function addMoreSubject(teacherId, sectionId) {
+    // Get teacher details
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    if (teacher) {
+        const teacherSelect = document.getElementById('assignTeacherId');
+        teacherSelect.innerHTML = `<option value="${teacherId}" selected>${teacher.name} (${teacherId})</option>`;
+    }
+    
+    // Get section details
+    const section = allSections.find(s => s.section_id === sectionId);
+    if (section) {
+        const courseSelect = document.getElementById('assignCourse');
+        courseSelect.innerHTML = `<option value="${section.course_code}" selected>${section.course_code}</option>`;
+        
+        // Load sections and select
+        setTimeout(() => {
+            const sectionSelect = document.getElementById('assignSectionId');
+            sectionSelect.innerHTML = `<option value="${sectionId}" selected>${section.section_name}</option>`;
+        }, 300);
+    }
+    
+    // Clear subject field
+    document.getElementById('assignSubject').value = '';
+    
+    // Update modal title
+    document.querySelector('#assignTeacherModal .modal-title').innerHTML = 
+        '<i class="fas fa-plus-circle me-2"></i>Add Another Subject';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('assignTeacherModal'));
+    modal.show();
 }
 
 // 16. Update Section Statistics
@@ -10165,6 +10540,269 @@ function showInfo(message) {
         alert('ℹ️ ' + message);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================
+// TEACHER PERMISSIONS MANAGEMENT
+// =====================================================
+
+let allPermissions = [];
+let filteredPermissions = [];
+
+// Load permissions when tab is shown
+document.addEventListener('DOMContentLoaded', function() {
+    const permTab = document.getElementById('teacher-permissions-tab');
+    if (permTab) {
+        permTab.addEventListener('shown.bs.tab', function() {
+            loadTeacherPermissions();
+        });
+    }
+});
+
+async function loadTeacherPermissions() {
+    try {
+        const tbody = document.getElementById('permissionsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Loading permissions...</p>
+                </td>
+            </tr>
+        `;
+        
+        const response = await fetch(`${API_URL}/api/teacher-permissions/all`);
+        const data = await response.json();
+        
+        if (data.success) {
+            allPermissions = data.permissions || [];
+            filteredPermissions = allPermissions;
+            displayPermissions(allPermissions);
+            updatePermissionStats();
+        }
+    } catch (error) {
+        console.error('Error loading permissions:', error);
+        showError('Failed to load permissions');
+    }
+}
+
+function displayPermissions(permissions) {
+    const tbody = document.getElementById('permissionsTableBody');
+    const countSpan = document.getElementById('permissionsCount');
+    
+    countSpan.textContent = permissions.length;
+    
+    if (permissions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No permissions found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    const today = new Date();
+    
+    permissions.forEach((perm, index) => {
+        const expiryDate = new Date(perm.expiry_date);
+        const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+        
+        let statusClass = 'success';
+        let statusText = 'Active';
+        
+        if (daysLeft < 0) {
+            statusClass = 'danger';
+            statusText = 'Expired';
+        } else if (daysLeft <= 7) {
+            statusClass = 'warning';
+            statusText = `Expiring in ${daysLeft} days`;
+        }
+        
+        const marksBadge = perm.can_upload_marks ? 
+            '<span class="badge bg-success me-1">Marks</span>' : 
+            '<span class="badge bg-secondary me-1">Marks</span>';
+            
+        const pdfBadge = perm.can_upload_pdfs ? 
+            '<span class="badge bg-success me-1">PDFs</span>' : 
+            '<span class="badge bg-secondary me-1">PDFs</span>';
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <strong>${perm.teacher_name || 'N/A'}</strong>
+                    <br>
+                    <small class="text-muted">${perm.teacher_id}</small>
+                </td>
+                <td>${perm.section_name || 'N/A'}</td>
+                <td>${perm.course_code || 'N/A'}</td>
+                <td>
+                    <span class="badge bg-success me-1">Attendance</span>
+                    ${marksBadge}
+                    ${pdfBadge}
+                </td>
+                <td>
+                    ${new Date(perm.expiry_date).toLocaleDateString()}
+                    ${daysLeft > 0 ? `<br><small class="text-${statusClass}">${daysLeft} days left</small>` : ''}
+                </td>
+                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="revokePermission(${perm.id})">
+                        <i class="fas fa-ban"></i> Revoke
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function updatePermissionStats() {
+    const today = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+    
+    const active = allPermissions.filter(p => new Date(p.expiry_date) >= today);
+    const expiringSoon = allPermissions.filter(p => {
+        const expiry = new Date(p.expiry_date);
+        return expiry >= today && expiry <= sevenDaysLater;
+    });
+    const expired = allPermissions.filter(p => new Date(p.expiry_date) < today);
+    
+    document.getElementById('totalTeachersWithPerm').textContent = 
+        [...new Set(allPermissions.map(p => p.teacher_id))].length;
+    document.getElementById('activePermissions').textContent = active.length;
+    document.getElementById('expiringSoon').textContent = expiringSoon.length;
+    document.getElementById('expiredPermissions').textContent = expired.length;
+}
+
+async function openGrantPermissionModal() {
+    await loadTeachersForPermission();
+    await loadSectionsForPermission();
+    
+    const modal = new bootstrap.Modal(document.getElementById('grantPermissionModal'));
+    modal.show();
+}
+
+async function loadTeachersForPermission() {
+    try {
+        const response = await fetch(`${API_URL}/api/teachers/all`);
+        const data = await response.json();
+        
+        const select = document.getElementById('permissionTeacher');
+        if (data.success && data.teachers) {
+            let options = '<option value="">Choose teacher...</option>';
+            data.teachers.forEach(teacher => {
+                options += `<option value="${teacher.teacher_id}">${teacher.name} (${teacher.teacher_id})</option>`;
+            });
+            select.innerHTML = options;
+        }
+    } catch (error) {
+        console.error('Error loading teachers:', error);
+    }
+}
+
+async function loadSectionsForPermission() {
+    try {
+        const response = await fetch(`${API_URL}/api/sections/all`);
+        const data = await response.json();
+        
+        const select = document.getElementById('permissionSection');
+        if (data.success && data.sections) {
+            let options = '<option value="">Choose section...</option>';
+            data.sections.forEach(section => {
+                options += `<option value="${section.section_id}">${section.section_name} (${section.course_code})</option>`;
+            });
+            select.innerHTML = options;
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+    }
+}
+
+async function grantMarksPermission() {
+    const teacherId = document.getElementById('permissionTeacher').value;
+    const sectionId = document.getElementById('permissionSection').value;
+    const canUploadMarks = document.getElementById('canUploadMarks').checked;
+    const canUploadPdfs = document.getElementById('canUploadPdfs').checked;
+    const days = document.getElementById('permissionDays').value;
+    
+    if (!teacherId || !sectionId || !days) {
+        showError('Please fill all fields');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/admin/grant-marks-permission`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                teacher_id: teacherId,
+                section_id: sectionId,
+                can_upload_marks: canUploadMarks,
+                can_upload_pdfs: canUploadPdfs,
+                granted_by: 'admin',
+                expiry_days: parseInt(days)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(result.message);
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('grantPermissionModal'));
+            modal.hide();
+            
+            loadTeacherPermissions();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error granting permission:', error);
+        showError('Failed to grant permission');
+    }
+}
+
+async function revokePermission(permissionId) {
+    if (!confirm('Are you sure you want to revoke this permission?')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/admin/revoke-permission/${permissionId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Permission revoked successfully');
+            loadTeacherPermissions();
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error revoking permission:', error);
+        showError('Failed to revoke permission');
+    }
+}
+
+
+
 
 
 
