@@ -9,6 +9,7 @@ let teacherSections = [];
 let notifications = [];
 let currentSectionId = null;
 let currentSectionStudents = [];
+let currentSubject = null;
 
 // ==================== CHECK LOGIN ====================
 document.addEventListener('DOMContentLoaded', function() {
@@ -153,10 +154,15 @@ function displayTeacherInfo() {
     if (welcomeTeacherName) welcomeTeacherName.textContent = currentTeacher?.name || 'Teacher';
 }
 
-// ==================== TEACHER LOGOUT ====================
+// ==================== LOGOUT FUNCTION ====================
 function teacherLogout() {
     if (!confirm('Are you sure you want to logout?')) return;
+    
+    // Clear all stored data
     localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirect to login
     window.location.href = 'teacher-login.html';
 }
 
@@ -179,13 +185,28 @@ async function checkTeacherPermission(sectionId, action) {
     }
 }
 
-// ==================== CHECK ATTENDANCE EXISTS ====================
-async function checkAttendanceExists(sectionId, date) {
+// ==================== FIXED: Check Attendance with Strict Subject Match ====================
+async function checkAttendanceExists(sectionId, date, subject) {
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/attendance/check-day?section_id=${sectionId}&date=${date}`
-        );
-        return await response.json();
+        const url = `${API_BASE_URL}/attendance/check-day?section_id=${sectionId}&date=${date}&subject=${encodeURIComponent(subject)}`;
+        console.log(`Checking attendance: ${url}`);
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        console.log(`Attendance check for ${subject} on ${date}:`, result);
+        
+        // ✅ Extra check: agar record mila bhi to verify karo ki subject match karta hai
+        if (result.exists && result.attendance) {
+            const dbSubject = result.attendance.subject;
+            if (dbSubject !== subject) {
+                console.warn(`⚠️ Subject mismatch! DB has ${dbSubject}, but checking for ${subject}`);
+                // Agar subject match nahi karta to treat as not exists
+                return { success: true, exists: false, message: 'Subject mismatch' };
+            }
+        }
+        
+        return result;
     } catch (error) {
         console.error('Error checking attendance:', error);
         return { success: false, exists: false };
@@ -389,23 +410,84 @@ async function loadDashboardData() {
     updateWelcomeMessage();
 }
 
+// ==================== FIXED: Load Teacher Sections with ALL Subjects ====================
 async function loadTeacherSections() {
     try {
         console.log('Loading teacher sections...');
         const response = await fetch(`${API_BASE_URL}/teacher-sections/teacher/${currentTeacher.teacher_id}`);
         const data = await response.json();
-        console.log('Teacher sections response:', data);
+        console.log('Raw API Response:', data);
         
         if (data.success) {
-            teacherSections = data.sections || [];
+            const rawSections = data.sections || [];
+            console.log('Raw sections from API:', rawSections);
             
+            const sectionMap = new Map();
+            
+            rawSections.forEach(item => {
+                const sectionId = item.section_id;
+                const sectionDetails = item.section_details || {};
+                
+                // ✅ IMPORTANT: Subjects ko mappings[0].subjects se lo (backend ne yahan rakha hai)
+                let subjectList = [];
+                
+                // Check mappings array for subjects
+                if (item.mappings && item.mappings.length > 0 && item.mappings[0].subjects) {
+                    subjectList = item.mappings[0].subjects;
+                    console.log(`Found subjects in mappings for ${sectionId}:`, subjectList);
+                }
+                // Fallback to direct subjects array
+                else if (item.subjects && Array.isArray(item.subjects)) {
+                    subjectList = item.subjects;
+                    console.log(`Found subjects directly for ${sectionId}:`, subjectList);
+                }
+                // Fallback to individual subject
+                else if (item.subject) {
+                    subjectList = [item.subject];
+                    console.log(`Found single subject for ${sectionId}:`, item.subject);
+                }
+                
+                if (!sectionMap.has(sectionId)) {
+                    sectionMap.set(sectionId, {
+                        section_id: sectionId,
+                        section_details: sectionDetails,
+                        subjects: [],
+                        mappings: [],
+                        studentCount: 0
+                    });
+                }
+                
+                const sectionData = sectionMap.get(sectionId);
+                
+                // Add all subjects from the list
+                subjectList.forEach(subj => {
+                    if (!sectionData.subjects.includes(subj)) {
+                        sectionData.subjects.push(subj);
+                    }
+                });
+                
+                sectionData.mappings.push(item);
+            });
+            
+            // Convert map to array
+            teacherSections = Array.from(sectionMap.values());
+            
+            console.log('✅ Processed teacher sections with ALL subjects:', teacherSections);
+            
+            // Update UI
             const totalSections = document.getElementById('totalSections');
             const sectionCount = document.getElementById('sectionCount');
             
             if (totalSections) totalSections.textContent = teacherSections.length;
             if (sectionCount) sectionCount.textContent = teacherSections.length;
             
-            console.log('Teacher sections loaded:', teacherSections.length);
+            // Update student counts
+            await updateSectionStudentCounts();
+            
+            // Refresh displays
+            displayTeacherSections();
+            loadSectionsPreview();
+            
         } else {
             console.error('Failed to load sections:', data.message);
             teacherSections = [];
@@ -413,6 +495,18 @@ async function loadTeacherSections() {
     } catch (error) {
         console.error('Error loading teacher sections:', error);
         teacherSections = [];
+    }
+}
+
+// ==================== Update Section Student Counts ====================
+async function updateSectionStudentCounts() {
+    for (const section of teacherSections) {
+        try {
+            const count = await getSectionStudentsCount(section.section_id);
+            section.studentCount = count;
+        } catch {
+            section.studentCount = 0;
+        }
     }
 }
 
@@ -468,7 +562,7 @@ function updateWelcomeMessage() {
     if (welcomeMsg) welcomeMsg.textContent = msg;
 }
 
-// ==================== SECTIONS DISPLAY ====================
+// ==================== FIXED: Load Sections Preview ====================
 async function loadSectionsPreview() {
     const container = document.getElementById('sectionsPreview');
     if (!container) return;
@@ -479,41 +573,74 @@ async function loadSectionsPreview() {
     }
     
     let html = '<div class="sections-grid">';
+    let cardCount = 0;
+    let totalSubjects = 0;
     
-    for (const s of teacherSections.slice(0,3)) {
-        const det = s.section_details || {};
-        const count = await getSectionStudentsCount(s.section_id);
+    // Count total subjects first
+    teacherSections.forEach(s => totalSubjects += s.subjects.length);
+    
+    // Dashboard mein sirf 3 cards dikhao
+    for (const section of teacherSections) {
+        const det = section.section_details || {};
+        const count = section.studentCount || await getSectionStudentsCount(section.section_id);
         
-        html += `<div class="section-card-modern">
-            <div class="section-header-modern">
-                <h4>Section ${det.section_name || 'N/A'}</h4>
-                <p>${det.course_code || ''}</p>
+        for (let i = 0; i < section.subjects.length; i++) {
+            if (cardCount >= 3) break;
+            
+            const subject = section.subjects[i];
+            
+            const colors = [
+                { bg: 'linear-gradient(135deg, #4361ee, #4895ef)' },
+                { bg: 'linear-gradient(135deg, #06d6a0, #1b9aaa)' },
+                { bg: 'linear-gradient(135deg, #ffd166, #f8c630)' }
+            ];
+            
+            html += `<div class="section-card-modern" style="border-top: 4px solid #4361ee;">
+                <div class="section-header-modern" style="background: ${colors[cardCount % 3].bg};">
+                    <h4 class="mb-0">Section ${det.section_name || 'N/A'}</h4>
+                    <small>${subject}</small>
+                </div>
+                <div class="section-body-modern">
+                    <div class="section-stats-modern">
+                        <div class="stat-item-modern">
+                            <div class="value">${count}</div>
+                            <div class="label">Students</div>
+                        </div>
+                        <div class="stat-item-modern">
+                            <div class="value">${section.subjects.length}</div>
+                            <div class="label">Subjects</div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons-modern">
+                        <button class="action-btn-modern" onclick="openAttendanceModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-calendar-check"></i>
+                        </button>
+                        <button class="action-btn-modern" onclick="openMarksModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn-modern" onclick="openPdfModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+            
+            cardCount++;
+        }
+    }
+    
+    // Agar zyada subjects hain to "View All" card dikhao
+    if (totalSubjects > 3) {
+        html += `<div class="section-card-modern" style="background: linear-gradient(135deg, #6c757d, #495057);">
+            <div class="section-header-modern" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                <h4 class="text-center text-white">+${totalSubjects - 3} More Subjects</h4>
             </div>
-            <div class="section-body-modern">
-                <div class="section-stats-modern">
-                    <div class="stat-item-modern">
-                        <div class="value">${count}</div>
-                        <div class="label">Students</div>
-                    </div>
-                    <div class="stat-item-modern">
-                        <div class="value">${s.subject || 'All'}</div>
-                        <div class="label">Subject</div>
-                    </div>
-                </div>
-                <div class="action-buttons-modern">
-                    <button class="action-btn-modern" onclick="openAttendanceModal('${s.section_id}')">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Attendance</span>
-                    </button>
-                    <button class="action-btn-modern" onclick="openMarksModal('${s.section_id}')">
-                        <i class="fas fa-edit"></i>
-                        <span>Marks</span>
-                    </button>
-                    <button class="action-btn-modern" onclick="openPdfModal('${s.section_id}')">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>PDFs</span>
-                    </button>
-                </div>
+            <div class="section-body-modern text-center">
+                <i class="fas fa-layer-group fa-3x text-white-50 mb-3"></i>
+                <button class="btn btn-light btn-sm w-100" onclick="showMySections()">
+                    <i class="fas fa-eye me-1"></i> View All Subjects
+                </button>
             </div>
         </div>`;
     }
@@ -522,6 +649,7 @@ async function loadSectionsPreview() {
     container.innerHTML = html;
 }
 
+// ==================== FIXED: Display Teacher Sections with Correct Student Count ====================
 async function displayTeacherSections() {
     const container = document.getElementById('sectionsContainer');
     if (!container) return;
@@ -535,42 +663,74 @@ async function displayTeacherSections() {
     
     let html = '<div class="sections-grid">';
     
-    for (const s of teacherSections) {
-        const det = s.section_details || {};
-        const count = await getSectionStudentsCount(s.section_id);
+    for (const section of teacherSections) {
+        const det = section.section_details || {};
         
-        html += `<div class="section-card-modern">
-            <div class="section-header-modern">
-                <h4>Section ${det.section_name || 'N/A'}</h4>
-                <p>${det.course_code || ''}</p>
-            </div>
-            <div class="section-body-modern">
-                <div class="section-stats-modern">
-                    <div class="stat-item-modern">
-                        <div class="value">${count}</div>
-                        <div class="label">Students</div>
-                    </div>
-                    <div class="stat-item-modern">
-                        <div class="value">${s.subject || 'All'}</div>
-                        <div class="label">Subject</div>
+        // ✅ Har section ke liye alag se student count fetch karo
+        const studentCount = await getSectionStudentsCount(section.section_id);
+        
+        // Subject ke according different colors
+        const colors = [
+            { bg: 'linear-gradient(135deg, #4361ee, #4895ef)', border: '#4361ee' }, // Blue
+            { bg: 'linear-gradient(135deg, #06d6a0, #1b9aaa)', border: '#06d6a0' }, // Green
+            { bg: 'linear-gradient(135deg, #ffd166, #f8c630)', border: '#ffd166' }, // Yellow
+            { bg: 'linear-gradient(135deg, #ef476f, #d62828)', border: '#ef476f' }, // Red
+            { bg: 'linear-gradient(135deg, #9c89b8, #7b6c9c)', border: '#9c89b8' }  // Purple
+        ];
+        
+        section.subjects.forEach((subject, index) => {
+            const colorScheme = colors[index % colors.length];
+            
+            html += `<div class="section-card-modern" style="border-top: 4px solid ${colorScheme.border};">
+                <div class="section-header-modern" style="background: ${colorScheme.bg};">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">Section ${det.section_name || 'N/A'}</h4>
+                            <small>${det.course_code || ''}</small>
+                        </div>
+                        <span class="badge bg-light text-dark" style="font-size: 0.9rem; padding: 5px 12px;">
+                            <i class="fas fa-book me-1"></i> ${subject}
+                        </span>
                     </div>
                 </div>
-                <div class="action-buttons-modern">
-                    <button class="action-btn-modern" onclick="openAttendanceModal('${s.section_id}')">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Attendance</span>
-                    </button>
-                    <button class="action-btn-modern" onclick="openMarksModal('${s.section_id}')">
-                        <i class="fas fa-edit"></i>
-                        <span>Marks</span>
-                    </button>
-                    <button class="action-btn-modern" onclick="openPdfModal('${s.section_id}')">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>PDFs</span>
-                    </button>
+                <div class="section-body-modern">
+                    <div class="section-stats-modern">
+                        <div class="stat-item-modern">
+                            <div class="value">${studentCount}</div>
+                            <div class="label">Students</div>
+                        </div>
+                        <div class="stat-item-modern">
+                            <div class="value">${section.subjects.length}</div>
+                            <div class="label">Subjects</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-3 p-2 bg-light rounded">
+                        <span class="fw-bold text-primary">Currently Teaching:</span>
+                        <div class="mt-1">
+                            <span class="badge bg-info p-2" style="font-size: 1rem;">
+                                ${subject}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons-modern">
+                        <button class="action-btn-modern" onclick="openAttendanceModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Attendance</span>
+                        </button>
+                        <button class="action-btn-modern" onclick="openMarksModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-edit"></i>
+                            <span>Marks</span>
+                        </button>
+                        <button class="action-btn-modern" onclick="openPdfModal('${section.section_id}', '${subject}')">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>PDFs</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div>`;
+            </div>`;
+        });
     }
     
     html += '</div>';
@@ -583,13 +743,17 @@ function takeAttendance() {
     showAlert('Select a section to take attendance', 'info'); 
 }
 
-async function openAttendanceModal(sectionId) {
+// ==================== FIXED: Sirf Manual Check Use Karo ====================
+async function openAttendanceModal(sectionId, subject) {
     currentSectionId = sectionId;
+    currentSubject = subject;
     const date = document.getElementById('attendanceDate').value;
-    const exists = await checkAttendanceExists(sectionId, date);
+    
+    // ✅ SIRF manual check use karo, API call nahi
+    const exists = await checkAttendanceManually(sectionId, date, subject);
     
     if (exists.exists) {
-        showAlert(`Attendance already marked for ${date}`, 'error');
+        showAlert(`Attendance already marked for ${subject} on ${date}`, 'error');
         return;
     }
     
@@ -597,10 +761,50 @@ async function openAttendanceModal(sectionId) {
     const section = teacherSections.find(s => s.section_id === sectionId);
     select.innerHTML = `<option value="${sectionId}">Section ${section?.section_details?.section_name || ''}</option>`;
     
+    const subjectSelect = document.getElementById('attendanceSubjectSelect');
+    if (subjectSelect) {
+        subjectSelect.innerHTML = `<option value="${subject}" selected>${subject}</option>`;
+        subjectSelect.disabled = true;
+    }
+    
+    const modalTitle = document.querySelector('#attendanceModal .modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-calendar-check me-2"></i>Take Attendance - ${subject}`;
+    }
+    
     await loadStudentsForAttendance(sectionId);
     
     const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
     modal.show();
+}
+
+// ==================== IMPROVED Manual Check ====================
+async function checkAttendanceManually(sectionId, date, subject) {
+    try {
+        console.log(`Manual check for ${subject} on ${date}`);
+        
+        // Saare attendance records fetch karo for this section and date
+        const response = await fetch(`${API_BASE_URL}/section-attendance/filter?section=${sectionId}&date=${date}`);
+        const data = await response.json();
+        
+        if (data.success && data.attendance) {
+            // Check if any record matches the subject EXACTLY
+            const matchingRecord = data.attendance.find(record => record.subject === subject);
+            
+            if (matchingRecord) {
+                console.log(`✅ Found attendance for ${subject}:`, matchingRecord);
+                return { success: true, exists: true, attendance: matchingRecord };
+            } else {
+                console.log(`❌ No attendance for ${subject}`);
+                return { success: true, exists: false };
+            }
+        }
+        
+        return { success: true, exists: false };
+    } catch (error) {
+        console.error('Error in manual check:', error);
+        return { success: false, exists: false };
+    }
 }
 
 async function loadStudentsForAttendance(id) {
@@ -650,14 +854,21 @@ function markAllAbsent() {
     document.querySelectorAll('.attendance-checkbox').forEach(cb => cb.checked = false); 
 }
 
+// ==================== DEBUG: Check Submit Attendance Data ====================
 async function submitAttendance() {
     const sectionId = currentSectionId;
     const date = document.getElementById('attendanceDate').value;
-    const subject = document.getElementById('attendanceSubject').value.trim() || 'General';
+    const subject = currentSubject;
     
-    const exists = await checkAttendanceExists(sectionId, date);
+    if (!subject) {
+        showAlert('Subject not selected', 'error');
+        return;
+    }
+    
+    // Double-check before saving
+    const exists = await checkAttendanceManually(sectionId, date, subject);
     if (exists.exists) {
-        showAlert('Attendance already marked for this day', 'error');
+        showAlert(`Attendance already marked for ${subject} on this day`, 'error');
         return;
     }
     
@@ -666,23 +877,34 @@ async function submitAttendance() {
         data[cb.dataset.studentId] = cb.checked ? 'present' : 'absent';
     });
     
+    // ✅ DEBUG: Check what we're sending
+    const payload = { 
+        section_id: sectionId, 
+        date, 
+        subject, 
+        attendance: data, 
+        teacher_id: currentTeacher.teacher_id 
+    };
+    
+    console.log('📤 Sending attendance payload:', JSON.stringify(payload, null, 2));
+    console.log('Section ID:', sectionId);
+    console.log('Date:', date);
+    console.log('Subject:', subject);
+    console.log('Teacher ID:', currentTeacher.teacher_id);
+    console.log('Students count:', Object.keys(data).length);
+    
     try {
         const res = await fetch(`${API_BASE_URL}/section-attendance/mark-restricted`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                section_id: sectionId, 
-                date, 
-                subject, 
-                attendance: data, 
-                teacher_id: currentTeacher.teacher_id 
-            })
+            body: JSON.stringify(payload)
         });
         
         const result = await res.json();
+        console.log('📥 Server response:', result);
         
         if (result.success) {
-            showAlert('Attendance saved successfully!', 'success');
+            showAlert(`${subject} attendance saved successfully!`, 'success');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
             if (modal) modal.hide();
@@ -693,45 +915,171 @@ async function submitAttendance() {
             showAlert(result.message || 'Failed to save attendance', 'error');
         }
     } catch (error) {
-        console.error('Error saving attendance:', error);
-        showAlert('Failed to save attendance', 'error');
+        console.error('❌ Error saving attendance:', error);
+        showAlert('Network error. Please try again.', 'error');
     }
 }
 
+
+// ==================== FIXED: Load Attendance Records with Duplicate Filter ====================
 async function loadAttendanceRecords() {
     const tbody = document.getElementById('attendanceTableBody');
     if (!tbody) return;
     
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="loading-spinner-modern mx-auto"></div><p class="mt-2">Loading attendance...</p></td></tr>';
     
-    let html = '';
-    let hasData = false;
-    
-    for (const s of teacherSections) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/section-attendance/section/${s.section_id}`);
-            const data = await res.json();
+    try {
+        // Map to store unique records (use latest by id)
+        const recordsMap = new Map();
+        
+        for (const section of teacherSections) {
+            const response = await fetch(`${API_BASE_URL}/section-attendance/section/${section.section_id}`);
+            const data = await response.json();
             
-            if (data.success && data.attendance && data.attendance.length > 0) {
-                hasData = true;
-                data.attendance.slice(0,10).forEach(r => {
-                    const cls = r.percentage >= 80 ? 'success' : r.percentage >= 60 ? 'warning' : 'danger';
-                    html += `<tr>
-                        <td>${r.date}</td>
-                        <td>Section ${s.section_details?.section_name || ''}</td>
-                        <td>${r.subject || 'General'}</td>
-                        <td><span class="badge bg-success">${r.present_count}</span></td>
-                        <td><span class="badge bg-danger">${r.absent_count}</span></td>
-                        <td><span class="badge bg-${cls}">${r.percentage}%</span></td>
-                    </tr>`;
+            if (data.success && data.attendance) {
+                data.attendance.forEach(record => {
+                    const key = `${record.date}_${record.subject}`;
+                    
+                    // Agar pehle se record hai to compare karo
+                    if (recordsMap.has(key)) {
+                        const existing = recordsMap.get(key);
+                        // Latest ID wala rakho
+                        if (record.id > existing.id) {
+                            recordsMap.set(key, {
+                                ...record,
+                                section_name: section.section_details?.section_name || 'N/A'
+                            });
+                        }
+                    } else {
+                        recordsMap.set(key, {
+                            ...record,
+                            section_name: section.section_details?.section_name || 'N/A'
+                        });
+                    }
                 });
             }
-        } catch (error) {
-            console.error('Error loading attendance:', error);
         }
+        
+        // Convert map to array and sort
+        const uniqueRecords = Array.from(recordsMap.values());
+        uniqueRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        if (uniqueRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No attendance records found</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        uniqueRecords.forEach(record => {
+            const cls = record.percentage >= 80 ? 'success' : 
+                       record.percentage >= 60 ? 'warning' : 'danger';
+            
+            html += `<tr>
+                <td>${record.date}</td>
+                <td>Section ${record.section_name || 'C'}</td>
+                <td><span class="badge bg-info">${record.subject}</span></td>
+                <td><span class="badge bg-success">${record.present_count}</span></td>
+                <td><span class="badge bg-danger">${record.absent_count}</span></td>
+                <td><span class="badge bg-${cls}">${record.percentage}%</span></td>
+            </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading attendance:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load attendance</td></tr>';
+    }
+}
+
+// ==================== Filter Attendance by Subject ====================
+function filterAttendanceBySubject() {
+    loadAttendanceRecords();
+}
+
+// Update the filter dropdown when loading
+function updateSubjectFilter() {
+    const subjectFilter = document.getElementById('filterSubject');
+    if (!subjectFilter) return;
+    
+    let options = '<option value="">All Subjects</option>';
+    const allSubjects = new Set();
+    
+    teacherSections.forEach(s => {
+        s.subjects.forEach(subj => allSubjects.add(subj));
+    });
+    
+    Array.from(allSubjects).sort().forEach(subj => {
+        options += `<option value="${subj}">${subj}</option>`;
+    });
+    
+    subjectFilter.innerHTML = options;
+}
+
+// Call this after loading teacher sections
+// updateSubjectFilter();
+// ==================== LOAD TEACHER SUBJECT FOR ATTENDANCE ====================
+function loadTeacherSubjectForAttendance() {
+    const sectionSelect = document.getElementById('attendanceSectionSelect');
+    const subjectSelect = document.getElementById('attendanceSubjectSelect');
+    const sectionId = sectionSelect.value;
+    
+    if (!sectionId) {
+        subjectSelect.innerHTML = '<option value="">Select section first...</option>';
+        return;
     }
     
-    tbody.innerHTML = html || '<tr><td colspan="6" class="text-center py-4">No attendance records found</td></tr>';
+    // Find the section in teacherSections array
+    const section = teacherSections.find(s => s.section_id === sectionId);
+    
+    if (section && section.subject) {
+        // Teacher ka assigned subject hai
+        subjectSelect.innerHTML = `<option value="${section.subject}" selected>${section.subject}</option>`;
+    } else {
+        // Agar subject assign nahi hai to general option
+        subjectSelect.innerHTML = `
+            <option value="General" selected>General</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+        `;
+    }
+}
+
+// ==================== LOAD TEACHER SUBJECT FOR MARKS ====================
+function loadTeacherSubjectForMarks() {
+    const sectionSelect = document.getElementById('marksSectionSelect');
+    const subjectSelect = document.getElementById('marksSubjectSelect');
+    const sectionId = sectionSelect.value;
+    
+    if (!sectionId) {
+        subjectSelect.innerHTML = '<option value="">Select section first...</option>';
+        return;
+    }
+    
+    // Find the section in teacherSections array
+    const section = teacherSections.find(s => s.section_id === sectionId);
+    
+    if (section && section.subject) {
+        // Teacher ka assigned subject hai
+        subjectSelect.innerHTML = `<option value="${section.subject}" selected>${section.subject}</option>`;
+        
+        // Permission badge ke liye bhi use karo
+        const permissionBadge = document.getElementById('permissionBadge');
+        if (permissionBadge) {
+            permissionBadge.textContent = `Teaching: ${section.subject}`;
+        }
+    } else {
+        // Agar subject assign nahi hai to general options
+        subjectSelect.innerHTML = `
+            <option value="General" selected>General</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+        `;
+    }
 }
 
 // ==================== MARKS ====================
@@ -740,7 +1088,8 @@ function enterMarks() {
     showAlert('Select a section to enter marks', 'info'); 
 }
 
-async function openMarksModal(sectionId) {
+// ==================== Open Marks Modal with Subject ====================
+async function openMarksModal(sectionId, subject) {
     const perm = await checkTeacherPermission(sectionId, 'marks');
     
     if (!perm.permitted) {
@@ -749,10 +1098,24 @@ async function openMarksModal(sectionId) {
     }
     
     currentSectionId = sectionId;
+    currentSubject = subject;
     
     const select = document.getElementById('marksSectionSelect');
     const section = teacherSections.find(s => s.section_id === sectionId);
     select.innerHTML = `<option value="${sectionId}">Section ${section?.section_details?.section_name || ''}</option>`;
+    
+    // Subject dropdown - disabled with selected subject
+    const subjectSelect = document.getElementById('marksSubjectSelect');
+    if (subjectSelect) {
+        subjectSelect.innerHTML = `<option value="${subject}" selected>${subject}</option>`;
+        subjectSelect.disabled = true;
+    }
+    
+    // Update modal title
+    const modalTitle = document.querySelector('#marksModal .modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-edit me-2"></i>Enter Marks - ${subject}`;
+    }
     
     if (perm.permission?.expiry_date) {
         const old = document.getElementById('permissionBadge');
@@ -816,39 +1179,85 @@ async function loadStudentsForMarks(id) {
     }
 }
 
+// ==================== FIXED: Submit Marks with Better Validation ====================
 async function submitMarks() {
     const sectionId = currentSectionId;
     const examType = document.getElementById('examType').value;
     const examDate = document.getElementById('examDate').value;
-    const subject = document.getElementById('marksSubject').value.trim();
-    const total = parseInt(document.getElementById('totalMarks').value);
+    const subject = currentSubject;  // Use stored subject
+    let total = document.getElementById('totalMarks').value;
     
     if (!examType || !subject) {
         showAlert('Please fill all required fields', 'error');
         return;
     }
     
+    // ✅ FIX: Ensure total is a valid number
+    total = parseInt(total);
+    if (isNaN(total) || total <= 0) {
+        total = 100;
+    }
+    
     const section = teacherSections.find(s => s.section_id === sectionId);
     const courseCode = section?.section_details?.course_code || '';
     
     const marksData = [];
+    let hasError = false;
+    
     document.querySelectorAll('.marks-input').forEach(inp => {
-        const val = parseFloat(inp.value);
-        if (!isNaN(val) && val >= 0) {
-            marksData.push({
-                student_id: inp.dataset.studentId,
-                student_name: inp.dataset.studentName,
-                marks_obtained: val
-            });
+        let val = inp.value.trim();
+        
+        // ✅ FIX: Handle empty or invalid input
+        if (val === '') {
+            // Skip empty fields or set to 0 based on requirement
+            // For now, we'll skip empty fields
+            return;
         }
+        
+        val = parseFloat(val);
+        if (isNaN(val) || val < 0) {
+            showAlert(`Invalid marks for ${inp.dataset.studentName}`, 'error');
+            hasError = true;
+            return;
+        }
+        
+        if (val > total) {
+            showAlert(`Marks cannot exceed ${total} for ${inp.dataset.studentName}`, 'error');
+            hasError = true;
+            return;
+        }
+        
+        marksData.push({
+            student_id: inp.dataset.studentId,
+            student_name: inp.dataset.studentName,
+            marks_obtained: val
+        });
     });
+    
+    if (hasError) return;
     
     if (marksData.length === 0) {
         showAlert('Please enter at least one mark', 'error');
         return;
     }
     
+    // Show loading
+    const saveBtn = document.querySelector('#marksModal .btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+    saveBtn.disabled = true;
+    
     try {
+        console.log('Submitting marks:', {
+            exam_type: examType,
+            exam_date: examDate,
+            course_code: courseCode,
+            section_id: sectionId,
+            subject: subject,
+            total_marks: total,
+            marks_count: marksData.length
+        });
+        
         const res = await fetch(`${API_BASE_URL}/section-marks/save-bulk-restricted`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -865,6 +1274,7 @@ async function submitMarks() {
         });
         
         const result = await res.json();
+        console.log('Marks save response:', result);
         
         if (result.success) {
             showAlert('Marks saved successfully!', 'success');
@@ -878,7 +1288,10 @@ async function submitMarks() {
         }
     } catch (error) {
         console.error('Error saving marks:', error);
-        showAlert('Failed to save marks', 'error');
+        showAlert('Network error. Please try again.', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
     }
 }
 
@@ -933,17 +1346,38 @@ function uploadPdf() {
     modal.show();
 }
 
-function openPdfModal() { 
-    uploadPdf(); 
+// ==================== FIXED: Open PDF Modal with Subject ====================
+function openPdfModal(sectionId, subject) {
+    currentSubject = subject;
+    
+    const select = document.getElementById('pdfSectionSelect');
+    if (!select) return;
+    
+    // Sirf is section ke options rakho
+    const section = teacherSections.find(s => s.section_id === sectionId);
+    select.innerHTML = `<option value="${sectionId}" selected>
+        Section ${section?.section_details?.section_name || ''} - ${subject}
+    </option>`;
+    
+    // Modal title update karo
+    const modalTitle = document.querySelector('#pdfModal .modal-title');
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-upload me-2"></i>Upload PDF - ${subject}`;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('pdfModal'));
+    modal.show();
 }
 
+// ==================== FIXED: Upload PDF with Subject ====================
 async function submitPdf() {
     const sectionId = document.getElementById('pdfSectionSelect').value;
     const title = document.getElementById('pdfTitle').value.trim();
     const desc = document.getElementById('pdfDescription').value.trim();
     const file = document.getElementById('pdfFile').files[0];
+    const subject = currentSubject;  // ✅ Current subject se lo
     
-    if (!sectionId || !title || !file) {
+    if (!sectionId || !title || !file || !subject) {
         showAlert('Please fill all fields', 'error');
         return;
     }
@@ -965,6 +1399,7 @@ async function submitPdf() {
     formData.append('section_id', sectionId);
     formData.append('pdf_title', title);
     formData.append('description', desc);
+    formData.append('subject', subject);  // ✅ Subject save karo
     formData.append('pdf_file', file);
     
     try {
@@ -976,13 +1411,13 @@ async function submitPdf() {
         const result = await res.json();
         
         if (result.success) {
-            showAlert('PDF uploaded successfully!', 'success');
+            showAlert(`PDF uploaded for ${subject}!`, 'success');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('pdfModal'));
             if (modal) modal.hide();
             
             document.getElementById('pdfForm').reset();
-            loadPdfRecords();
+            loadPdfRecords();  // Refresh with subject filter
         } else {
             showAlert(result.message || 'Failed to upload PDF', 'error');
         }
@@ -992,47 +1427,162 @@ async function submitPdf() {
     }
 }
 
+// ==================== FIXED: Load PDFs for Specific Subject ====================
+async function loadPdfsForSubject(sectionId, subject) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/section-pdfs/by-subject?section_id=${sectionId}&subject=${encodeURIComponent(subject)}`
+        );
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.pdfs || [];
+        }
+        return [];
+    } catch (error) {
+        console.error(`Error loading PDFs for ${subject}:`, error);
+        return [];
+    }
+}
+
+// ==================== FIXED: Load PDF Records with Beautiful UI ====================
 async function loadPdfRecords() {
     const container = document.getElementById('pdfsContainer');
     if (!container) return;
     
     container.innerHTML = '<div class="text-center py-4"><div class="loading-spinner-modern mx-auto"></div><p class="mt-2">Loading PDFs...</p></div>';
     
-    let html = '';
-    let hasData = false;
-    
-    for (const s of teacherSections) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/section-pdfs/all?section=${s.section_id}`);
-            const data = await res.json();
+    try {
+        let html = '';
+        let hasAnyPdf = false;
+        
+        // Har section ke liye
+        for (const section of teacherSections) {
+            const sectionId = section.section_id;
+            const sectionName = section.section_details?.section_name || 'N/A';
             
-            if (data.success && data.pdfs && data.pdfs.length > 0) {
-                hasData = true;
-                data.pdfs.forEach(p => {
-                    const date = new Date(p.created_at).toLocaleDateString();
-                    html += `<div class="pdf-card-modern">
-                        <div class="pdf-icon-modern">
-                            <i class="fas fa-file-pdf"></i>
+            // Har subject ke liye alag section
+            for (const subject of section.subjects) {
+                const response = await fetch(
+                    `${API_BASE_URL}/section-pdfs/by-subject?section_id=${sectionId}&subject=${encodeURIComponent(subject)}`
+                );
+                const data = await response.json();
+                
+                if (data.success && data.pdfs && data.pdfs.length > 0) {
+                    hasAnyPdf = true;
+                    
+                    // Subject Header with gradient
+                    html += `<div class="subject-section mb-4">
+                        <div class="subject-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                padding: 15px 20px; border-radius: 15px 15px 0 0; color: white;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-book-open me-2"></i>
+                                    Section ${sectionName} - ${subject}
+                                </h4>
+                                <span class="badge bg-light text-dark">${data.pdfs.length} PDF${data.pdfs.length > 1 ? 's' : ''}</span>
+                            </div>
                         </div>
-                        <div class="pdf-title-modern">${p.pdf_title}</div>
-                        <div class="pdf-meta-modern">${date}</div>
-                        <div class="pdf-actions-modern">
-                            <button class="pdf-btn-modern view" onclick="viewPdf('${p.pdf_id}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                            <button class="pdf-btn-modern download" onclick="downloadPdf('${p.pdf_id}')">
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                        </div>
-                    </div>`;
-                });
+                        
+                        <div class="subject-body" style="background: #f8f9fa; padding: 20px; border-radius: 0 0 15px 15px;">
+                            <div class="row">`;
+                    
+                    // PDF Cards
+                    data.pdfs.forEach(pdf => {
+                        const date = new Date(pdf.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                        
+                        html += `<div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                                <div class="card-header bg-white border-0 pt-3 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file-pdf text-danger fa-2x"></i>
+                                        </div>
+                                        <span class="badge bg-info">${pdf.subject}</span>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0 px-3">
+                                    <h6 class="card-title fw-bold mb-1">${pdf.pdf_title}</h6>
+                                    <div class="small text-muted mb-2">
+                                        <i class="fas fa-calendar-alt me-1"></i> ${date}
+                                    </div>
+                                    <p class="small text-muted mb-2">${pdf.description || 'No description'}</p>
+                                </div>
+                                <div class="card-footer bg-white border-0 pb-3 px-3">
+                                    <div class="btn-group w-100" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewPdf('${pdf.pdf_id}')">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="downloadPdf('${pdf.pdf_id}')">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deletePdf('${pdf.pdf_id}', '${pdf.pdf_title}')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    html += `</div></div></div>`;
+                }
             }
-        } catch (error) {
-            console.error('Error loading PDFs:', error);
         }
+        
+        if (!hasAnyPdf) {
+            html = `<div class="text-center py-5">
+                <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No PDFs Uploaded Yet</h5>
+                <p class="text-muted">Click on a subject card to upload PDFs</p>
+            </div>`;
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading PDFs:', error);
+        container.innerHTML = `<div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i> Failed to load PDFs
+        </div>`;
     }
+}
+
+// ==================== DELETE PDF with Confirmation ====================
+async function deletePdf(pdfId, title) {
+    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
     
-    container.innerHTML = html || '<p class="text-center text-muted py-4">No PDFs uploaded yet</p>';
+    // Show loading state
+    const deleteBtn = event.target;
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    deleteBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/section-pdfs/delete/${pdfId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(`PDF "${title}" deleted successfully!`, 'success');
+            loadPdfRecords();  // Refresh list
+        } else {
+            showAlert('Failed to delete PDF', 'error');
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error deleting PDF:', error);
+        showAlert('Error deleting PDF', 'error');
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
+    }
 }
 
 function viewPdf(id) { 
@@ -1043,39 +1593,107 @@ function downloadPdf(id) {
     window.open(`${API_BASE_URL}/section-pdfs/view/${id}?download=true`, '_blank'); 
 }
 
-// ==================== STUDENTS ====================
+// ==================== FIXED: Load My Students from ALL Sections ====================
 async function loadMyStudents() {
     const tbody = document.getElementById('studentsTableBody');
     if (!tbody) return;
     
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="loading-spinner-modern mx-auto"></div><p class="mt-2">Loading students...</p></td></tr>';
     
-    let html = '', idx = 1;
-    let hasData = false;
-    
-    for (const s of teacherSections) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/section-attendance/students/${s.section_id}`);
-            const data = await res.json();
+    try {
+        let allStudents = [];
+        
+        // ✅ Har section ke liye students fetch karo
+        for (const section of teacherSections) {
+            const response = await fetch(`${API_BASE_URL}/section-attendance/students/${section.section_id}`);
+            const data = await response.json();
             
-            if (data.success && data.students && data.students.length > 0) {
-                hasData = true;
-                data.students.forEach(st => {
-                    html += `<tr>
-                        <td>${idx++}</td>
-                        <td>${st.student_id}</td>
-                        <td>${st.name}</td>
-                        <td>Section ${s.section_details?.section_name || ''}</td>
-                    </tr>`;
+            if (data.success && data.students) {
+                console.log(`Section ${section.section_details?.section_name} has ${data.students.length} students`);
+                
+                data.students.forEach(student => {
+                    allStudents.push({
+                        ...student,
+                        section_name: section.section_details?.section_name || 'N/A',
+                        section_id: section.section_id
+                    });
                 });
+            } else {
+                console.log(`Section ${section.section_details?.section_name} has 0 students`);
             }
-        } catch (error) {
-            console.error('Error loading students:', error);
         }
+        
+        // Sort by name
+        allStudents.sort((a, b) => a.name.localeCompare(b.name));
+        
+        if (allStudents.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No students found in any section</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        allStudents.forEach((student, index) => {
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td><span class="badge bg-dark">${student.student_id}</span></td>
+                <td><strong>${student.name}</strong></td>
+                <td>Section ${student.section_name}</td>
+            </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading students:', error);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load students</td></tr>';
+    }
+}
+function sortStudents(by = 'name') {
+    if (by === 'name') {
+        allStudents.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (by === 'id') {
+        allStudents.sort((a, b) => {
+            const numA = parseInt(a.student_id.replace(/\D/g, ''));
+            const numB = parseInt(b.student_id.replace(/\D/g, ''));
+            return numA - numB;
+        });
     }
     
-    tbody.innerHTML = html || '<tr><td colspan="4" class="text-center py-4">No students found</td></tr>';
+    displayStudents();
 }
+
+function searchStudents(query) {
+    const searchTerm = query.toLowerCase();
+    const filtered = allStudents.filter(student => 
+        student.name.toLowerCase().includes(searchTerm) ||
+        student.student_id.toLowerCase().includes(searchTerm)
+    );
+    displayStudents(filtered);
+}
+
+function displayStudents(students = allStudents) {
+    const tbody = document.getElementById('studentsTableBody');
+    
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No students found</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    students.forEach((student, index) => {
+        html += `<tr>
+            <td>${index + 1}</td>
+            <td><span class="badge bg-dark">${student.student_id}</span></td>
+            <td><strong>${student.name}</strong></td>
+            <td>Section ${student.section_name}</td>
+        </tr>`;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Add search input in HTML
+// <input type="text" class="form-control mb-3" placeholder="Search students..." onkeyup="searchStudents(this.value)">
 
 // ==================== ALERTS ====================
 function showAlert(msg, type = 'info') {
