@@ -698,15 +698,26 @@ async function loadCoursesForMarks() {
 }
 
 // ==================== LOAD SECTIONS FOR MARKS ====================
-async function loadSectionsForMarks() {
-    const courseSelect = document.getElementById('marksCourse');
-    const sectionSelect = document.getElementById('marksSection');
+async function loadSectionsForMarks(courseCode) {
+    console.log('Loading sections for course:', courseCode);
     
-    const courseCode = courseSelect.value;
+    const sectionSelect = document.getElementById('marksSection');
+    const studentsList = document.getElementById('marksStudentsList');
+    
+    if (!sectionSelect || !studentsList) {
+        console.error('Required elements not found');
+        return;
+    }
     
     if (!courseCode) {
-        sectionSelect.innerHTML = '<option value="">-- Select Course First --</option>';
+        sectionSelect.innerHTML = '<option value="">Select course first...</option>';
         sectionSelect.disabled = true;
+        studentsList.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                <p class="mb-0">Select course and section to load students</p>
+            </div>
+        `;
         return;
     }
     
@@ -717,24 +728,42 @@ async function loadSectionsForMarks() {
         const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
         const data = await response.json();
         
+        console.log('Sections response:', data);
+        
         if (data.success && data.sections) {
             const activeSections = data.sections.filter(s => s.is_active);
             
             if (activeSections.length === 0) {
-                sectionSelect.innerHTML = '<option value="">No sections found</option>';
+                sectionSelect.innerHTML = '<option value="">No active sections found</option>';
                 sectionSelect.disabled = true;
+                studentsList.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No active sections found for this course
+                    </div>
+                `;
                 return;
             }
             
-            let options = '<option value="">-- Select Section --</option>';
+            let options = '<option value="">Select section...</option>';
             activeSections.forEach(section => {
+                const current = section.current_students || 0;
+                const max = section.max_students || 60;
                 options += `<option value="${section.section_id}">
-                    ${section.section_name} (${section.current_students || 0}/${section.max_students || 60} students)
+                    ${section.section_name} (${current}/${max} students)
                 </option>`;
             });
             
             sectionSelect.innerHTML = options;
             sectionSelect.disabled = false;
+            
+            // Reset students list
+            studentsList.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                    <p class="mb-0">Select section to load students</p>
+                </div>
+            `;
         } else {
             sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
             sectionSelect.disabled = true;
@@ -748,14 +777,22 @@ async function loadSectionsForMarks() {
 
 // ==================== LOAD STUDENTS FOR MARKS ====================
 async function loadStudentsForMarks() {
+    console.log('Loading students for marks...');
+    
     const sectionSelect = document.getElementById('marksSection');
-    const studentsContainer = document.getElementById('marksStudentsList');
-    const editId = document.getElementById('editMarksId');
+    const studentsList = document.getElementById('marksStudentsList');
+    const totalMarksInput = document.getElementById('totalMarks');
+    
+    if (!sectionSelect || !studentsList || !totalMarksInput) {
+        console.error('Required elements not found');
+        return;
+    }
     
     const sectionId = sectionSelect.value;
+    const totalMarks = parseInt(totalMarksInput.value) || 100;
     
     if (!sectionId) {
-        studentsContainer.innerHTML = `
+        studentsList.innerHTML = `
             <div class="text-center text-muted py-4">
                 <i class="fas fa-hand-pointer fa-2x mb-2"></i>
                 <p class="mb-0">Select section to load students</p>
@@ -764,7 +801,7 @@ async function loadStudentsForMarks() {
         return;
     }
     
-    studentsContainer.innerHTML = `
+    studentsList.innerHTML = `
         <div class="text-center py-4">
             <div class="spinner-border text-primary mb-2"></div>
             <p class="text-muted">Loading students...</p>
@@ -772,11 +809,13 @@ async function loadStudentsForMarks() {
     `;
     
     try {
-        const studentsResponse = await fetch(`${API_URL}/api/section-attendance/students/${sectionId}`);
-        const studentsData = await studentsResponse.json();
+        const response = await fetch(`${API_URL}/api/section-attendance/students/${sectionId}`);
+        const data = await response.json();
         
-        if (!studentsData.success || !studentsData.students || studentsData.students.length === 0) {
-            studentsContainer.innerHTML = `
+        console.log('Students response:', data);
+        
+        if (!data.success || !data.students || data.students.length === 0) {
+            studentsList.innerHTML = `
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     No students found in this section
@@ -785,32 +824,30 @@ async function loadStudentsForMarks() {
             return;
         }
         
-        const students = studentsData.students;
-        const examType = document.getElementById('marksExam').value;
-        const subject = document.getElementById('marksSubject').value;
-        const totalMarks = document.getElementById('marksTotalMarks').value;
+        const students = data.students;
         
         let html = `
-            <table class="table table-sm table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Student ID</th>
-                        <th>Student Name</th>
-                        <th>Marks Obtained</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="20%">Student ID</th>
+                            <th width="35%">Student Name</th>
+                            <th width="40%">Marks (0-${totalMarks})</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         `;
         
         students.forEach((student, index) => {
             html += `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${student.student_id}</td>
-                    <td>${student.name}</td>
+                    <td><span class="badge bg-dark">${student.student_id}</span></td>
+                    <td><strong>${student.name}</strong></td>
                     <td>
-                        <input type="number" class="form-control form-control-sm student-marks" 
+                        <input type="number" class="form-control form-control-sm student-marks-input" 
                                data-student-id="${student.student_id}"
                                data-student-name="${student.name}"
                                min="0" max="${totalMarks}" step="0.01"
@@ -821,24 +858,54 @@ async function loadStudentsForMarks() {
         });
         
         html += `
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
             <div class="alert alert-info mt-2">
                 <i class="fas fa-info-circle me-2"></i>
                 Enter marks for each student (0 to ${totalMarks})
             </div>
         `;
         
-        studentsContainer.innerHTML = html;
+        studentsList.innerHTML = html;
         
     } catch (error) {
         console.error('Error loading students:', error);
-        studentsContainer.innerHTML = `
+        studentsList.innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 Error loading students: ${error.message}
             </div>
         `;
+    }
+}
+
+// ==================== POPULATE COURSES FOR MARKS ====================
+function populateCoursesForMarks() {
+    const courseSelect = document.getElementById('marksCourse');
+    if (!courseSelect) return;
+    
+    courseSelect.innerHTML = '<option value="">Select Course</option>';
+    
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        coursesData.filter(c => c.is_active).forEach(course => {
+            courseSelect.innerHTML += `<option value="${course.course_code}">
+                ${course.course_name} (${course.course_code})
+            </option>`;
+        });
+    } else {
+        // Fallback - load from API
+        fetch(`${API_URL}/api/courses/all`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.courses) {
+                    data.courses.filter(c => c.is_active).forEach(course => {
+                        courseSelect.innerHTML += `<option value="${course.course_code}">
+                            ${course.course_name} (${course.course_code})
+                        </option>`;
+                    });
+                }
+            });
     }
 }
 
@@ -872,28 +939,35 @@ async function loadSectionsForMarksFilter(courseCode) {
     }
 }
 
-// ==================== SAVE SECTION MARKS ====================
+// ==================== SAVE SECTION MARKS - FIXED ====================
 async function saveSectionMarks() {
-    const examType = document.getElementById('marksExam').value;
-    const examDate = document.getElementById('marksExamDate').value;
-    const courseCode = document.getElementById('marksCourse').value;
-    const sectionId = document.getElementById('marksSection').value;
-    const subject = document.getElementById('marksSubject').value.trim();
-    const totalMarks = document.getElementById('marksTotalMarks').value;
-    const editId = document.getElementById('editMarksId').value;
+    console.log('Saving marks...');
     
+    // Get form elements
+    const examType = document.getElementById('examType')?.value;
+    const examDate = document.getElementById('examDate')?.value;
+    const courseCode = document.getElementById('marksCourse')?.value;
+    const sectionId = document.getElementById('marksSection')?.value;
+    const subject = document.getElementById('marksSubject')?.value.trim();
+    const totalMarks = document.getElementById('totalMarks')?.value;
+    const editId = document.getElementById('editMarksId')?.value;
+    
+    // Validation
     if (!examType || !examDate || !courseCode || !sectionId || !subject) {
         showError('Please fill all required fields');
         return;
     }
     
-    // Collect marks data
-    const marksInputs = document.querySelectorAll('.student-marks');
+    // Get all marks inputs
+    const marksInputs = document.querySelectorAll('.student-marks-input');
+    console.log('Found marks inputs:', marksInputs.length);
+    
     if (marksInputs.length === 0) {
-        showError('No students found');
+        showError('No students found. Please select a section first.');
         return;
     }
     
+    // Collect marks data
     const marksData = [];
     let hasError = false;
     
@@ -917,16 +991,13 @@ async function saveSectionMarks() {
     
     if (hasError) return;
     
+    // Show loading state
+    const saveBtn = document.querySelector('#marksModal .btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+    saveBtn.disabled = true;
+    
     try {
-        const saveBtn = document.querySelector('#marksModal .btn-primary');
-        const originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
-        saveBtn.disabled = true;
-        
-        let url = `${API_URL}/api/section-marks/save-bulk`;
-        let method = 'POST';
-        let successMessage = 'Marks saved successfully!';
-        
         const payload = {
             exam_type: examType,
             exam_date: examDate,
@@ -937,26 +1008,34 @@ async function saveSectionMarks() {
             marks_data: marksData
         };
         
-        // If editing, we need to handle update differently
-        // For now, we'll just create new records (backend should handle duplicates)
+        console.log('Sending payload:', payload);
         
-        const response = await fetch(url, {
-            method: method,
+        const response = await fetch(`${API_URL}/api/section-marks/save-bulk`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         
         const result = await response.json();
+        console.log('Save response:', result);
         
         saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
         
         if (result.success) {
-            showSuccess(successMessage);
+            showSuccess('Marks saved successfully!');
+            
+            // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('marksModal'));
-            modal.hide();
-            currentMarksEditId = null;
-            await loadSectionMarks();
+            if (modal) modal.hide();
+            
+            // Reset edit ID
+            document.getElementById('editMarksId').value = '';
+            
+            // Reload marks data
+            if (typeof loadSectionMarks === 'function') {
+                await loadSectionMarks();
+            }
         } else {
             showError('Error: ' + (result.message || 'Unknown error'));
         }
@@ -964,10 +1043,49 @@ async function saveSectionMarks() {
         console.error('Error saving marks:', error);
         showError('Failed to save marks: ' + error.message);
         
-        const saveBtn = document.querySelector('#marksModal .btn-primary');
-        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Marks';
+        saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
     }
+}
+
+// ==================== MARKS MODAL INITIALIZATION ====================
+function initMarksModal() {
+    const marksModal = document.getElementById('marksModal');
+    if (!marksModal) return;
+    
+    marksModal.addEventListener('show.bs.modal', function() {
+        console.log('Marks modal opened');
+        
+        // Reset form
+        document.getElementById('marksForm')?.reset();
+        document.getElementById('editMarksId').value = '';
+        
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        const examDate = document.getElementById('examDate');
+        if (examDate) examDate.value = today;
+        
+        // Populate courses
+        populateCoursesForMarks();
+        
+        // Reset section dropdown
+        const sectionSelect = document.getElementById('marksSection');
+        if (sectionSelect) {
+            sectionSelect.innerHTML = '<option value="">Select course first...</option>';
+            sectionSelect.disabled = true;
+        }
+        
+        // Reset students list
+        const studentsList = document.getElementById('marksStudentsList');
+        if (studentsList) {
+            studentsList.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                    <p class="mb-0">Select course and section to load students</p>
+                </div>
+            `;
+        }
+    });
 }
 
 // ==================== LOAD SECTION MARKS ====================
@@ -1798,6 +1916,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Load courses for fee modal
             loadCoursesForFeeModal();
+            initMarksModal();
             
             // Reset section dropdown
             const sectionSelect = document.getElementById('feeModalSection');
@@ -7328,17 +7447,58 @@ document.getElementById('timetable-tab')?.addEventListener('shown.bs.tab', funct
 });
 
 function initTimetableTab() {
-    populateTimetableCourseDropdown();
+    populateTimetableCourseDropdowns();
     loadTimetableData();
     loadTeachersForTimetable(); // Load teachers when tab opens
 }
 
-function initTimetableTab() {
-    populateTimetableCourseDropdowns();
-    loadTimetableData();
+
+// ==================== POPULATE COURSE DROPDOWNS ====================
+function populateTimetableCourseDropdowns() {
+    console.log('Populating timetable course dropdowns...');
+    
+    const filterSelect = document.getElementById('timetableCourseFilter');
+    const modalSelect = document.getElementById('timetableCourse');
+    
+    if (!filterSelect || !modalSelect) {
+        console.error('Course dropdown elements not found');
+        return;
+    }
+    
+    filterSelect.innerHTML = '<option value="">All Courses</option>';
+    modalSelect.innerHTML = '<option value="">Select course...</option>';
+    
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        const activeCourses = coursesData.filter(c => c.is_active !== false);
+        
+        activeCourses.forEach(course => {
+            const option1 = document.createElement('option');
+            option1.value = course.course_code;
+            option1.textContent = `${course.course_name} (${course.course_code})`;
+            filterSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = course.course_code;
+            option2.textContent = `${course.course_name} (${course.course_code})`;
+            modalSelect.appendChild(option2);
+        });
+        
+        console.log(`Populated ${activeCourses.length} courses in dropdowns`);
+    } else {
+        // Fallback - load courses from API
+        fetch(`${API_URL}/api/courses/all`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.courses) {
+                    const activeCourses = data.courses.filter(c => c.is_active !== false);
+                    activeCourses.forEach(course => {
+                        filterSelect.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
+                        modalSelect.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
+                    });
+                }
+            });
+    }
 }
-
-
 
 // Load timetable data
 async function loadTimetableData() {
