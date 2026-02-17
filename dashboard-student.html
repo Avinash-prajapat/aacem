@@ -187,7 +187,7 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
-    /* Sidebar - Default Collapsed */
+        /* Sidebar - Default Collapsed with Flex Layout */
     .sidebar {
       position: fixed;
       top: var(--header-height);
@@ -198,8 +198,11 @@
       transform: translateX(-100%);
       transition: transform 0.3s ease;
       z-index: 999;
-      overflow-y: auto;
+      overflow-y: auto;  /* Scrollable */
+      overflow-x: hidden;
       box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;  /* Flex column banaya */
     }
 
     .sidebar.expanded {
@@ -210,6 +213,7 @@
       padding: 20px;
       background: rgba(0,0,0,0.2);
       border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;  /* Header fixed */
     }
 
     .sidebar-header h4 {
@@ -221,6 +225,7 @@
 
     .sidebar-menu {
       padding: 15px 10px;
+      flex: 1;  /* Menu expand hoga */
     }
 
     .menu-item {
@@ -279,6 +284,90 @@
     .menu-item span {
       font-size: 0.95rem;
       font-weight: 500;
+    }
+
+    /* Sidebar Footer - Naya add kiya */
+    .sidebar-footer {
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 2px solid var(--accent);
+      backdrop-filter: blur(5px);
+      flex-shrink: 0;  /* Footer fixed */
+      margin-top: auto; /* Footer neeche push */
+    }
+
+    .director-info {
+      color: #b8c5d6;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      padding: 5px 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.1);
+    }
+
+    .director-info i {
+      color: gold;
+      margin-right: 8px;
+      font-size: 0.9rem;
+    }
+
+    .director-info strong {
+      color: white;
+      font-weight: 600;
+    }
+
+    .developer-info {
+      color: #b8c5d6;
+      font-size: 0.85rem;
+      margin-bottom: 5px;
+    }
+
+    .developer-info i {
+      color: var(--accent-light);
+      margin-right: 8px;
+      font-size: 0.8rem;
+    }
+
+    .developer-info strong {
+      color: white;
+      font-weight: 600;
+    }
+
+    .developer-version {
+      color: #6c757d;
+      font-size: 0.7rem;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    /* Hover effects */
+    .sidebar-footer:hover .director-info i {
+      color: gold;
+      transform: scale(1.1);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-footer:hover .developer-info i {
+      color: var(--accent);
+      transform: rotate(360deg);
+      transition: transform 0.5s ease;
+    }
+
+    /* Scrollbar Styling */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     /* Main Content */
@@ -354,8 +443,55 @@
       color: var(--accent);
     }
 
-  /* Attendance Specific Styles */
-    .stats-grid {
+/* Attendance Section Container */
+    #attendance .modern-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+    }
+
+    #attendance .card-header {
+      background: transparent;
+      border-bottom: 2px solid #f0f0f0;
+      padding: 0 0 15px 0;
+      margin-bottom: 25px;
+    }
+
+    #attendance .card-header h4 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
+    #attendance .card-header h4 i {
+      color: #4361ee;
+      margin-right: 12px;
+      font-size: 1.8rem;
+    }
+
+    /* Back button styling */
+    #attendance .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    #attendance .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateX(-3px);
+    }    .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
@@ -363,14 +499,14 @@
     }
 
     .stat-card {
-      background: var(--card-bg);
+      background: white;
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       display: flex;
       align-items: center;
       gap: 20px;
-      border: 1px solid rgba(0,0,0,0.03);
+      border: 1px solid #e9ecef;
       transition: all 0.3s ease;
     }
 
@@ -389,10 +525,22 @@
       font-size: 24px;
     }
 
-    .stat-icon.primary { background: #e0e7ff; color: #4361ee; }
-    .stat-icon.success { background: #d1fae5; color: #06d6a0; }
-    .stat-icon.danger { background: #fee2e2; color: #ef476f; }
-    .stat-icon.warning { background: #fed7aa; color: #ffb703; }
+        .stat-icon.primary { 
+      background: linear-gradient(135deg, #4361ee20, #4361ee40); 
+      color: #4361ee; 
+    }
+    .stat-icon.success { 
+      background: linear-gradient(135deg, #06d6a020, #06d6a040); 
+      color: #06d6a0; 
+    }
+    .stat-icon.danger { 
+      background: linear-gradient(135deg, #ef476f20, #ef476f40); 
+      color: #ef476f; 
+    }
+    .stat-icon.warning { 
+      background: linear-gradient(135deg, #ffb70320, #ffb70340); 
+      color: #ffb703; 
+    }
 
     .stat-info h3 {
       font-size: 28px;
@@ -409,11 +557,12 @@
     }
 
     .progress-card {
-      background: var(--card-bg);
+      background: white;
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 25px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
     }
 
     .progress-header {
@@ -455,6 +604,7 @@
       background: linear-gradient(135deg, #4361ee, #3a56d4);
       border-radius: 16px;
       color: white;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
     }
 
     .subject-view-title h2 {
@@ -495,11 +645,25 @@
     }
 
     .summary-card {
-      background: var(--card-bg);
+      background: white;
       border-radius: 16px;
       padding: 20px;
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+    }
+    
+    .summary-card.present { 
+      border-left: 4px solid #06d6a0;
+      background: linear-gradient(135deg, #ffffff, #f0fff4);
+    }
+    .summary-card.absent { 
+      border-left: 4px solid #ef476f;
+      background: linear-gradient(135deg, #ffffff, #fff5f5);
+    }
+    .summary-card.percentage { 
+      border-left: 4px solid #4361ee;
+      background: linear-gradient(135deg, #ffffff, #f0f2ff);
     }
 
     .summary-card.present { border-left: 4px solid #06d6a0; }
@@ -518,14 +682,23 @@
     }
 
     .teacher-info-card {
-      background: #f8fafc;
+      background: linear-gradient(135deg, #f8fafc, #ffffff);
       border-radius: 12px;
       padding: 15px 20px;
       margin-bottom: 25px;
       display: flex;
       align-items: center;
       gap: 15px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #4361ee30;
+      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+    }
+    
+    .teacher-info-card i {
+      font-size: 24px;
+      color: #4361ee;
+      background: #4361ee20;
+      padding: 12px;
+      border-radius: 50%;
     }
 
     .teacher-info-card i {
@@ -541,13 +714,19 @@
     }
 
     .subject-card {
-      background: var(--card-bg);
+      background: white;
       border-radius: 16px;
       padding: 20px;
       cursor: pointer;
       transition: all 0.3s ease;
-      border: 1px solid rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .subject-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+      border-color: #4361ee;
     }
 
     .subject-card:hover {
@@ -569,12 +748,13 @@
     }
 
     .subject-badge {
-      background: #f1f5f9;
+      background: #4361ee10;
       padding: 5px 12px;
       border-radius: 30px;
       font-size: 12px;
       font-weight: 600;
       color: #4361ee;
+      border: 1px solid #4361ee30;
     }
 
     .subject-stats {
@@ -605,8 +785,16 @@
     }
 
     .results-table thead {
-      background: #4361ee;
+      background: linear-gradient(135deg, #4361ee, #3a56d4);
       color: white;
+    }
+    
+    .results-table thead th {
+      padding: 16px;
+      font-weight: 600;
+      font-size: 14px;
+      text-align: left;
+      border: none;
     }
 
     .results-table thead th {
@@ -633,8 +821,16 @@
       display: inline-block;
     }
 
-    .grade-a { background: #d1fae5; color: #065f46; }
-    .grade-d { background: #fee2e2; color: #991b1b; }
+    .grade-a { 
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0); 
+      color: #065f46;
+      border: 1px solid #06d6a0;
+    }
+    .grade-d { 
+      background: linear-gradient(135deg, #fee2e2, #fecaca); 
+      color: #991b1b;
+      border: 1px solid #ef476f;
+    }
 
     @media (max-width: 768px) {
       .stats-grid {
@@ -658,6 +854,92 @@
         padding: 12px 8px;
       }
     }  
+
+    /* Results Section Improvements */
+    #results .nav-tabs {
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    #results .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 500;
+      border: none;
+      padding: 10px 20px;
+      margin-right: 5px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    #results .nav-tabs .nav-link:hover {
+      background: #f8f9fa;
+      color: #f76707;
+    }
+
+    #results .nav-tabs .nav-link.active {
+      color: #f76707;
+      background: white;
+      border-bottom: 3px solid #f76707;
+      font-weight: 600;
+    }
+
+    #results .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+    }
+
+    #results .table {
+      margin-bottom: 0;
+    }
+
+    #results .table thead th {
+      background: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+      border-bottom: 2px solid #dee2e6;
+      padding: 15px;
+    }
+
+    #results .table tbody tr:hover {
+      background: #fff9f0;
+    }
+
+    #results .badge {
+      font-size: 0.85rem;
+      padding: 6px 12px;
+    }
+
+    #results .progress {
+      background: #e9ecef;
+      border-radius: 10px;
+    }
+
+    /* Summary cards */
+    #results .border-start {
+      transition: all 0.3s ease;
+    }
+
+    #results .border-start:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      #results .nav-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+      
+      #results .table td {
+        font-size: 0.9rem;
+      }
+      
+      #results .table td .progress {
+        width: 50px !important;
+      }
+    }
 
     /* Loading */
     .loading-container {
@@ -816,6 +1098,24 @@
       margin-bottom: 20px;
     }
 
+    /* Hidden menu items */
+    .menu-item[style*="display: none"] {
+      display: none !important;
+    }
+
+    .section-badge {
+      background: #2d6b6b;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .section-badge.warning {
+      background: #ffc107;
+      color: #000;
+    }
     /* Edit Profile Modal */
     .modal-header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -1591,6 +1891,8 @@
       padding: 12px 8px;
     }
   }
+
+  
   </style>
 </head>
 <body>
@@ -1688,6 +1990,7 @@
     </div>
     <div class="header-user">
       <span class="welcome-text" id="welcomeText">Welcome, Student</span>
+      <!-- YEH LINE ADD KARO -->
       <button class="logout-btn" onclick="showLogoutConfirmation()">
         <i class="fas fa-sign-out-alt me-1"></i> Logout
       </button>
@@ -1732,6 +2035,23 @@
         <i class="fas fa-bullhorn"></i>
         <span>Notices</span>
       </a>
+    </div>
+    
+    <!-- Director and Developer Info - Sidebar ke bottom mein -->
+    <div class="sidebar-footer">
+      <!-- Director Info -->
+      <div class="director-info">
+        <i class="fas fa-user-tie"></i>
+        <span>Director: <strong>Ajit Kumar Singh</strong></span>
+      </div>
+      <!-- Developer Info -->
+      <div class="developer-info">
+        <i class="fas fa-code"></i>
+        <span>Developed by: <strong>Avinash Kumar</strong></span>
+      </div>
+      <div class="developer-version">
+        <small>v1.0.0</small>
+      </div>
     </div>
   </nav>
 
@@ -2198,6 +2518,66 @@
       });
     }
 
+    // Check if student has section assigned
+    function hasSectionAssigned() {
+      const studentData = JSON.parse(sessionStorage.getItem('studentData') || '{}');
+      return studentData && studentData.section_id ? true : false;
+    }
+
+    // Show/hide menu items based on section assignment
+    function updateMenuBasedOnSection() {
+      const hasSection = hasSectionAssigned();
+      
+      // Menu items that need section
+      const sectionDependentMenus = [
+        'attendance',
+        'timetable', 
+        'study-materials',
+        'syllabus',
+        'results'
+      ];
+      
+      sectionDependentMenus.forEach(sectionId => {
+        const menuItem = document.querySelector(`.menu-item[onclick="showSection('${sectionId}')"]`);
+        if (menuItem) {
+          menuItem.style.display = hasSection ? 'flex' : 'none';
+        }
+      });
+      
+      // Always show these regardless of section
+      const alwaysShowMenus = ['profile', 'fees', 'notice'];
+      alwaysShowMenus.forEach(sectionId => {
+        const menuItem = document.querySelector(`.menu-item[onclick="showSection('${sectionId}')"]`);
+        if (menuItem) {
+          menuItem.style.display = 'flex';
+        }
+      });
+      
+      // If no section, auto-show profile section
+      if (!hasSection) {
+        const profileMenuItem = document.querySelector(`.menu-item[onclick="showSection('profile')"]`);
+        if (profileMenuItem) {
+          profileMenuItem.click();
+        }
+      }
+    }
+
+    // Update section badge
+    function updateSectionBadge() {
+      const studentData = JSON.parse(sessionStorage.getItem('studentData') || '{}');
+      const badge = document.getElementById('sectionBadge');
+      
+      if (badge) {
+        if (studentData.section_name) {
+          badge.textContent = studentData.section_name;
+          badge.className = 'section-badge';
+        } else {
+          badge.textContent = 'No Section';
+          badge.className = 'section-badge warning';
+        }
+      }
+    }
+
     // Show logout confirmation modal
     function showLogoutConfirmation() {
       document.getElementById('logoutModal').classList.add('show');
@@ -2223,7 +2603,7 @@
       window.location.href = "index.html";
     }
 
-    // Main initialization
+
     document.addEventListener('DOMContentLoaded', async function() {
       if (!studentData || !checkSessionTimeout()) {
         document.getElementById('loginModal').classList.add('show');
@@ -2235,7 +2615,12 @@
       
       console.log('Loading student dashboard data for:', STUDENT_ID);
       updateWelcomeMessage();
-      loadStudentData();
+      
+      // Update menu visibility first
+      updateMenuBasedOnSection();
+      
+      // Load data
+      await loadStudentData();
       
       initBackButtonHandler();
     });
@@ -2247,28 +2632,72 @@
       }
     }
 
-    // Load all student data
     async function loadStudentData() {
       try {
+        const hasSection = hasSectionAssigned();
+        
+        // Always load these
         await Promise.all([
           loadProfile(),
-          loadAttendance(),
-          loadResults(),
           loadFees(),
-          loadNotices(),
-          loadStudyMaterials(),
-          loadSyllabus() 
+          loadNotices()
         ]);
         
-        await loadTimetable();
+        // Only load section-dependent data if section exists
+        if (hasSection) {
+          await Promise.all([
+            loadAttendance(),
+            loadResults(),
+            loadStudyMaterials(),
+            loadSyllabus(),
+            loadTimetable()
+          ]);
+          console.log('All section-specific data loaded successfully');
+        } else {
+          console.log('No section assigned - showing only basic info');
+          
+          // Show "Section Required" message in other sections
+          const sectionMessages = {
+            'attendance': 'Attendance',
+            'timetable': 'Timetable',
+            'study-materials': 'Study Materials',
+            'syllabus': 'Syllabus',
+            'results': 'Results'
+          };
+          
+          Object.keys(sectionMessages).forEach(sectionId => {
+            const element = document.getElementById(sectionId);
+            if (element) {
+              element.innerHTML = `
+                <div class="dashboard-card">
+                  <div class="text-center py-5">
+                    <div class="display-1 text-muted mb-4">
+                      <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h5 class="text-muted mb-3">Section Required</h5>
+                    <p class="text-muted mb-4">
+                      You need to be assigned to a section to view ${sectionMessages[sectionId]}.
+                    </p>
+                    <button class="btn btn-primary" onclick="showSection('profile')">
+                      <i class="fas fa-user me-2"></i>Go to Profile
+                    </button>
+                  </div>
+                </div>
+              `;
+            }
+          });
+        }
         
-        console.log('All student data loaded successfully');
+        // Update menu visibility
+        updateMenuBasedOnSection();
         
       } catch (error) {
         console.error('Error loading student data:', error);
       }
     }
 
+    
+    
     // Replace the loadProfile function in your HTML with this updated version
     async function loadProfile() {
       try {
@@ -2312,7 +2741,6 @@
                   <label class="text-muted small mb-1">Section</label>
                   <h6 class="mb-0">
                     <span class="badge bg-secondary">Not Assigned Yet</span>
-                    <small class="text-muted ms-2">Contact admin</small>
                   </h6>
                 </div>
                 `}
@@ -2357,6 +2785,10 @@
               </div>
             ` : ''}
           `;
+          
+          // YEH EK LINE ADD KARO - function ke end mein, closing brace se pehle
+          updateSectionBadge();
+          
         } else {
           document.getElementById('profileContent').innerHTML = `
             <div class="alert alert-custom alert-warning">
@@ -2624,6 +3056,7 @@
       showMainView();
     });
 
+    // Updated loadStudyMaterials function - Replace the entire function
     async function loadStudyMaterials() {
       try {
         const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
@@ -2636,7 +3069,6 @@
         const student = profileResult.student;
         const sectionId = student.section_id;
         const sectionName = student.section_name;
-        const course = student.course;
         
         // Show loading
         document.getElementById('pdfsContent').innerHTML = `
@@ -2646,78 +3078,64 @@
           </div>
         `;
         
-        let pdfs = [];
-        
-        // If student has section, ONLY fetch that section's PDFs
-        if (sectionId) {
-          console.log(`Fetching PDFs for student's section: ${sectionName || sectionId}`);
-          
-          try {
-            // Try different endpoint formats
-            let sectionResponse;
-            
-            // Try first endpoint
-            sectionResponse = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${sectionId}`);
-            
-            if (!sectionResponse.ok) {
-              // Try second endpoint
-              sectionResponse = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${sectionId}`);
-            }
-            
-            if (!sectionResponse.ok) {
-              // Try third endpoint
-              sectionResponse = await fetch(`${API_BASE_URL}/pdfs/section/${sectionId}`);
-            }
-            
-            if (sectionResponse.ok) {
-              const sectionResult = await sectionResponse.json();
-              
-              // Handle different response formats
-              if (sectionResult.success && sectionResult.pdfs) {
-                pdfs = sectionResult.pdfs;
-              } else if (Array.isArray(sectionResult)) {
-                pdfs = sectionResult;
-              } else if (sectionResult.data && Array.isArray(sectionResult.data)) {
-                pdfs = sectionResult.data;
-              }
-              
-              // Filter to ensure ONLY this section's PDFs (extra safety)
-              if (pdfs.length > 0 && sectionId) {
-                pdfs = pdfs.filter(pdf => 
-                  pdf.section_id === sectionId || 
-                  pdf.section_id === parseInt(sectionId) ||
-                  pdf.section_name === sectionName
-                );
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching section PDFs:', error);
-          }
-          
-        } else {
-          // Student has no section - fetch course PDFs
-          console.log('No section assigned, fetching course PDFs for:', course);
-          
-          if (course) {
-            try {
-              const response = await fetch(`${API_BASE_URL}/course-pdfs?course=${encodeURIComponent(course)}`);
-              if (response.ok) {
-                const result = await response.json();
-                if (result.success && result.pdfs) {
-                  pdfs = result.pdfs;
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching course PDFs:', error);
-            }
-          }
+        // CRITICAL CHANGE 1: If NO section assigned, show "No Materials" message immediately
+        if (!sectionId) {
+          console.log('No section assigned to student');
+          displayNoSectionMessage();
+          return;
         }
         
-        // Display PDFs
-        if (pdfs.length > 0) {
-          displayStudyMaterials(pdfs, student);
+        // CRITICAL CHANGE 2: Only fetch section PDFs if section exists
+        console.log(`Fetching PDFs for section: ${sectionName || sectionId}`);
+        let pdfs = [];
+        
+        try {
+          // Try multiple endpoint formats for section PDFs
+          let sectionResponse;
+          
+          // Try first endpoint
+          sectionResponse = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${sectionId}`);
+          
+          if (!sectionResponse.ok) {
+            // Try second endpoint
+            sectionResponse = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${sectionId}`);
+          }
+          
+          if (!sectionResponse.ok) {
+            // Try third endpoint
+            sectionResponse = await fetch(`${API_BASE_URL}/pdfs/section/${sectionId}`);
+          }
+          
+          if (sectionResponse.ok) {
+            const sectionResult = await sectionResponse.json();
+            
+            // Handle different response formats
+            if (sectionResult.success && sectionResult.pdfs) {
+              pdfs = sectionResult.pdfs;
+            } else if (Array.isArray(sectionResult)) {
+              pdfs = sectionResult;
+            } else if (sectionResult.data && Array.isArray(sectionResult.data)) {
+              pdfs = sectionResult.data;
+            }
+            
+            // CRITICAL CHANGE 3: Filter to ensure ONLY this section's PDFs
+            pdfs = pdfs.filter(pdf => {
+              const pdfSectionId = pdf.section_id || pdf.sectionId;
+              const pdfSectionName = pdf.section_name || pdf.sectionName;
+              
+              return pdfSectionId == sectionId || pdfSectionName === sectionName;
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching section PDFs:', error);
+        }
+        
+        // CRITICAL CHANGE 4: If no PDFs found for section, show "No Materials" message
+        if (pdfs.length === 0) {
+          displayNoSectionMaterialsMessage(sectionName);
         } else {
-          displayNoMaterialsMessage(student, sectionId);
+          // Display the section PDFs
+          displayStudyMaterials(pdfs, student);
         }
         
       } catch (error) {
@@ -2734,9 +3152,64 @@
       }
     }
 
-    // Update the button calls in displayStudyMaterials function
+    // NEW FUNCTION 1: Display message when NO section assigned
+    function displayNoSectionMessage() {
+      document.getElementById('pdfsContent').innerHTML = `
+        <div class="text-center py-5">
+          <div class="display-1 text-muted mb-4">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <h5 class="text-muted mb-3">No Section Assigned</h5>
+          <p class="text-muted mb-4">
+            You need to be assigned to a section to access study materials.<br>
+            Please contact the institute office to get assigned to a section.
+          </p>
+          <div class="alert alert-warning d-inline-block mx-auto" style="max-width: 400px;">
+            <i class="fas fa-info-circle me-2"></i>
+            Study materials are organized by sections. Once you're assigned to a section,<br>
+            you'll be able to access all relevant materials here.
+          </div>
+          <br>
+          <button class="btn btn-outline-primary mt-3" onclick="loadStudyMaterials()">
+            <i class="fas fa-redo me-2"></i>Refresh
+          </button>
+        </div>
+      `;
+    }
+
+    // NEW FUNCTION 2: Display message when section has NO materials
+    function displayNoSectionMaterialsMessage(sectionName) {
+      document.getElementById('pdfsContent').innerHTML = `
+        <div class="text-center py-5">
+          <div class="display-1 text-muted mb-4">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <h5 class="text-muted mb-3">No Study Materials Available</h5>
+          <p class="text-muted mb-4">
+            <span class="badge bg-primary mb-3 p-2">${sectionName}</span><br>
+            No study materials have been uploaded for your section yet.
+          </p>
+          <div class="alert alert-info d-inline-block mx-auto" style="max-width: 400px;">
+            <i class="fas fa-clock me-2"></i>
+            Materials will appear here once uploaded by your faculty.
+          </div>
+          <br>
+          <button class="btn btn-outline-primary mt-3" onclick="loadStudyMaterials()">
+            <i class="fas fa-redo me-2"></i>Refresh
+          </button>
+        </div>
+      `;
+    }
+
+    // Updated displayStudyMaterials function - Replace the existing one
     function displayStudyMaterials(pdfs, student) {
+      const sectionName = student.section_name || 'Your Section';
+      
       let pdfsHTML = `
+        <div class="alert alert-success mb-4">
+          <i class="fas fa-layer-group me-2"></i>
+          <strong>${sectionName}</strong> - Study Materials
+        </div>
         <div class="row g-4">
       `;
       
@@ -2750,9 +3223,6 @@
         const fileSizeMB = pdf.file_size ? (pdf.file_size / (1024 * 1024)).toFixed(2) : '0.00';
         const subjectName = pdf.subject || pdf.subject_name || 'General';
         const uploadedBy = pdf.uploaded_by_name || pdf.teacher_name || 'Faculty';
-        
-        // Determine if it's section PDF or course PDF
-        const isSectionPdf = pdf.section_id ? true : false;
         const pdfId = pdf.pdf_id;
         
         pdfsHTML += `
@@ -2761,6 +3231,9 @@
               <div class="card-header bg-light">
                 <small class="text-primary">
                   <i class="fas fa-book me-1"></i>${subjectName}
+                </small>
+                <small class="text-muted float-end">
+                  <i class="fas fa-layer-group me-1"></i>${sectionName}
                 </small>
               </div>
               <div class="card-body">
@@ -2810,10 +3283,10 @@
       
       pdfsHTML += '</div>';
       
-      // Simple count at the bottom
+      // Show count at the bottom
       pdfsHTML += `
         <div class="mt-4 text-muted small">
-          <i class="fas fa-file-pdf me-1"></i> ${pdfs.length} study material${pdfs.length > 1 ? 's' : ''} available
+          <i class="fas fa-file-pdf me-1"></i> ${pdfs.length} study material${pdfs.length > 1 ? 's' : ''} available for ${sectionName}
         </div>
       `;
       
@@ -3596,98 +4069,232 @@
 
 
 
-    // Load Results
+    // Load Results - IMPROVED VERSION for better readability
     async function loadResults() {
       try {
         const response = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
         const result = await response.json();
         
         if (result.success && result.results && result.results.length > 0) {
-          let tableHTML = `
-            <div class="table-container">
-              <div class="table-title">
-                <i class="fas fa-chart-line"></i>
-                <span>Academic Results</span>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-custom">
-                  <thead>
-                    <tr>
-                      <th width="20%">Subject</th>
-                      <th width="15%" class="text-center">Exam Type</th>
-                      <th width="12%" class="text-center">Marks</th>
-                      <th width="12%" class="text-center">Total</th>
-                      <th width="15%" class="text-center">Percentage</th>
-                      <th width="15%" class="text-center">Grade</th>
-                      <th width="15%" class="text-center">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-          `;
-          
+          // Group results by exam type for better organization
+          const groupedResults = {};
           let totalMarks = 0;
           let totalMaxMarks = 0;
           
           result.results.forEach(item => {
-            const percentage = ((item.marks_obtained / item.total_marks) * 100).toFixed(1);
+            const examType = item.exam_type || 'General';
+            if (!groupedResults[examType]) {
+              groupedResults[examType] = [];
+            }
+            groupedResults[examType].push(item);
+            
             totalMarks += parseFloat(item.marks_obtained);
             totalMaxMarks += parseFloat(item.total_marks);
-            
-            tableHTML += `
-              <tr>
-                <td><strong>${item.subject}</strong></td>
-                <td class="text-center">${item.exam_type}</td>
-                <td class="text-center">${item.marks_obtained}</td>
-                <td class="text-center">${item.total_marks}</td>
-                <td class="text-center">${percentage}%</td>
-                <td class="text-center">
-                  <span class="badge badge-custom bg-${getGradeColor(item.grade)}">${item.grade}</span>
-                </td>
-                <td class="text-center">${item.exam_date}</td>
-              </tr>
-            `;
           });
           
           const overallPercentage = totalMaxMarks > 0 ? ((totalMarks / totalMaxMarks) * 100).toFixed(1) : 0;
           const overallGrade = calculateGrade(overallPercentage);
           
-          tableHTML += `
-                    </tbody>
-                    <tfoot>
-                      <tr class="table-active">
-                        <td colspan="2" class="text-end fw-bold">Overall Performance:</td>
-                        <td class="text-center fw-bold">${totalMarks}</td>
-                        <td class="text-center fw-bold">${totalMaxMarks}</td>
-                        <td class="text-center fw-bold">${overallPercentage}%</td>
-                        <td class="text-center fw-bold">
-                          <span class="badge badge-custom bg-${getGradeColor(overallGrade)}">${overallGrade}</span>
-                        </td>
-                        <td class="text-center fw-bold">${result.results.length} Exams</td>
+          let tableHTML = `
+            <!-- Overall Summary Card -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-3 col-6">
+                <div class="bg-light p-3 rounded-3 text-center border-start border-4 border-primary">
+                  <small class="text-muted d-block">Total Exams</small>
+                  <h3 class="mb-0 fw-bold">${result.results.length}</h3>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="bg-light p-3 rounded-3 text-center border-start border-4 border-success">
+                  <small class="text-muted d-block">Total Marks</small>
+                  <h3 class="mb-0 fw-bold">${totalMarks}/${totalMaxMarks}</h3>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="bg-light p-3 rounded-3 text-center border-start border-4 border-info">
+                  <small class="text-muted d-block">Percentage</small>
+                  <h3 class="mb-0 fw-bold">${overallPercentage}%</h3>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="bg-light p-3 rounded-3 text-center border-start border-4 border-warning">
+                  <small class="text-muted d-block">Overall Grade</small>
+                  <h3 class="mb-0 fw-bold">
+                    <span class="badge bg-${getGradeColor(overallGrade)} p-2">${overallGrade}</span>
+                  </h3>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Create tabs for different exam types
+          const examTypes = Object.keys(groupedResults);
+          
+          if (examTypes.length > 1) {
+            // Create tab navigation
+            tableHTML += `
+              <ul class="nav nav-tabs mb-3" id="resultTabs" role="tablist">
+            `;
+            
+            examTypes.forEach((type, index) => {
+              const active = index === 0 ? 'active' : '';
+              tableHTML += `
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link ${active}" id="tab-${index}" data-bs-toggle="tab" 
+                          data-bs-target="#content-${index}" type="button" role="tab">
+                    ${type} (${groupedResults[type].length})
+                  </button>
+                </li>
+              `;
+            });
+            
+            tableHTML += `</ul><div class="tab-content" id="resultTabContent">`;
+            
+            // Create tab content
+            examTypes.forEach((type, index) => {
+              const active = index === 0 ? 'show active' : '';
+              tableHTML += `
+                <div class="tab-pane fade ${active}" id="content-${index}" role="tabpanel">
+                  <div class="table-container">
+                    <div class="table-responsive">
+                      <table class="table table-hover align-middle">
+                        <thead class="bg-light">
+                          <tr>
+                            <th>Subject</th>
+                            <th class="text-center">Marks</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Percentage</th>
+                            <th class="text-center">Grade</th>
+                            <th class="text-center">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+              `;
+              
+              groupedResults[type].forEach(item => {
+                const percentage = ((item.marks_obtained / item.total_marks) * 100).toFixed(1);
+                tableHTML += `
+                  <tr>
+                    <td>
+                      <strong>${item.subject}</strong>
+                      <br><small class="text-muted">${item.exam_type}</small>
+                    </td>
+                    <td class="text-center fw-bold">${item.marks_obtained}</td>
+                    <td class="text-center">${item.total_marks}</td>
+                    <td class="text-center">
+                      <div class="d-flex align-items-center">
+                        <div class="progress w-75 me-2" style="height: 6px;">
+                          <div class="progress-bar bg-${getProgressColor(percentage)}" 
+                              style="width: ${percentage}%"></div>
+                        </div>
+                        <span>${percentage}%</span>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-${getGradeColor(item.grade)} p-2">${item.grade}</span>
+                    </td>
+                    <td class="text-center">
+                      <small>${new Date(item.exam_date).toLocaleDateString('en-IN')}</small>
+                    </td>
+                  </tr>
+                `;
+              });
+              
+              tableHTML += `
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            
+            tableHTML += `</div>`;
+          } else {
+            // Single exam type - simple table
+            tableHTML += `
+              <div class="table-container">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="bg-light">
+                      <tr>
+                        <th>Subject</th>
+                        <th>Exam Type</th>
+                        <th class="text-center">Marks</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Percentage</th>
+                        <th class="text-center">Grade</th>
+                        <th class="text-center">Date</th>
                       </tr>
-                    </tfoot>
+                    </thead>
+                    <tbody>
+            `;
+            
+            result.results.forEach(item => {
+              const percentage = ((item.marks_obtained / item.total_marks) * 100).toFixed(1);
+              tableHTML += `
+                <tr>
+                  <td><strong>${item.subject}</strong></td>
+                  <td>${item.exam_type}</td>
+                  <td class="text-center fw-bold">${item.marks_obtained}</td>
+                  <td class="text-center">${item.total_marks}</td>
+                  <td class="text-center">
+                    <div class="d-flex align-items-center">
+                      <div class="progress w-75 me-2" style="height: 6px;">
+                        <div class="progress-bar bg-${getProgressColor(percentage)}" 
+                            style="width: ${percentage}%"></div>
+                      </div>
+                      <span>${percentage}%</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-${getGradeColor(item.grade)} p-2">${item.grade}</span>
+                  </td>
+                  <td class="text-center">
+                    <small>${new Date(item.exam_date).toLocaleDateString('en-IN')}</small>
+                  </td>
+                </tr>
+              `;
+            });
+            
+            tableHTML += `
+                    </tbody>
                   </table>
                 </div>
               </div>
-          `;
+            `;
+          }
           
           document.getElementById('resultsContent').innerHTML = tableHTML;
+          
         } else {
           document.getElementById('resultsContent').innerHTML = `
-            <div class="alert alert-custom alert-info">
-              <i class="fas fa-info-circle"></i>
-              <span>No results available yet</span>
+            <div class="text-center py-5">
+              <div class="display-1 text-muted mb-4">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <h5 class="text-muted mb-3">No Results Available</h5>
+              <p class="text-muted">Your results will appear here once published.</p>
             </div>
           `;
         }
       } catch (error) {
         console.error('Error loading results:', error);
         document.getElementById('resultsContent').innerHTML = `
-          <div class="alert alert-custom alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Failed to load results</span>
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Failed to load results. Please try again.
           </div>
         `;
       }
+    }
+
+    // Helper function for progress bar color
+    function getProgressColor(percentage) {
+      if (percentage >= 75) return 'success';
+      if (percentage >= 50) return 'info';
+      if (percentage >= 35) return 'warning';
+      return 'danger';
     }
 
     // Calculate grade based on percentage
