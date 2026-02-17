@@ -1296,6 +1296,46 @@
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
             outline: none;
         }
+
+        /* Institute Footer in Sidebar */
+    .institute-footer {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-bottom: 2px solid var(--primary-light) !important;
+        margin: 10px 0;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+
+    .institute-footer .d-flex {
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .institute-footer .d-flex:hover {
+        background: white;
+        transform: translateX(3px);
+        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+    }
+
+    .institute-footer i {
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .institute-footer .d-flex:hover i {
+        transform: scale(1.1);
+    }
+
+    .institute-footer strong {
+        color: #2d3436;
+        font-size: 0.9rem;
+    }
+
+    .institute-footer small.text-muted {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
     </style>
 </head>
 <body>
@@ -1366,7 +1406,33 @@
             <p id="teacherSubject">Subject: Loading...</p>
             <small id="teacherId">ID: Loading...</small>
         </div>
-
+        <!-- YEH NAYA SECTION ADD KARO - Director aur Developer Info -->
+        <div class="institute-footer px-3 py-3" style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-university text-primary me-2" style="width: 20px;"></i>
+                <div>
+                    <small class="text-muted d-block">Institute</small>
+                    <strong>AACEM Institute</strong>
+                </div>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-user-tie text-warning me-2" style="width: 20px;"></i>
+                <div>
+                    <small class="text-muted d-block">Director</small>
+                    <strong>Ajit Kumar Singh</strong>
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <i class="fas fa-code text-info me-2" style="width: 20px;"></i>
+                <div>
+                    <small class="text-muted d-block">Developed by</small>
+                    <strong>Avinash Kumar</strong>
+                </div>
+            </div>
+            <div class="text-end mt-2">
+                <small class="text-muted">v1.0.0</small>
+            </div>
+        </div>
         <div class="nav-menu">
             <div class="nav-item">
                 <div class="nav-link-modern active" onclick="showDashboard()">
