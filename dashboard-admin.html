@@ -2076,7 +2076,7 @@
                             </div>
                         </div>
 
-                        <!-- Attendance Tab - Replace this entire tab content -->
+                        <!-- Attendance Tab - No changes needed, already has Subject column -->
                         <div class="tab-pane fade" id="attendance" role="tabpanel">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -2111,7 +2111,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Table -->
+                                    <!-- Table - Already has Subject column ✅ -->
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
@@ -2120,7 +2120,7 @@
                                                     <th>Course</th>
                                                     <th>Section</th>
                                                     <th>Date</th>
-                                                    <th>Subject</th>
+                                                    <th>Subject</th>  <!-- ✅ This column already exists -->
                                                     <th>Present/Absent</th>
                                                     <th>Percentage</th>
                                                     <th>Actions</th>
@@ -3732,7 +3732,7 @@
         </div>
     </div>
 
-    <!-- Marks Modal - Complete Fixed Version -->
+    <!-- Marks Modal - Fixed with Subject Dropdown -->
     <div class="modal fade" id="marksModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -3762,31 +3762,34 @@
                                 <label class="form-label">Exam Date *</label>
                                 <input type="date" class="form-control" id="examDate" required>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Subject *</label>
-                                <input type="text" class="form-control" id="marksSubject" required placeholder="e.g., Mathematics">
-                            </div>
                         </div>
 
                         <!-- Course and Section Row -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Select Course *</label>
                                 <select class="form-select" id="marksCourse" required onchange="loadSectionsForMarks(this.value)">
                                     <option value="">Select Course</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Select Section *</label>
-                                <select class="form-select" id="marksSection" required disabled onchange="loadStudentsForMarks()">
+                                <select class="form-select" id="marksSection" required disabled onchange="loadSubjectsForMarksSection()">
                                     <option value="">Select course first...</option>
                                 </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Subject *</label>
+                                <select class="form-select" id="marksSubjectSelect" required disabled onchange="loadStudentsForMarks()">
+                                    <option value="">Select section first...</option>
+                                </select>
+                                <small class="text-muted">Subjects taught in this section</small>
                             </div>
                         </div>
 
                         <!-- Total Marks -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Total Marks *</label>
                                 <input type="number" class="form-control" id="totalMarks" value="100" min="1" required>
                             </div>
@@ -3795,7 +3798,7 @@
                         <!-- Hidden edit ID -->
                         <input type="hidden" id="editMarksId">
 
-                        <!-- Students Marks List - IMPORTANT: This element must exist -->
+                        <!-- Students Marks List -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-users me-2"></i>Student Marks
@@ -3804,7 +3807,7 @@
                                 style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
                                 <div class="text-center text-muted py-4">
                                     <i class="fas fa-arrow-up fa-2x mb-2"></i>
-                                    <p class="mb-0">Select course and section to load students</p>
+                                    <p class="mb-0">Select course, section and subject to load students</p>
                                 </div>
                             </div>
                         </div>
@@ -3820,7 +3823,7 @@
         </div>
     </div>
 
-    <!-- Attendance Modal - Section Wise - NEW -->
+    <!-- Attendance Modal - Section Wise with Subject Dropdown -->
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -3839,7 +3842,7 @@
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-book me-1 text-primary"></i> Select Course *
                                 </label>
-                                <select class="form-select" id="attendanceCourse" required>
+                                <select class="form-select" id="attendanceCourse" required onchange="loadSectionsForAttendance()">
                                     <option value="">-- Choose Course --</option>
                                 </select>
                             </div>
@@ -3849,7 +3852,7 @@
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-layer-group me-1 text-success"></i> Select Section *
                                 </label>
-                                <select class="form-select" id="attendanceSection" required disabled>
+                                <select class="form-select" id="attendanceSection" required disabled onchange="loadSubjectsForSection()">
                                     <option value="">-- Select Course First --</option>
                                 </select>
                             </div>
@@ -3865,11 +3868,20 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">
-                                    <i class="fas fa-tag me-1 text-warning"></i> Subject
+                                    <i class="fas fa-tag me-1 text-warning"></i> Subject *
                                 </label>
-                                <input type="text" class="form-control" id="attendanceSubject" 
-                                    placeholder="e.g., Mathematics">
+                                <!-- ✅ Changed from input to select dropdown -->
+                                <select class="form-select" id="attendanceSubject" required disabled onchange="loadStudentsForAttendanceWithSubject()">
+                                    <option value="">Select section first...</option>
+                                </select>
+                                <small class="text-muted">Subjects taught in this section</small>
                             </div>
+                        </div>
+
+                        <!-- Multiple Subjects Info (NEW) -->
+                        <div class="alert alert-info mb-3" id="multipleSubjectsInfo" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="subjectCountMessage"></span>
                         </div>
 
                         <!-- Attendance ID for editing -->
@@ -3884,7 +3896,7 @@
                                 style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
                                 <div class="text-center text-muted py-4">
                                     <i class="fas fa-arrow-up fa-2x mb-2"></i>
-                                    <p class="mb-0">Select course and section to load students</p>
+                                    <p class="mb-0">Select course, section and subject to load students</p>
                                 </div>
                             </div>
                         </div>
@@ -3901,6 +3913,7 @@
             </div>
         </div>
     </div>
+
     <!-- View Contact Message Modal - Add this at the end of your modals -->
     <div class="modal fade" id="viewContactModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -4286,7 +4299,6 @@
         </div>
     </div>
 
-    <!-- Assign Teacher to Section Modal -->
     <div class="modal fade" id="assignTeacherModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -4298,6 +4310,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="assignTeacherForm">
+                        <!-- Teacher dropdown -->
                         <div class="mb-3">
                             <label class="form-label">Select Teacher *</label>
                             <select class="form-select" id="assignTeacherId" required>
@@ -4305,20 +4318,23 @@
                             </select>
                         </div>
 
+                        <!-- Course dropdown - with onchange -->
                         <div class="mb-3">
                             <label class="form-label">Select Course *</label>
-                            <select class="form-select" id="assignCourse" required onchange="loadSectionsForAssignment()">
+                            <select class="form-select" id="assignCourse" required onchange="loadSectionsForTeacher()">
                                 <option value="">Choose course...</option>
                             </select>
                         </div>
 
+                        <!-- Section dropdown -->
                         <div class="mb-3">
                             <label class="form-label">Select Section *</label>
-                            <select class="form-select" id="assignSectionId" required>
+                            <select class="form-select" id="assignSectionId" required disabled>
                                 <option value="">Select course first...</option>
                             </select>
                         </div>
 
+                        <!-- Subject input -->
                         <div class="mb-3">
                             <label class="form-label">Subject</label>
                             <input type="text" class="form-control" id="assignSubject" 
@@ -4335,7 +4351,6 @@
             </div>
         </div>
     </div>
-
     <!-- Time Table Modal - Updated with Teacher Subject Auto-load -->
     <div class="modal fade" id="timetableModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
