@@ -775,27 +775,29 @@ async function loadSectionsForMarks(courseCode) {
     }
 }
 
-// ==================== LOAD STUDENTS FOR MARKS ====================
+// ==================== LOAD STUDENTS FOR MARKS - UPDATED ====================
 async function loadStudentsForMarks() {
     console.log('Loading students for marks...');
     
     const sectionSelect = document.getElementById('marksSection');
+    const subjectSelect = document.getElementById('marksSubjectSelect');
     const studentsList = document.getElementById('marksStudentsList');
     const totalMarksInput = document.getElementById('totalMarks');
     
-    if (!sectionSelect || !studentsList || !totalMarksInput) {
+    if (!sectionSelect || !studentsList || !totalMarksInput || !subjectSelect) {
         console.error('Required elements not found');
         return;
     }
     
     const sectionId = sectionSelect.value;
+    const subject = subjectSelect.value;
     const totalMarks = parseInt(totalMarksInput.value) || 100;
     
-    if (!sectionId) {
+    if (!sectionId || !subject) {
         studentsList.innerHTML = `
             <div class="text-center text-muted py-4">
                 <i class="fas fa-hand-pointer fa-2x mb-2"></i>
-                <p class="mb-0">Select section to load students</p>
+                <p class="mb-0">Select section and subject to load students</p>
             </div>
         `;
         return;
@@ -827,6 +829,9 @@ async function loadStudentsForMarks() {
         const students = data.students;
         
         let html = `
+            <div class="mb-3">
+                <span class="badge bg-info p-2">Subject: ${subject}</span>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm table-bordered">
                     <thead class="table-light">
@@ -863,7 +868,7 @@ async function loadStudentsForMarks() {
             </div>
             <div class="alert alert-info mt-2">
                 <i class="fas fa-info-circle me-2"></i>
-                Enter marks for each student (0 to ${totalMarks})
+                Enter marks for ${subject} (0 to ${totalMarks})
             </div>
         `;
         
@@ -877,6 +882,61 @@ async function loadStudentsForMarks() {
                 Error loading students: ${error.message}
             </div>
         `;
+    }
+}
+
+// ==================== LOAD SUBJECTS FOR MARKS SECTION ====================
+async function loadSubjectsForMarksSection() {
+    const sectionSelect = document.getElementById('marksSection');
+    const subjectSelect = document.getElementById('marksSubjectSelect');
+    const studentsList = document.getElementById('marksStudentsList');
+    
+    const sectionId = sectionSelect.value;
+    
+    if (!sectionId) {
+        subjectSelect.innerHTML = '<option value="">Select section first...</option>';
+        subjectSelect.disabled = true;
+        studentsList.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                <p class="mb-0">Select section and subject to load students</p>
+            </div>
+        `;
+        return;
+    }
+    
+    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+    subjectSelect.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/section-subjects/${sectionId}`);
+        const data = await response.json();
+        
+        console.log('Subjects for section:', data);
+        
+        if (data.success && data.subjects && data.subjects.length > 0) {
+            let options = '<option value="">Select subject...</option>';
+            data.subjects.forEach(item => {
+                options += `<option value="${item.subject}">${item.subject} (${item.teacher_name || 'Teacher'})</option>`;
+            });
+            subjectSelect.innerHTML = options;
+            subjectSelect.disabled = false;
+            
+            // Show multiple subjects info
+            const infoDiv = document.getElementById('multipleSubjectsInfo');
+            if (infoDiv) {
+                infoDiv.style.display = 'block';
+                document.getElementById('subjectCountMessage').textContent = 
+                    `This section has ${data.subjects.length} subjects.`;
+            }
+        } else {
+            subjectSelect.innerHTML = '<option value="General" selected>General</option>';
+            subjectSelect.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="General" selected>General</option>';
+        subjectSelect.disabled = false;
     }
 }
 
@@ -939,7 +999,7 @@ async function loadSectionsForMarksFilter(courseCode) {
     }
 }
 
-// ==================== SAVE SECTION MARKS - FIXED ====================
+// ==================== SAVE SECTION MARKS - FIXED WITH SUBJECT ====================
 async function saveSectionMarks() {
     console.log('Saving marks...');
     
@@ -948,7 +1008,7 @@ async function saveSectionMarks() {
     const examDate = document.getElementById('examDate')?.value;
     const courseCode = document.getElementById('marksCourse')?.value;
     const sectionId = document.getElementById('marksSection')?.value;
-    const subject = document.getElementById('marksSubject')?.value.trim();
+    const subject = document.getElementById('marksSubjectSelect')?.value; // ✅ Use dropdown
     const totalMarks = document.getElementById('totalMarks')?.value;
     const editId = document.getElementById('editMarksId')?.value;
     
@@ -1003,7 +1063,7 @@ async function saveSectionMarks() {
             exam_date: examDate,
             course_code: courseCode,
             section_id: sectionId,
-            subject: subject,
+            subject: subject, // ✅ Subject included
             total_marks: parseInt(totalMarks),
             marks_data: marksData
         };
@@ -1353,7 +1413,7 @@ async function viewSectionMarks(marksId) {
     }
 }
 
-// ==================== EDIT SECTION MARKS ====================
+// ==================== EDIT SECTION MARKS - FIXED WITH SUBJECT ====================
 async function editSectionMarks(marksId) {
     try {
         const mark = allMarks.find(m => m.id === marksId);
@@ -1362,37 +1422,70 @@ async function editSectionMarks(marksId) {
             return;
         }
         
+        console.log('Editing marks:', mark);
+        
         currentMarksEditId = marksId;
         document.getElementById('editMarksId').value = marksId;
         
         // Set form values
-        document.getElementById('marksExam').value = mark.exam_type || '';
-        document.getElementById('marksExamDate').value = mark.exam_date || '';
-        document.getElementById('marksSubject').value = mark.subject || '';
-        document.getElementById('marksTotalMarks').value = mark.total_marks || 100;
+        document.getElementById('examType').value = mark.exam_type || '';
+        document.getElementById('examDate').value = mark.exam_date || '';
+        document.getElementById('totalMarks').value = mark.total_marks || 100;
         
         // Load courses and set
         await loadCoursesForMarks();
         document.getElementById('marksCourse').value = mark.course || '';
         
-        // Load sections
-        await loadSectionsForMarks();
+        // Load sections for this course
+        await loadSectionsForMarks(mark.course);
         
         // Set section after a delay
-        setTimeout(() => {
+        setTimeout(async () => {
             document.getElementById('marksSection').value = mark.section_id || '';
             
-            // Load students
-            loadStudentsForMarks();
+            // Load subjects for this section
+            await loadSubjectsForMarksSection();
             
-            // After students load, set marks
+            // Set subject after another delay
             setTimeout(() => {
-                const marksInputs = document.querySelectorAll('.student-marks');
-                marksInputs.forEach(input => {
-                    if (input.dataset.studentId === mark.student_id) {
-                        input.value = mark.marks_obtained;
+                const subjectSelect = document.getElementById('marksSubjectSelect');
+                if (subjectSelect) {
+                    // Check if subject exists in dropdown
+                    let subjectFound = false;
+                    for (let i = 0; i < subjectSelect.options.length; i++) {
+                        if (subjectSelect.options[i].value === mark.subject) {
+                            subjectSelect.selectedIndex = i;
+                            subjectFound = true;
+                            break;
+                        }
                     }
-                });
+                    
+                    // If subject not found, add it as an option
+                    if (!subjectFound && mark.subject) {
+                        const option = document.createElement('option');
+                        option.value = mark.subject;
+                        option.textContent = mark.subject;
+                        option.selected = true;
+                        subjectSelect.appendChild(option);
+                    }
+                    
+                    console.log('Subject set to:', mark.subject);
+                }
+                
+                // Load students
+                loadStudentsForMarks();
+                
+                // After students load, set marks
+                setTimeout(() => {
+                    const marksInputs = document.querySelectorAll('.student-marks-input');
+                    marksInputs.forEach(input => {
+                        if (input.dataset.studentId === mark.student_id) {
+                            input.value = mark.marks_obtained;
+                        }
+                    });
+                    console.log('Marks values restored');
+                }, 500);
+                
             }, 500);
             
         }, 500);
@@ -4521,7 +4614,7 @@ function toggleMobileMenu() {
 // SECTION-WISE ATTENDANCE MANAGEMENT - COMPLETE CODE
 // =====================================================
 
-// Attendance Modal Events - ADD THIS
+// Attendance Modal Events - UPDATE THIS
 const attendanceModal = document.getElementById('attendanceModal');
 if (attendanceModal) {
     attendanceModal.addEventListener('show.bs.modal', function() {
@@ -4544,36 +4637,53 @@ if (attendanceModal) {
         sectionSelect.innerHTML = '<option value="">-- Select Course First --</option>';
         sectionSelect.disabled = true;
         
+        // ✅ NEW: Reset subject dropdown
+        const subjectSelect = document.getElementById('attendanceSubject');
+        if (subjectSelect) {
+            subjectSelect.innerHTML = '<option value="">Select section first...</option>';
+            subjectSelect.disabled = true;
+        }
+        
         // Reset students container
         const studentsContainer = document.getElementById('attendanceStudentsList');
         studentsContainer.innerHTML = `
             <div class="text-center text-muted py-4">
                 <i class="fas fa-arrow-up fa-2x mb-2"></i>
-                <p class="mb-0">Select course and section to load students</p>
+                <p class="mb-0">Select course, section and subject to load students</p>
             </div>
         `;
+        
+        // Hide multiple subjects info
+        const infoDiv = document.getElementById('multipleSubjectsInfo');
+        if (infoDiv) infoDiv.style.display = 'none';
     });
 }
-
-// Course change event - ADD THIS
+// Course change event - KEEP AS IS
 const courseSelect = document.getElementById('attendanceCourse');
 if (courseSelect) {
     courseSelect.addEventListener('change', loadSectionsForAttendance);
 }
 
-// Section change event - ADD THIS
+// Section change event - ✅ UPDATED
 const sectionSelect = document.getElementById('attendanceSection');
 if (sectionSelect) {
-    sectionSelect.addEventListener('change', loadStudentsForAttendance);
+    sectionSelect.addEventListener('change', loadSubjectsForSection);  // Changed
 }
 
-// Date change event - ADD THIS
+// ✅ NEW: Subject change event - ADD THIS
+const subjectSelect = document.getElementById('attendanceSubject');
+if (subjectSelect) {
+    subjectSelect.addEventListener('change', loadStudentsForAttendanceWithSubject);
+}
+
+// Date change event - ✅ UPDATED
 const dateInput = document.getElementById('attendanceDate');
 if (dateInput) {
     dateInput.addEventListener('change', function() {
         const sectionId = document.getElementById('attendanceSection').value;
-        if (sectionId) {
-            loadStudentsForAttendance();
+        const subject = document.getElementById('attendanceSubject').value;
+        if (sectionId && subject) {
+            loadStudentsForAttendanceWithSubject();  // Changed
         }
     });
 }
@@ -4696,152 +4806,7 @@ async function loadSectionsForAttendance() {
     }
 }
 
-// 3. Load students when section changes
-async function loadStudentsForAttendance() {
-    const sectionSelect = document.getElementById('attendanceSection');
-    const dateInput = document.getElementById('attendanceDate');
-    const studentsContainer = document.getElementById('attendanceStudentsList');
-    const editId = document.getElementById('editAttendanceId');
-    
-    const sectionId = sectionSelect.value;
-    const selectedDate = dateInput.value;
-    
-    if (!sectionId) {
-        studentsContainer.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-hand-pointer fa-2x mb-2"></i>
-                <p class="mb-0">Select section to load students</p>
-            </div>
-        `;
-        return;
-    }
-    
-    if (!selectedDate) {
-        studentsContainer.innerHTML = `
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                Please select date first
-            </div>
-        `;
-        return;
-    }
-    
-    studentsContainer.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary mb-2"></div>
-            <p class="text-muted">Loading students...</p>
-        </div>
-    `;
-    
-    try {
-        // Check if attendance already exists
-        const checkResponse = await fetch(
-            `${API_URL}/api/section-attendance/check-existing?date=${selectedDate}&section_id=${sectionId}`
-        );
-        const checkData = await checkResponse.json();
-        
-        // Get students in section
-        const studentsResponse = await fetch(`${API_URL}/api/section-attendance/students/${sectionId}`);
-        const studentsData = await studentsResponse.json();
-        
-        if (!studentsData.success || !studentsData.students || studentsData.students.length === 0) {
-            studentsContainer.innerHTML = `
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    No students found in this section
-                </div>
-            `;
-            return;
-        }
-        
-        const students = studentsData.students;
-        let html = '';
-        
-        // Show existing attendance warning
-        if (checkData.success && checkData.exists) {
-            const attendance = checkData.attendance;
-            editId.value = attendance.id;
-            
-            html += `
-                <div class="alert alert-warning mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Attendance already exists for ${selectedDate}</strong><br>
-                            Present: ${attendance.present_count} | 
-                            Absent: ${attendance.absent_count} | 
-                            Percentage: ${attendance.percentage}%
-                        </div>
-                        <span class="badge bg-warning">Editing Mode</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            editId.value = '';
-        }
-        
-        // Quick action buttons
-        html += `
-            <div class="mb-3 d-flex gap-2">
-                <button type="button" class="btn btn-success btn-sm" onclick="markAllPresent()">
-                    <i class="fas fa-check-double me-1"></i> All Present
-                </button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="markAllAbsent()">
-                    <i class="fas fa-times me-1"></i> All Absent
-                </button>
-            </div>
-        `;
-        
-        // Students list
-        students.forEach((student, index) => {
-            let isChecked = true; // Default present
-            let statusClass = 'bg-success';
-            let statusText = 'Present';
-            
-            // If editing, get saved status
-            if (checkData.success && checkData.exists && checkData.attendance.attendance_data) {
-                const savedStatus = checkData.attendance.attendance_data[student.student_id];
-                isChecked = savedStatus === 'present';
-                statusClass = isChecked ? 'bg-success' : 'bg-danger';
-                statusText = isChecked ? 'Present' : 'Absent';
-            }
-            
-            html += `
-                <div class="form-check mb-2 p-2 border rounded student-row" 
-                     style="background: ${isChecked ? '#e8f5e9' : '#ffebee'};">
-                    <div class="d-flex align-items-center">
-                        <input class="form-check-input attendance-checkbox me-3" 
-                               type="checkbox" 
-                               data-student-id="${student.student_id}"
-                               data-student-name="${student.name}"
-                               id="stu_${student.student_id}"
-                               ${isChecked ? 'checked' : ''}
-                               onchange="updateStudentStatus(this)">
-                        <label class="form-check-label flex-grow-1" for="stu_${student.student_id}">
-                            <strong>${index + 1}. ${student.name}</strong>
-                            <br>
-                            <small class="text-muted">${student.student_id}</small>
-                        </label>
-                        <span class="badge ${statusClass} status-badge" style="min-width: 80px;">
-                            ${statusText}
-                        </span>
-                    </div>
-                </div>
-            `;
-        });
-        
-        studentsContainer.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading students:', error);
-        studentsContainer.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                Error loading students: ${error.message}
-            </div>
-        `;
-    }
-}
+
 
 // 4. Update student status when checkbox changes
 function updateStudentStatus(checkbox) {
@@ -4875,21 +4840,21 @@ function markAllAbsent() {
     });
 }
 
-// 7. Save attendance
+// 7. Save attendance - FIXED for edit mode
 async function saveSectionAttendance() {
     const courseSelect = document.getElementById('attendanceCourse');
     const sectionSelect = document.getElementById('attendanceSection');
+    const subjectSelect = document.getElementById('attendanceSubject');
     const dateInput = document.getElementById('attendanceDate');
-    const subjectInput = document.getElementById('attendanceSubject');
     const editId = document.getElementById('editAttendanceId');
     
     const courseCode = courseSelect.value;
     const sectionId = sectionSelect.value;
+    const subject = subjectSelect.value;
     const date = dateInput.value;
-    const subject = subjectInput.value.trim() || 'General';
     
-    if (!courseCode || !sectionId || !date) {
-        showError('Please select course, section and date');
+    if (!courseCode || !sectionId || !subject || !date) {
+        showError('Please select course, section, subject and date');
         return;
     }
     
@@ -4910,13 +4875,15 @@ async function saveSectionAttendance() {
         saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         saveBtn.disabled = true;
         
-        let url = `${API_URL}/api/section-attendance/mark`;
+        let url = `${API_URL}/api/section-attendance/mark-subject`;
         let method = 'POST';
+        let successMessage = 'Attendance saved successfully!';
         
         // If editing, use update endpoint
         if (editId.value) {
             url = `${API_URL}/api/section-attendance/update/${editId.value}`;
             method = 'PUT';
+            successMessage = 'Attendance updated successfully!';
         }
         
         const response = await fetch(url, {
@@ -4927,7 +4894,8 @@ async function saveSectionAttendance() {
                 section_id: sectionId,
                 date: date,
                 subject: subject,
-                attendance: attendanceData
+                attendance: attendanceData,
+                teacher_id: 'admin' // or current user
             })
         });
         
@@ -4937,7 +4905,10 @@ async function saveSectionAttendance() {
         saveBtn.disabled = false;
         
         if (result.success) {
-            showSuccess('Attendance saved successfully!');
+            showSuccess(successMessage);
+            
+            // Clear edit ID
+            editId.value = '';
             
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('attendanceModal'));
@@ -5178,49 +5149,114 @@ function displayFilteredAttendance(records) {
     tbody.innerHTML = html;
 }
 
-// 11. Edit attendance
+// ==================== EDIT ATTENDANCE - FINAL WORKING VERSION ====================
 async function editAttendance(attendanceId) {
+    console.log('🔍 Edit attendance clicked for ID:', attendanceId);
+    
     try {
+        // Step 1: Fetch attendance data
         const response = await fetch(`${API_URL}/api/section-attendance/${attendanceId}`);
-        const data = await response.json();
+        const result = await response.json();
         
-        if (data.success && data.attendance) {
-            const attendance = data.attendance;
-            
-            // Set form values
-            const courseSelect = document.getElementById('attendanceCourse');
-            const sectionSelect = document.getElementById('attendanceSection');
-            const dateInput = document.getElementById('attendanceDate');
-            const subjectInput = document.getElementById('attendanceSubject');
-            const editId = document.getElementById('editAttendanceId');
-            
-            // Load courses first
-            await loadCoursesForAttendance();
-            
-            // Set course
-            courseSelect.value = attendance.course_code;
-            
-            // Load sections
-            await loadSectionsForAttendance();
-            
-            // Set section after a delay
-            setTimeout(() => {
-                sectionSelect.value = attendance.section_id;
-                dateInput.value = attendance.date;
-                subjectInput.value = attendance.subject || '';
-                editId.value = attendance.id;
-                
-                // Load students
-                loadStudentsForAttendance();
-            }, 500);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
-            modal.show();
+        console.log('📦 Attendance data:', result);
+        
+        if (!result.success || !result.attendance) {
+            alert('Failed to load attendance data');
+            return;
         }
+        
+        const attendance = result.attendance;
+        
+        // Step 2: Get modal elements
+        const modalEl = document.getElementById('attendanceModal');
+        const courseSelect = document.getElementById('attendanceCourse');
+        const sectionSelect = document.getElementById('attendanceSection');
+        const subjectSelect = document.getElementById('attendanceSubject');
+        const dateInput = document.getElementById('attendanceDate');
+        const editIdInput = document.getElementById('editAttendanceId');
+        const studentsContainer = document.getElementById('attendanceStudentsList');
+        
+        // Step 3: Reset form
+        document.getElementById('attendanceForm').reset();
+        editIdInput.value = attendance.id;
+        dateInput.value = attendance.date;
+        
+        // Step 4: Load courses and set value
+        await loadCoursesForAttendance();
+        courseSelect.value = attendance.course_code;
+        console.log('✅ Course set:', attendance.course_code);
+        
+        // Step 5: Load sections for this course
+        await loadSectionsForAttendance();
+        
+        // Force section select to enable
+        sectionSelect.disabled = false;
+        sectionSelect.value = attendance.section_id;
+        console.log('✅ Section set:', attendance.section_id);
+        
+        // Step 6: Load subjects for this section
+        await loadSubjectsForSection();
+        
+        // Force subject select to enable
+        subjectSelect.disabled = false;
+        subjectSelect.value = attendance.subject;
+        console.log('✅ Subject set:', attendance.subject);
+        
+        // Step 7: Load students
+        await loadStudentsForAttendanceWithSubject();
+        
+        // Step 8: Set checkbox states based on attendance data
+        if (attendance.attendance_data) {
+            // Small delay to ensure students are rendered
+            setTimeout(() => {
+                Object.keys(attendance.attendance_data).forEach(studentId => {
+                    const status = attendance.attendance_data[studentId];
+                    const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
+                    
+                    if (checkbox) {
+                        checkbox.checked = (status === 'present');
+                        
+                        // Update the row color and badge
+                        const row = checkbox.closest('.student-row');
+                        const badge = row?.querySelector('.status-badge');
+                        
+                        if (row && badge) {
+                            if (checkbox.checked) {
+                                badge.textContent = 'Present';
+                                badge.className = 'badge bg-success status-badge';
+                                row.style.background = '#e8f5e9';
+                            } else {
+                                badge.textContent = 'Absent';
+                                badge.className = 'badge bg-danger status-badge';
+                                row.style.background = '#ffebee';
+                            }
+                        }
+                    }
+                });
+                console.log('✅ Attendance status restored');
+            }, 300);
+        }
+        
+        // Step 9: FORCE MODAL TO SHOW - CRITICAL!
+        console.log('🟢 Opening modal now...');
+        
+        // Make sure modal is initialized
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalEl);
+        }
+        modal.show();
+        
+        // Force modal to be visible (backup)
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+        document.body.classList.add('modal-open');
+        
+        console.log('✅ Modal should be visible now');
+        
     } catch (error) {
-        console.error('Error loading attendance for edit:', error);
-        showError('Failed to load attendance details');
+        console.error('❌ Error:', error);
+        alert('Error loading attendance: ' + error.message);
     }
 }
 
@@ -5247,7 +5283,7 @@ async function deleteAttendance(attendanceId) {
     }
 }
 
-// 13. View attendance details
+// 13. View attendance details - FIXED with Student Names
 async function viewAttendanceDetails(attendanceId) {
     try {
         const response = await fetch(`${API_URL}/api/section-attendance/${attendanceId}`);
@@ -5256,14 +5292,45 @@ async function viewAttendanceDetails(attendanceId) {
         if (data.success && data.attendance) {
             const attendance = data.attendance;
             
+            // Pehle se studentsData available hai to use karo, nahi to fetch karo
+            let studentsMap = {};
+            
+            // Agar studentsData already loaded hai to use karo
+            if (typeof studentsData !== 'undefined' && studentsData.length > 0) {
+                studentsData.forEach(student => {
+                    studentsMap[student.student_id] = student.name;
+                });
+            } else {
+                // Nahi to fetch karo
+                try {
+                    const studentsRes = await fetch(`${API_URL}/api/students/all`);
+                    const studentsData = await studentsRes.json();
+                    if (studentsData.success && studentsData.students) {
+                        studentsData.students.forEach(student => {
+                            studentsMap[student.student_id] = student.name;
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error fetching students:', e);
+                }
+            }
+            
             let studentsHtml = '';
             if (attendance.attendance_data) {
                 Object.entries(attendance.attendance_data).forEach(([studentId, status]) => {
+                    const studentName = studentsMap[studentId] || 'Unknown Student';
+                    
                     studentsHtml += `
                         <tr>
-                            <td>${studentId}</td>
+                            <td>
+                                <span class="badge bg-dark">${studentId}</span>
+                            </td>
+                            <td>
+                                <strong>${studentName}</strong>
+                            </td>
                             <td>
                                 <span class="badge bg-${status === 'present' ? 'success' : 'danger'}">
+                                    <i class="fas fa-${status === 'present' ? 'check-circle' : 'times-circle'} me-1"></i>
                                     ${status.toUpperCase()}
                                 </span>
                             </td>
@@ -5275,30 +5342,80 @@ async function viewAttendanceDetails(attendanceId) {
             const detailsHtml = `
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Attendance Details</h5>
-                        <table class="table table-sm">
-                            <tr><th>Course:</th><td>${attendance.course_code}</td></tr>
-                            <tr><th>Section:</th><td>${attendance.section_name || attendance.section_id}</td></tr>
-                            <tr><th>Date:</th><td>${attendance.date}</td></tr>
-                            <tr><th>Subject:</th><td>${attendance.subject || 'General'}</td></tr>
-                            <tr><th>Present:</th><td>${attendance.present_count}</td></tr>
-                            <tr><th>Absent:</th><td>${attendance.absent_count}</td></tr>
-                            <tr><th>Percentage:</th><td>${attendance.percentage}%</td></tr>
-                        </table>
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Attendance Details
+                        </h5>
                         
-                        <h6 class="mt-3">Student-wise Attendance</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
                                     <tr>
-                                        <th>Student ID</th>
-                                        <th>Status</th>
+                                        <th width="40%"><i class="fas fa-book me-2 text-muted"></i>Course:</th>
+                                        <td><span class="badge bg-primary">${attendance.course_code}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-layer-group me-2 text-muted"></i>Section:</th>
+                                        <td><span class="badge bg-success">${attendance.section_name || attendance.section_id}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-calendar me-2 text-muted"></i>Date:</th>
+                                        <td>${formatDate(attendance.date)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <th width="40%"><i class="fas fa-tag me-2 text-muted"></i>Subject:</th>
+                                        <td><span class="badge bg-info">${attendance.subject || 'General'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-check-circle me-2 text-muted text-success"></i>Present:</th>
+                                        <td><strong class="text-success">${attendance.present_count}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-times-circle me-2 text-muted text-danger"></i>Absent:</th>
+                                        <td><strong class="text-danger">${attendance.absent_count}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th><i class="fas fa-chart-line me-2 text-muted"></i>Percentage:</th>
+                                        <td>
+                                            <span class="badge bg-${attendance.percentage >= 80 ? 'success' : 
+                                                                   attendance.percentage >= 60 ? 'warning' : 'danger'}">
+                                                ${attendance.percentage}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-3 mb-3">
+                            <i class="fas fa-users me-2"></i>
+                            Student-wise Attendance
+                        </h6>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="25%">Student ID</th>
+                                        <th width="50%">Student Name</th>
+                                        <th width="25%">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${studentsHtml || '<tr><td colspan="2" class="text-center">No data</td></tr>'}
+                                    ${studentsHtml || '<tr><td colspan="3" class="text-center py-4">No student data available</td></tr>'}
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div class="progress-bar bg-${attendance.percentage >= 80 ? 'success' : 
+                                                        attendance.percentage >= 60 ? 'warning' : 'danger'}" 
+                                 style="width: ${attendance.percentage}%">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5310,6 +5427,21 @@ async function viewAttendanceDetails(attendanceId) {
     } catch (error) {
         console.error('Error viewing attendance:', error);
         showError('Failed to load attendance details');
+    }
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return dateString;
     }
 }
 
@@ -5342,6 +5474,208 @@ function showInfoModal(content, title = 'Information') {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     const modal = new bootstrap.Modal(document.getElementById('infoModal'));
     modal.show();
+}
+
+// ==================== LOAD SUBJECTS FOR SELECTED SECTION ====================
+async function loadSubjectsForSection() {
+    const sectionSelect = document.getElementById('attendanceSection');
+    const subjectSelect = document.getElementById('attendanceSubject');
+    const studentsContainer = document.getElementById('attendanceStudentsList');
+    
+    const sectionId = sectionSelect.value;
+    
+    if (!sectionId) {
+        subjectSelect.innerHTML = '<option value="">Select section first...</option>';
+        subjectSelect.disabled = true;
+        studentsContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                <p class="mb-0">Select section and subject to load students</p>
+            </div>
+        `;
+        return;
+    }
+    
+    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+    subjectSelect.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/section-subjects/${sectionId}`);
+        const data = await response.json();
+        
+        subjectSelect.disabled = false;
+        
+        if (data.success && data.subjects && data.subjects.length > 0) {
+            let options = '<option value="">Select subject...</option>';
+            
+            data.subjects.forEach(item => {
+                options += `<option value="${item.subject}">${item.subject} (${item.teacher_name || 'Teacher'})</option>`;
+            });
+            
+            subjectSelect.innerHTML = options;
+            
+            // Show multiple subjects info
+            const infoDiv = document.getElementById('multipleSubjectsInfo');
+            if (infoDiv) {
+                infoDiv.style.display = 'block';
+                document.getElementById('subjectCountMessage').textContent = 
+                    `This section has ${data.subjects.length} subjects. You can mark attendance for each subject separately.`;
+            }
+        } else {
+            subjectSelect.innerHTML = '<option value="">No subjects found for this section</option>';
+        }
+    } catch (error) {
+        console.error('Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+        subjectSelect.disabled = false;
+    }
+}
+
+// ==================== CHECK SUBJECT ATTENDANCE ====================
+async function checkSubjectAttendance(sectionId, date, subject) {
+    try {
+        const response = await fetch(
+            `${API_URL}/api/attendance/check-subject?section_id=${sectionId}&date=${date}&subject=${encodeURIComponent(subject)}`
+        );
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error checking subject attendance:', error);
+        return { success: false, exists: false };
+    }
+}
+
+// ==================== LOAD STUDENTS FOR ATTENDANCE WITH SUBJECT ====================
+async function loadStudentsForAttendanceWithSubject() {
+    const sectionSelect = document.getElementById('attendanceSection');
+    const subjectSelect = document.getElementById('attendanceSubject');
+    const dateInput = document.getElementById('attendanceDate');
+    const studentsContainer = document.getElementById('attendanceStudentsList');
+    const editId = document.getElementById('editAttendanceId');
+    
+    const sectionId = sectionSelect.value;
+    const subject = subjectSelect.value;
+    const selectedDate = dateInput.value;
+    
+    if (!sectionId || !subject || !selectedDate) {
+        studentsContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                <p class="mb-0">Select section, subject and date to load students</p>
+            </div>
+        `;
+        return;
+    }
+    
+    studentsContainer.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary mb-2"></div>
+            <p class="text-muted">Loading students...</p>
+        </div>
+    `;
+    
+    try {
+        // Check if attendance already exists for this subject
+        const checkResponse = await checkSubjectAttendance(sectionId, selectedDate, subject);
+        
+        // Get students in section
+        const studentsResponse = await fetch(`${API_URL}/api/section-attendance/students/${sectionId}`);
+        const studentsData = await studentsResponse.json();
+        
+        if (!studentsData.success || !studentsData.students || studentsData.students.length === 0) {
+            studentsContainer.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No students found in this section
+                </div>
+            `;
+            return;
+        }
+        
+        const students = studentsData.students;
+        let html = '';
+        
+        // Show warning if attendance exists
+        if (checkResponse.success && checkResponse.exists) {
+            const attendance = checkResponse.attendance;
+            editId.value = attendance.id;
+            
+            html += `
+                <div class="alert alert-warning mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Attendance already exists for ${subject} on ${selectedDate}</strong>
+                        </div>
+                        <span class="badge bg-warning">Editing Mode</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            editId.value = '';
+        }
+        
+        // Quick action buttons
+        html += `
+            <div class="mb-3 d-flex gap-2">
+                <button type="button" class="btn btn-success btn-sm" onclick="markAllPresent()">
+                    <i class="fas fa-check-double me-1"></i> All Present
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="markAllAbsent()">
+                    <i class="fas fa-times me-1"></i> All Absent
+                </button>
+            </div>
+        `;
+        
+        // Students list
+        students.forEach((student, index) => {
+            let isChecked = true; // Default present
+            let statusClass = 'bg-success';
+            let statusText = 'Present';
+            
+            // If editing, get saved status
+            if (checkResponse.success && checkResponse.exists && checkResponse.attendance.attendance_data) {
+                const savedStatus = checkResponse.attendance.attendance_data[student.student_id];
+                isChecked = savedStatus === 'present';
+                statusClass = isChecked ? 'bg-success' : 'bg-danger';
+                statusText = isChecked ? 'Present' : 'Absent';
+            }
+            
+            html += `
+                <div class="form-check mb-2 p-2 border rounded student-row" 
+                     style="background: ${isChecked ? '#e8f5e9' : '#ffebee'};">
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input attendance-checkbox me-3" 
+                               type="checkbox" 
+                               data-student-id="${student.student_id}"
+                               data-student-name="${student.name}"
+                               id="stu_${student.student_id}"
+                               ${isChecked ? 'checked' : ''}
+                               onchange="updateStudentStatus(this)">
+                        <label class="form-check-label flex-grow-1" for="stu_${student.student_id}">
+                            <strong>${index + 1}. ${student.name}</strong>
+                            <br>
+                            <small class="text-muted">${student.student_id}</small>
+                        </label>
+                        <span class="badge ${statusClass} status-badge" style="min-width: 80px;">
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        studentsContainer.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading students:', error);
+        studentsContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Error loading students: ${error.message}
+            </div>
+        `;
+    }
 }
 
 // 15. Export attendance
@@ -5427,7 +5761,6 @@ async function loadContactMessages() {
             contactMessagesData = result.messages || [];
             updateContactMessagesTable();
             updateContactMessageCounts();
-            showSuccess('Contact messages loaded successfully');
         } else {
             showError('Failed to load contact messages: ' + result.message);
         }
@@ -8637,39 +8970,66 @@ async function loadCoursesForAssignment() {
     }
 }
 
-// 9. Load Sections for Assignment Dropdown
-async function loadSectionsForAssignment() {
+// ✅ ADD THIS NEW FUNCTION - Teacher ke liye sections load karega
+async function loadSectionsForTeacher() {
+    console.log('🔍 Loading sections for teacher modal');
+    
+    const courseSelect = document.getElementById('assignCourse');
+    const sectionSelect = document.getElementById('assignSectionId');
+    
+    if (!courseSelect || !sectionSelect) {
+        console.error('❌ Elements not found');
+        return;
+    }
+    
+    const courseCode = courseSelect.value;
+    console.log('📚 Course selected:', courseCode);
+    
+    if (!courseCode) {
+        sectionSelect.innerHTML = '<option value="">Select course first...</option>';
+        sectionSelect.disabled = true;
+        return;
+    }
+    
+    // Show loading
+    sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+    sectionSelect.disabled = true;
+    
     try {
-        const courseCode = document.getElementById('assignCourse').value;
-        
-        if (!courseCode) {
-            document.getElementById('assignSectionId').innerHTML = '<option value="">Select course first...</option>';
-            return;
-        }
-        
-        showLoading('assignSectionId');
-        
-        const response = await fetch(`${SECTION_API_URL}/api/sections/course/${courseCode}`);
+        const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
         const data = await response.json();
         
-        hideLoading('assignSectionId');
-        
-        const select = document.getElementById('assignSectionId');
-        if (select && data.sections) {
-            const activeSections = data.sections.filter(s => s.is_active !== false);
+        if (data.success && data.sections) {
+            const activeSections = data.sections.filter(s => s.is_active);
+            
             if (activeSections.length === 0) {
-                select.innerHTML = '<option value="">No active sections for this course</option>';
-            } else {
-                select.innerHTML = '<option value="">Select section...</option>' +
-                    activeSections.map(s => `<option value="${s.section_id}">${s.section_name} (${s.current_students}/${s.max_students})</option>`).join('');
+                sectionSelect.innerHTML = '<option value="">No active sections</option>';
+                sectionSelect.disabled = true;
+                return;
             }
+            
+            let options = '<option value="">Select section...</option>';
+            activeSections.forEach(section => {
+                const current = section.current_students || 0;
+                const max = section.max_students || 60;
+                const available = max - current;
+                
+                options += `<option value="${section.section_id}">
+                    ${section.section_name} (${current}/${max}) - ${available} slots
+                </option>`;
+            });
+            
+            sectionSelect.innerHTML = options;
+            sectionSelect.disabled = false;
+            console.log('✅ Sections loaded successfully');
         } else {
-            select.innerHTML = '<option value="">No sections available</option>';
+            sectionSelect.innerHTML = '<option value="">No sections found</option>';
+            sectionSelect.disabled = true;
         }
     } catch (error) {
-        console.error('Error loading sections:', error);
-        hideLoading('assignSectionId');
-        showError('Failed to load sections');
+        console.error('❌ Error loading sections:', error);
+        sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+        sectionSelect.disabled = true;
     }
 }
 
@@ -10068,7 +10428,6 @@ async function loadStudentSectionsData() {
             `;
         }
         
-        console.log('🔄 Fetching students from:', `${API_URL}/api/students/all`);
         
         const response = await fetch(`${API_URL}/api/students/all`);
         
@@ -10636,6 +10995,487 @@ function exportStudentSections() {
     window.URL.revokeObjectURL(url);
     
     showSuccess(`Exported ${filteredStudents.length} students`);
+}
+
+// ==================== ASSIGN STUDENT TO SECTION ====================
+async function assignStudentToSection(studentId, studentName, courseCode) {
+    try {
+        // Set values in modal
+        document.getElementById('assignStudentId').value = studentId;
+        document.getElementById('assignStudentName').value = studentName;
+        document.getElementById('assignStudentCourse').value = courseCode;
+        
+        document.getElementById('assignStudentNameDisplay').textContent = studentName;
+        document.getElementById('assignStudentIdDisplay').textContent = studentId;
+        document.getElementById('assignStudentCourseDisplay').textContent = courseCode;
+        
+        // Check current section
+        const student = allStudents.find(s => s.student_id === studentId);
+        if (student?.section_id) {
+            document.getElementById('assignStudentCurrentSection').textContent = student.section_name || student.section_id;
+            document.getElementById('assignStudentCurrentSection').className = 'badge bg-success';
+        } else {
+            document.getElementById('assignStudentCurrentSection').textContent = 'Not Assigned';
+            document.getElementById('assignStudentCurrentSection').className = 'badge bg-warning text-dark';
+        }
+        
+        // Hide section info initially
+        document.getElementById('selectedSectionInfo').style.display = 'none';
+        
+        // Load sections for this course
+        await loadSectionsForAssignment(courseCode);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('assignSectionModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error opening assign modal:', error);
+        showError('Failed to open assignment modal');
+    }
+}
+
+// ==================== LOAD SECTIONS FOR ASSIGNMENT ====================
+async function loadSectionsForAssignment(courseCode) {
+    const sectionSelect = document.getElementById('studentSectionSelect');
+    
+    if (!courseCode) {
+        sectionSelect.innerHTML = '<option value="">Choose course first...</option>';
+        return;
+    }
+    
+    try {
+        sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+        sectionSelect.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
+        const data = await response.json();
+        
+        sectionSelect.disabled = false;
+        
+        if (data.success && data.sections) {
+            const activeSections = data.sections.filter(s => s.is_active);
+            
+            if (activeSections.length === 0) {
+                sectionSelect.innerHTML = '<option value="">No active sections available</option>';
+                return;
+            }
+            
+            let options = '<option value="">Choose section...</option>';
+            activeSections.forEach(section => {
+                const current = section.current_students || 0;
+                const max = section.max_students || 60;
+                const available = max - current;
+                
+                options += `<option value="${section.section_id}">
+                    ${section.section_name} (${current}/${max}) - ${available} slots
+                </option>`;
+            });
+            
+            sectionSelect.innerHTML = options;
+        } else {
+            sectionSelect.innerHTML = '<option value="">No sections found</option>';
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        sectionSelect.disabled = false;
+        sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+    }
+}
+
+// ==================== SAVE STUDENT SECTION ASSIGNMENT ====================
+async function saveStudentSectionAssignment() {
+    const studentId = document.getElementById('assignStudentId').value;
+    const sectionId = document.getElementById('studentSectionSelect').value;
+    
+    if (!sectionId) {
+        showError('Please select a section');
+        return;
+    }
+    
+    try {
+        const saveBtn = document.querySelector('#assignSectionModal .btn-primary');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Assigning...';
+        saveBtn.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/students/assign-section`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: studentId, section_id: sectionId })
+        });
+        
+        const result = await response.json();
+        
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+        
+        if (result.success) {
+            showSuccess(result.message);
+            bootstrap.Modal.getInstance(document.getElementById('assignSectionModal')).hide();
+            await loadStudentSectionsData(); // Refresh the list
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error assigning student:', error);
+        showError('Failed to assign student');
+        
+        const saveBtn = document.querySelector('#assignSectionModal .btn-primary');
+        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Assignment';
+        saveBtn.disabled = false;
+    }
+}
+
+// ==================== REASSIGN STUDENT ====================
+async function reassignStudent(studentId, studentName, currentSectionId, currentSectionName, courseCode) {
+    try {
+        // Use the assign function but change modal title
+        await assignStudentToSection(studentId, studentName, courseCode);
+        
+        // Update modal title
+        document.querySelector('#assignSectionModal .modal-title').innerHTML = 
+            '<i class="fas fa-exchange-alt me-2"></i>Reassign Student to Different Section';
+        
+        // Update current section display
+        if (currentSectionId) {
+            document.getElementById('assignStudentCurrentSection').textContent = currentSectionName || currentSectionId;
+            document.getElementById('assignStudentCurrentSection').className = 'badge bg-success';
+        }
+        
+    } catch (error) {
+        console.error('Error in reassignStudent:', error);
+        showError('Failed to open reassign modal');
+    }
+}
+
+// ==================== OPEN REMOVE MODAL ====================
+function openRemoveModal(studentId, studentName) {
+    document.getElementById('removeStudentId').value = studentId;
+    document.getElementById('removeStudentName').textContent = studentName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('removeConfirmModal'));
+    modal.show();
+}
+
+// ==================== CONFIRM REMOVE FROM SECTION ====================
+async function confirmRemoveFromSection() {
+    const studentId = document.getElementById('removeStudentId').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/students/remove-from-section/${studentId}`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(result.message);
+            bootstrap.Modal.getInstance(document.getElementById('removeConfirmModal')).hide();
+            await loadStudentSectionsData(); // Refresh the list
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error removing student:', error);
+        showError('Failed to remove student from section');
+    }
+}
+
+// ==================== OPEN BULK ASSIGN MODAL ====================
+function openBulkAssignModal() {
+    const bulkCourse = document.getElementById('bulkAssignCourse');
+    if (!bulkCourse) return;
+    
+    // Get unique courses from students data
+    const courses = [...new Set(allStudents.map(s => s.course))].filter(c => c);
+    
+    let options = '<option value="">Choose course...</option>';
+    courses.forEach(course => {
+        const unassigned = allStudents.filter(s => 
+            s.course === course && !s.section_id
+        ).length;
+        
+        options += `<option value="${course}">
+            ${course} (${unassigned} unassigned student${unassigned !== 1 ? 's' : ''})
+        </option>`;
+    });
+    
+    bulkCourse.innerHTML = options;
+    
+    // Reset form
+    document.getElementById('bulkAssignSection').innerHTML = '<option value="">Choose course first...</option>';
+    document.getElementById('bulkAssignPreview').innerHTML = `
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-hand-pointer fa-4x mb-3 opacity-50"></i>
+            <p class="lead">Select course and section to see preview</p>
+        </div>
+    `;
+    document.getElementById('bulkAssignStudentsTable').style.display = 'none';
+    document.getElementById('bulkAssignBtn').disabled = true;
+    
+    const modal = new bootstrap.Modal(document.getElementById('bulkAssignModal'));
+    modal.show();
+}
+
+// ==================== LOAD SECTIONS FOR BULK ASSIGN ====================
+async function loadSectionsForBulkAssign(courseCode) {
+    const sectionSelect = document.getElementById('bulkAssignSection');
+    const preview = document.getElementById('bulkAssignPreview');
+    
+    if (!courseCode) {
+        sectionSelect.innerHTML = '<option value="">Choose course first...</option>';
+        preview.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-hand-pointer fa-4x mb-3 opacity-50"></i>
+                <p class="lead">Select course and section to see preview</p>
+            </div>
+        `;
+        document.getElementById('bulkAssignStudentsTable').style.display = 'none';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            const activeSections = data.sections.filter(s => s.is_active);
+            
+            let options = '<option value="">Choose section...</option>';
+            activeSections.forEach(section => {
+                const current = section.current_students || 0;
+                const max = section.max_students || 0;
+                const available = max - current;
+                
+                options += `<option value="${section.section_id}">
+                    ${section.section_name} (${current}/${max}) - ${available} slots available
+                </option>`;
+            });
+            
+            sectionSelect.innerHTML = options;
+        }
+        
+        // Show unassigned count
+        const unassignedStudents = allStudents.filter(s => 
+            s.course === courseCode && !s.section_id
+        );
+        
+        preview.innerHTML = `
+            <div class="alert alert-info border-0">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>${unassignedStudents.length}</strong> unassigned student${unassignedStudents.length !== 1 ? 's' : ''} 
+                found in <strong>${courseCode}</strong>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading sections:', error);
+    }
+}
+
+// ==================== SHOW BULK PREVIEW ====================
+function showBulkPreview() {
+    const courseCode = document.getElementById('bulkAssignCourse').value;
+    const sectionId = document.getElementById('bulkAssignSection').value;
+    
+    if (!courseCode || !sectionId) {
+        document.getElementById('bulkAssignStudentsTable').style.display = 'none';
+        document.getElementById('bulkAssignBtn').disabled = true;
+        return;
+    }
+    
+    const unassignedStudents = allStudents.filter(s => 
+        s.course === courseCode && !s.section_id
+    );
+    
+    if (unassignedStudents.length === 0) {
+        document.getElementById('bulkAssignStudentsTable').style.display = 'none';
+        document.getElementById('bulkAssignBtn').disabled = true;
+        return;
+    }
+    
+    let html = '';
+    unassignedStudents.forEach((student, index) => {
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><span class="badge bg-dark">${student.student_id}</span></td>
+                <td>${student.name}</td>
+                <td><small>${student.email || 'N/A'}</small></td>
+                <td><span class="badge bg-warning text-dark">Unassigned</span></td>
+            </tr>
+        `;
+    });
+    
+    document.getElementById('bulkAssignStudentsList').innerHTML = html;
+    document.getElementById('bulkStudentCount').textContent = unassignedStudents.length;
+    document.getElementById('bulkAssignStudentsTable').style.display = 'block';
+    document.getElementById('bulkAssignBtn').disabled = false;
+}
+
+// ==================== EXECUTE BULK ASSIGN ====================
+async function executeBulkAssign() {
+    const courseCode = document.getElementById('bulkAssignCourse').value;
+    const sectionId = document.getElementById('bulkAssignSection').value;
+    
+    if (!courseCode || !sectionId) {
+        showError('Please select both course and section');
+        return;
+    }
+    
+    const unassignedCount = allStudents.filter(s => 
+        s.course === courseCode && !s.section_id
+    ).length;
+    
+    if (!confirm(`Are you sure you want to assign ${unassignedCount} student(s) to this section?`)) {
+        return;
+    }
+    
+    try {
+        const btn = document.getElementById('bulkAssignBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Assigning...';
+        btn.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/students/bulk-assign-section`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course_code: courseCode, section_id: sectionId })
+        });
+        
+        const result = await response.json();
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+            showSuccess(result.message);
+            bootstrap.Modal.getInstance(document.getElementById('bulkAssignModal')).hide();
+            await loadStudentSectionsData(); // Refresh the list
+        } else {
+            showError(result.message);
+        }
+    } catch (error) {
+        console.error('Error in bulk assign:', error);
+        showError('Failed to bulk assign students');
+        
+        const btn = document.getElementById('bulkAssignBtn');
+        btn.innerHTML = '<i class="fas fa-users-cog me-1"></i> Assign All Students';
+        btn.disabled = false;
+    }
+}
+
+// ==================== OPEN SECTION WISE VIEW ====================
+async function openSectionWiseView() {
+    const modal = new bootstrap.Modal(document.getElementById('sectionWiseViewModal'));
+    modal.show();
+    
+    document.getElementById('sectionWiseContent').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted">Loading section-wise data...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/sections/all`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            let html = '<div class="accordion" id="sectionAccordion">';
+            
+            data.sections.forEach((section, index) => {
+                const sectionStudents = allStudents.filter(s => s.section_id === section.section_id);
+                const capacity = `${sectionStudents.length}/${section.max_students}`;
+                const percentage = (sectionStudents.length / section.max_students) * 100;
+                
+                html += `
+                    <div class="accordion-item border-0 shadow-sm mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse${index}">
+                                <div class="d-flex align-items-center w-100 justify-content-between me-3">
+                                    <div>
+                                        <strong>${section.section_name}</strong>
+                                        <small class="text-muted ms-2">${section.course_code}</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary me-2">${capacity}</span>
+                                        <span class="badge bg-${percentage >= 80 ? 'danger' : percentage >= 50 ? 'warning' : 'success'}">
+                                            ${percentage.toFixed(0)}% Full
+                                        </span>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse${index}" 
+                            class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" 
+                            data-bs-parent="#sectionAccordion">
+                            <div class="accordion-body">
+                                ${sectionStudents.length > 0 ? `
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="5%">#</th>
+                                                    <th width="20%">Student ID</th>
+                                                    <th width="35%">Name</th>
+                                                    <th width="30%">Email</th>
+                                                    <th width="10%">Phone</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${sectionStudents.map((s, i) => `
+                                                    <tr>
+                                                        <td>${i + 1}</td>
+                                                        <td><span class="badge bg-dark">${s.student_id}</span></td>
+                                                        <td>${s.name}</td>
+                                                        <td><small>${s.email || 'N/A'}</small></td>
+                                                        <td><small>${s.phone || 'N/A'}</small></td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ` : `
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-users-slash fa-2x mb-2 opacity-50"></i>
+                                        <p class="mb-0">No students assigned to this section yet</p>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (data.sections.length === 0) {
+                html = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-layer-group fa-4x mb-3 opacity-50"></i>
+                        <h5>No Sections Found</h5>
+                        <p class="mb-0">Create sections first to view section-wise students</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('sectionWiseContent').innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Error loading section-wise view:', error);
+        document.getElementById('sectionWiseContent').innerHTML = `
+            <div class="text-center text-danger py-5">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <h5>Error Loading Data</h5>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
 }
 
 // ==================== FORMAT DATE ====================
