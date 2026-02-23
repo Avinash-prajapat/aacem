@@ -7766,85 +7766,332 @@ console.log('✅ Syllabus Management loaded with Course-wise grouping and Toggle
 
 
 
-// ==================== TIME TABLE MANAGEMENT ====================
 
+// =====================================================
+// SECTION-WISE TIME TABLE MANAGEMENT - COMPLETE JS CODE
+// =====================================================
+
+// ==================== GLOBAL VARIABLES ====================
 let allTimetable = [];
-let filteredTimetableData = [];
-let currentExpandedCourse = null;
-let currentExpandedDay = null;
+let filteredTimetable = [];
 
-// Add to your DOMContentLoaded event
-document.getElementById('timetable-tab')?.addEventListener('shown.bs.tab', function() {
-    initTimetableTab();
-    loadTeachersForTimetable(); // Pre-load teachers
+let teacherSubjectsCache = {};
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+    const timetableTab = document.getElementById('timetable-tab');
+    if (timetableTab) {
+        timetableTab.addEventListener('shown.bs.tab', function() {
+            console.log('📅 Timetable tab activated');
+            initTimetableTab();
+        });
+    }
+    
+    // Course filter change
+    const courseFilter = document.getElementById('timetableCourseFilter');
+    if (courseFilter) {
+        courseFilter.addEventListener('change', function() {
+            const courseCode = this.value;
+            updateSectionFilterForTimetable(courseCode);
+            filterTimetable();
+        });
+    }
+    
+    // Section filter change
+    const sectionFilter = document.getElementById('timetableSectionFilter');
+    if (sectionFilter) {
+        sectionFilter.addEventListener('change', filterTimetable);
+    }
+    
+    // Day filter change
+    const dayFilter = document.getElementById('timetableDayFilter');
+    if (dayFilter) {
+        dayFilter.addEventListener('change', filterTimetable);
+    }
+    
+    // Active only checkbox
+    const activeOnly = document.getElementById('showActiveTimetableOnly');
+    if (activeOnly) {
+        activeOnly.addEventListener('change', filterTimetable);
+    }
 });
 
+// ==================== INIT TIMETABLE TAB ====================
 function initTimetableTab() {
+    console.log('📅 Initializing timetable tab...');
+    
     populateTimetableCourseDropdowns();
+    populateTimetableCourseFilter();
+    loadTeachersForTimetable();
+    loadAllSections();
     loadTimetableData();
-    loadTeachersForTimetable(); // Load teachers when tab opens
 }
 
+// ==================== LOAD ALL SECTIONS ====================
+async function loadAllSections() {
+    try {
+        const response = await fetch(`${API_URL}/api/sections/all`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            allSections = data.sections;
+            console.log(`📚 Loaded ${allSections.length} sections`);
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+    }
+}
+
+// ==================== LOAD TEACHERS FOR TIMETABLE ====================
+async function loadTeachersForTimetable() {
+    try {
+        console.log('📚 Loading teachers for timetable...');
+        
+        const response = await fetch(`${API_URL}/api/teachers/all`);
+        const data = await response.json();
+        
+        const teacherSelect = document.getElementById('timetableTeacher');
+        if (!teacherSelect) {
+            console.error('❌ timetableTeacher element not found!');
+            return;
+        }
+        
+        if (data.success && data.teachers) {
+            teachersData = data.teachers;
+            
+            let options = '<option value="">Choose teacher...</option>';
+            teachersData.forEach(teacher => {
+                options += `<option value="${teacher.teacher_id}">${teacher.name} (${teacher.teacher_id})</option>`;
+            });
+            
+            teacherSelect.innerHTML = options;
+            console.log(`✅ Loaded ${teachersData.length} teachers`);
+        } else {
+            teacherSelect.innerHTML = '<option value="">No teachers found</option>';
+        }
+    } catch (error) {
+        console.error('❌ Error loading teachers:', error);
+        const teacherSelect = document.getElementById('timetableTeacher');
+        if (teacherSelect) {
+            teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
+        }
+    }
+}
+
+// ==================== LOAD SUBJECTS FOR TIMETABLE ====================
+async function loadSubjectsForTimetable() {
+    const teacherSelect = document.getElementById('timetableTeacher');
+    const subjectSelect = document.getElementById('timetableSubject');
+    const teacherId = teacherSelect.value;
+    
+    if (!teacherId) {
+        subjectSelect.innerHTML = '<option value="">Select teacher first...</option>';
+        return;
+    }
+    
+    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+    subjectSelect.disabled = true;
+    
+    try {
+        // Check cache first
+        if (teacherSubjectsCache[teacherId]) {
+            populateSubjectDropdown(teacherSubjectsCache[teacherId], subjectSelect);
+            subjectSelect.disabled = false;
+            return;
+        }
+        
+        const response = await fetch(`${API_URL}/api/teacher-subjects/${teacherId}`);
+        const data = await response.json();
+        
+        console.log('📚 Subjects for teacher:', data);
+        
+        if (data.success && data.subjects && data.subjects.length > 0) {
+            // Store in cache
+            teacherSubjectsCache[teacherId] = data.subjects;
+            populateSubjectDropdown(data.subjects, subjectSelect);
+        } else {
+            subjectSelect.innerHTML = '<option value="">No subjects found</option>';
+        }
+    } catch (error) {
+        console.error('❌ Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+    } finally {
+        subjectSelect.disabled = false;
+    }
+}
+
+// ==================== POPULATE SUBJECT DROPDOWN ====================
+function populateSubjectDropdown(subjects, subjectSelect) {
+    // Remove duplicates
+    const uniqueSubjects = [];
+    const seen = new Set();
+    
+    subjects.forEach(item => {
+        if (!seen.has(item.subject)) {
+            seen.add(item.subject);
+            uniqueSubjects.push(item);
+        }
+    });
+    
+    let options = '<option value="">Select subject...</option>';
+    uniqueSubjects.forEach(item => {
+        options += `<option value="${item.subject}">${item.subject}</option>`;
+    });
+    
+    subjectSelect.innerHTML = options;
+    console.log(`✅ Loaded ${uniqueSubjects.length} unique subjects`);
+}
 
 // ==================== POPULATE COURSE DROPDOWNS ====================
 function populateTimetableCourseDropdowns() {
     console.log('Populating timetable course dropdowns...');
     
-    const filterSelect = document.getElementById('timetableCourseFilter');
     const modalSelect = document.getElementById('timetableCourse');
+    if (!modalSelect) return;
     
-    if (!filterSelect || !modalSelect) {
-        console.error('Course dropdown elements not found');
-        return;
-    }
-    
-    filterSelect.innerHTML = '<option value="">All Courses</option>';
     modalSelect.innerHTML = '<option value="">Select course...</option>';
     
     if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
-        const activeCourses = coursesData.filter(c => c.is_active !== false);
-        
-        activeCourses.forEach(course => {
-            const option1 = document.createElement('option');
-            option1.value = course.course_code;
-            option1.textContent = `${course.course_name} (${course.course_code})`;
-            filterSelect.appendChild(option1);
-            
-            const option2 = document.createElement('option');
-            option2.value = course.course_code;
-            option2.textContent = `${course.course_name} (${course.course_code})`;
-            modalSelect.appendChild(option2);
+        coursesData.filter(c => c.is_active).forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.course_code;
+            option.textContent = `${course.course_name} (${course.course_code})`;
+            modalSelect.appendChild(option);
         });
-        
-        console.log(`Populated ${activeCourses.length} courses in dropdowns`);
-    } else {
-        // Fallback - load courses from API
-        fetch(`${API_URL}/api/courses/all`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.courses) {
-                    const activeCourses = data.courses.filter(c => c.is_active !== false);
-                    activeCourses.forEach(course => {
-                        filterSelect.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
-                        modalSelect.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
-                    });
-                }
-            });
+        console.log(`📊 Populated ${coursesData.length} courses in modal`);
     }
 }
 
-// Load timetable data
+// ==================== POPULATE COURSE FILTER ====================
+function populateTimetableCourseFilter() {
+    const filterSelect = document.getElementById('timetableCourseFilter');
+    if (!filterSelect) return;
+    
+    filterSelect.innerHTML = '<option value="">All Courses</option>';
+    
+    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
+        coursesData.filter(c => c.is_active).forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.course_code;
+            option.textContent = `${course.course_name} (${course.course_code})`;
+            filterSelect.appendChild(option);
+        });
+        console.log(`📊 Populated ${coursesData.length} courses in filter`);
+    }
+}
+
+// ==================== LOAD SECTIONS FOR TIMETABLE MODAL ====================
+async function loadSectionsForTimetable() {
+    const courseSelect = document.getElementById('timetableCourse');
+    const sectionSelect = document.getElementById('timetableSection');
+    
+    const courseCode = courseSelect.value;
+    
+    if (!courseCode) {
+        sectionSelect.innerHTML = '<option value="">Select course first...</option>';
+        sectionSelect.disabled = true;
+        return;
+    }
+    
+    try {
+        sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+        sectionSelect.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            const activeSections = data.sections.filter(s => s.is_active);
+            
+            if (activeSections.length === 0) {
+                sectionSelect.innerHTML = '<option value="">No active sections</option>';
+                sectionSelect.disabled = true;
+                return;
+            }
+            
+            let options = '<option value="">Select section...</option>';
+            activeSections.forEach(section => {
+                options += `<option value="${section.section_id}">${section.section_name}</option>`;
+            });
+            
+            sectionSelect.innerHTML = options;
+            sectionSelect.disabled = false;
+            console.log('✅ Sections loaded successfully');
+            
+        } else {
+            sectionSelect.innerHTML = '<option value="">No sections found</option>';
+            sectionSelect.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error loading sections:', error);
+        sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+        sectionSelect.disabled = true;
+    }
+}
+
+// ==================== UPDATE SECTION FILTER ====================
+async function updateSectionFilterForTimetable(courseCode) {
+    const sectionFilter = document.getElementById('timetableSectionFilter');
+    if (!sectionFilter) return;
+    
+    if (!courseCode) {
+        sectionFilter.innerHTML = '<option value="">All Sections</option>';
+        sectionFilter.disabled = true;
+        filterTimetable();
+        return;
+    }
+    
+    try {
+        sectionFilter.innerHTML = '<option value="">Loading sections...</option>';
+        sectionFilter.disabled = true;
+        
+        const response = await fetch(`${API_URL}/api/sections/course/${courseCode}`);
+        const data = await response.json();
+        
+        if (data.success && data.sections) {
+            let options = '<option value="">All Sections</option>';
+            data.sections.forEach(section => {
+                options += `<option value="${section.section_id}">${section.section_name}</option>`;
+            });
+            sectionFilter.innerHTML = options;
+            sectionFilter.disabled = false;
+        } else {
+            sectionFilter.innerHTML = '<option value="">No sections found</option>';
+            sectionFilter.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error loading sections for filter:', error);
+        sectionFilter.innerHTML = '<option value="">Error loading sections</option>';
+        sectionFilter.disabled = true;
+    } finally {
+        filterTimetable();
+    }
+}
+
+// ==================== LOAD TIMETABLE DATA ====================
 async function loadTimetableData() {
     try {
         showLoading('Loading timetable...');
         
-        const response = await fetch('https://aacem-backend.onrender.com/api/timetable/all');
+        const response = await fetch(`${API_URL}/api/timetable/all`);
         const result = await response.json();
         
         hideLoading();
         
         if (result.success) {
             allTimetable = result.timetable || [];
+            
+            // Add section names if missing
+            allTimetable = allTimetable.map(entry => {
+                if (!entry.section_name && entry.section_id) {
+                    const section = allSections.find(s => s.section_id === entry.section_id);
+                    if (section) {
+                        entry.section_name = section.section_name;
+                    }
+                }
+                return entry;
+            });
+            
             filterTimetable();
         } else {
             showError('Failed to load timetable');
@@ -7859,24 +8106,26 @@ async function loadTimetableData() {
     }
 }
 
-// Filter timetable
+// ==================== FILTER TIMETABLE ====================
 function filterTimetable() {
     const courseFilter = document.getElementById('timetableCourseFilter')?.value || '';
+    const sectionFilter = document.getElementById('timetableSectionFilter')?.value || '';
     const dayFilter = document.getElementById('timetableDayFilter')?.value || '';
     const showActiveOnly = document.getElementById('showActiveTimetableOnly')?.checked || false;
     
     let filtered = allTimetable.filter(entry => {
         if (courseFilter && entry.course_code !== courseFilter) return false;
+        if (sectionFilter && entry.section_id !== sectionFilter) return false;
         if (dayFilter && entry.day_of_week !== dayFilter) return false;
         if (showActiveOnly && !entry.is_active) return false;
         return true;
     });
     
-    filteredTimetableData = filtered;
+    filteredTimetable = filtered;
     renderTimetableTable(filtered);
 }
 
-// ============ MAIN RENDER FUNCTION WITH DAY-WISE TOGGLE INSIDE COURSE ============
+// ==================== RENDER TIMETABLE TABLE ====================
 function renderTimetableTable(timetableList) {
     const tbody = document.getElementById('timetableTableBody');
     const countBadge = document.getElementById('timetableCount');
@@ -7888,7 +8137,7 @@ function renderTimetableTable(timetableList) {
     if (timetableList.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center py-5">
+                <td colspan="10" class="text-center py-5">
                     <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No timetable entries found.</p>
                     <button class="btn btn-primary btn-sm" onclick="showAddTimetableModal()">
@@ -7900,624 +8149,122 @@ function renderTimetableTable(timetableList) {
         return;
     }
     
-    // Group timetable by course
-    const timetableByCourse = {};
+    // Group by course and section
+    const groupedByCourseSection = {};
+    
     timetableList.forEach(entry => {
-        const courseKey = `${entry.course_code}|${entry.course_name || entry.course_code}`;
-        if (!timetableByCourse[courseKey]) {
-            timetableByCourse[courseKey] = [];
+        const key = `${entry.course_code}|${entry.section_id}`;
+        if (!groupedByCourseSection[key]) {
+            groupedByCourseSection[key] = {
+                course_code: entry.course_code,
+                course_name: entry.course_name || entry.course_code,
+                section_id: entry.section_id,
+                section_name: entry.section_name || 'Section',
+                entries: []
+            };
         }
-        timetableByCourse[courseKey].push(entry);
+        groupedByCourseSection[key].entries.push(entry);
     });
     
-    // Day order
-    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
     let html = '';
+    let rowNumber = 1;
     
-    // Sort courses alphabetically
-    const sortedCourses = Object.keys(timetableByCourse).sort();
+    // Sort by course and section
+    const sortedGroups = Object.values(groupedByCourseSection).sort((a, b) => {
+        if (a.course_code !== b.course_code) return a.course_code.localeCompare(b.course_code);
+        return (a.section_name || '').localeCompare(b.section_name || '');
+    });
     
-    sortedCourses.forEach(courseKey => {
-        const entries = timetableByCourse[courseKey];
-        const [courseCode, courseName] = courseKey.split('|');
-        const totalClasses = entries.length;
+    sortedGroups.forEach(group => {
+        // Sort entries by day and time
+        const dayOrder = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
         
-        // Count active classes
-        const activeClasses = entries.filter(e => 
-            e.is_active === true || e.is_active === 1 || e.is_active === '1' || e.is_active === 'true'
-        ).length;
-        
-        const inactiveClasses = totalClasses - activeClasses;
-        
-        // Group entries by day for this course
-        const entriesByDay = {};
-        dayOrder.forEach(day => {
-            entriesByDay[day] = entries.filter(e => e.day_of_week === day);
+        group.entries.sort((a, b) => {
+            if (dayOrder[a.day_of_week] !== dayOrder[b.day_of_week]) {
+                return (dayOrder[a.day_of_week] || 99) - (dayOrder[b.day_of_week] || 99);
+            }
+            return (a.start_time || '').localeCompare(b.start_time || '');
         });
         
-        // Sort each day's entries by time
-        dayOrder.forEach(day => {
-            entriesByDay[day].sort((a, b) => {
-                return (a.start_time || '').localeCompare(b.start_time || '');
-            });
-        });
-        
-        // Create unique course ID
-        const courseId = 'course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
-        
-        // ============ COURSE HEADER ROW ============
+        // Section header
         html += `
-            <tr class="course-header-row bg-light" style="cursor: pointer;" onclick="toggleCourseDetails('${courseId}', event)">
-                <td colspan="9" class="py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">
-                                <i class="fas fa-book me-2 text-primary"></i>
-                                <strong>${escapeHtml(courseCode)}</strong> - ${escapeHtml(courseName || courseCode)}
-                                <span class="badge bg-primary ms-2">${totalClasses} Classes</span>
-                            </h6>
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success me-1"></i> Active: ${activeClasses}
-                                <span class="mx-2">|</span>
-                                <i class="fas fa-ban text-danger me-1"></i> Inactive: ${inactiveClasses}
-                            </small>
-                        </div>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-success" onclick="addTimetableForCourse('${escapeHtml(courseCode)}', event)" title="Add New Class">
-                                <i class="fas fa-plus me-1"></i> Add Class
-                            </button>
-                            <button class="btn btn-outline-info" onclick="toggleCourseDetails('${courseId}', event)" title="Toggle Course Details">
-                                <i class="fas fa-chevron-down" id="toggle-course-icon-${courseId}"></i>
-                            </button>
-                        </div>
-                    </div>
+            <tr class="table-info">
+                <td colspan="10" class="py-2">
+                    <strong>
+                        <i class="fas fa-book me-2"></i>${group.course_code} - ${group.course_name}
+                        <span class="badge bg-primary ms-2">Section ${group.section_name}</span>
+                        <span class="badge bg-secondary ms-2">${group.entries.length} classes</span>
+                    </strong>
+                    <span class="float-end">
+                        <button class="btn btn-sm btn-outline-success" onclick="addTimetableForSection('${group.course_code}', '${group.section_id}')">
+                            <i class="fas fa-plus"></i> Add Entry
+                        </button>
+                    </span>
                 </td>
             </tr>
         `;
         
-        // ============ COURSE DETAILS ROW (Initially Hidden) ============
-        html += `<tr class="course-details-row ${courseId}" style="display: none;">`;
-        html += `<td colspan="9" class="p-0" style="background: #f8f9fa;">`;
-        html += `<div class="course-details-container p-3">`;
-        
-        // ============ DAY BUTTONS FOR THIS COURSE ============
-        html += `<div class="day-buttons-container mb-3">`;
-        html += `<div class="btn-group w-100" role="group">`;
-        
-        dayOrder.forEach(day => {
-            const dayEntries = entriesByDay[day];
-            const classCount = dayEntries.length;
-            const dayId = `${courseId}-${day}`;
-            const isActive = currentExpandedCourse === courseId && currentExpandedDay === day;
+        // Entries for this section
+        group.entries.forEach(entry => {
+            const isActive = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
+            const statusClass = isActive ? 'success' : 'danger';
+            const statusText = isActive ? 'Active' : 'Inactive';
             
             html += `
-                <button type="button" 
-                        class="btn ${classCount > 0 ? 'btn-outline-primary' : 'btn-outline-secondary'} day-toggle-btn 
-                               ${isActive ? 'active' : ''}"
-                        onclick="toggleDayTimetable('${courseId}', '${day}', event)"
-                        id="day-btn-${dayId}">
-                    <i class="fas fa-calendar-day me-1"></i> ${day}
-                    ${classCount > 0 ? `<span class="badge bg-primary ms-1">${classCount}</span>` : ''}
-                </button>
+                <tr>
+                    <td>${rowNumber++}</td>
+                    <td>${entry.day_of_week || 'N/A'}</td>
+                    <td>${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</td>
+                    <td>${entry.course_code || 'N/A'}</td>
+                    <td>${entry.section_name || entry.section_id || 'N/A'}</td>
+                    <td>${entry.subject || 'N/A'}</td>
+                    <td>${entry.teacher_name || 'N/A'}</td>
+                    <td>${entry.room_number || 'N/A'}</td>
+                    <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-warning" onclick="editTimetable('${entry.timetable_id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteTimetable('${entry.timetable_id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
             `;
         });
-        
-        html += `</div>`;
-        html += `</div>`;
-        
-        // ============ DAY WISE TIMETABLE TABLES (Initially Hidden) ============
-        dayOrder.forEach(day => {
-            const dayEntries = entriesByDay[day];
-            const dayId = `${courseId}-${day}`;
-            const displayStyle = (currentExpandedCourse === courseId && currentExpandedDay === day) ? 'block' : 'none';
-            
-            html += `<div id="day-timetable-${dayId}" class="day-timetable-container" style="display: ${displayStyle};">`;
-            
-            if (dayEntries.length === 0) {
-                html += `
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        No classes scheduled on ${day} for this course.
-                        <button class="btn btn-sm btn-primary ms-3" onclick="addTimetableForCourse('${escapeHtml(courseCode)}', '${day}', event)">
-                            <i class="fas fa-plus me-1"></i> Add Class
-                        </button>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th width="50">#</th>
-                                    <th>Time</th>
-                                    <th>Subject</th>
-                                    <th>Teacher</th>
-                                    <th>Room</th>
-                                    <th>Status</th>
-                                    <th width="120">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                dayEntries.forEach((entry, index) => {
-                    const isActive = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1' || entry.is_active === 'true';
-                    const statusClass = isActive ? 'success' : 'danger';
-                    const statusText = isActive ? 'Active' : 'Inactive';
-                    
-                    html += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>
-                                <span class="badge bg-info">${formatTime(entry.start_time)}</span>
-                                -
-                                <span class="badge bg-info">${formatTime(entry.end_time)}</span>
-                            </td>
-                            <td>${escapeHtml(entry.subject || '-')}</td>
-                            <td>${escapeHtml(entry.teacher_name || '-')}</td>
-                            <td>${escapeHtml(entry.room_number || '-')}</td>
-                            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-warning" onclick="editTimetable('${entry.timetable_id || ''}', event)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-${isActive ? 'secondary' : 'success'}" 
-                                            onclick="toggleTimetableStatus('${entry.timetable_id || ''}', event)">
-                                        <i class="fas fa-power-off"></i>
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteTimetable('${entry.timetable_id || ''}', event)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                html += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-            
-            html += `</div>`; // Close day-timetable-container
-        });
-        
-        html += `</div>`; // Close course-details-container
-        html += `</td>`;
-        html += `</tr>`; // Close course-details-row
     });
     
     tbody.innerHTML = html;
 }
 
-// ============ TOGGLE FUNCTIONS ============
-
-// Toggle course details (show/hide entire course section)
-function toggleCourseDetails(courseId, event) {
-    if (event) {
-        event.stopPropagation();
-    }
-    
-    const courseDetailsRow = document.querySelector(`tr.course-details-row.${courseId}`);
-    const toggleIcon = document.getElementById(`toggle-course-icon-${courseId}`);
-    
-    if (courseDetailsRow) {
-        const isHidden = courseDetailsRow.style.display === 'none';
-        
-        // Hide all other expanded courses first
-        if (isHidden) {
-            // Close all other course details
-            document.querySelectorAll('tr.course-details-row').forEach(row => {
-                row.style.display = 'none';
-            });
-            
-            // Reset all toggle icons
-            document.querySelectorAll('[id^="toggle-course-icon-"]').forEach(icon => {
-                icon.className = 'fas fa-chevron-down';
-            });
-        }
-        
-        // Toggle current course
-        courseDetailsRow.style.display = isHidden ? '' : 'none';
-        
-        if (toggleIcon) {
-            toggleIcon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-        }
-        
-        // Reset expanded day when toggling course
-        if (isHidden) {
-            currentExpandedCourse = courseId;
-            currentExpandedDay = null;
-        } else {
-            currentExpandedCourse = null;
-            currentExpandedDay = null;
-        }
-    }
-}
-
-// Toggle day timetable (show/hide specific day's timetable)
-function toggleDayTimetable(courseId, day, event) {
-    if (event) {
-        event.stopPropagation();
-    }
-    
-    const dayTimetableDiv = document.getElementById(`day-timetable-${courseId}-${day}`);
-    const dayBtn = document.getElementById(`day-btn-${courseId}-${day}`);
-    
-    if (dayTimetableDiv) {
-        const isHidden = dayTimetableDiv.style.display === 'none' || dayTimetableDiv.style.display === '';
-        
-        // Hide all other day timetables for this course
-        const allDayDivs = document.querySelectorAll(`[id^="day-timetable-${courseId}-"]`);
-        allDayDivs.forEach(div => {
-            div.style.display = 'none';
-        });
-        
-        // Remove active class from all day buttons
-        const allDayBtns = document.querySelectorAll(`[id^="day-btn-${courseId}-"]`);
-        allDayBtns.forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // Show selected day
-        if (isHidden) {
-            dayTimetableDiv.style.display = 'block';
-            if (dayBtn) {
-                dayBtn.classList.add('active');
-            }
-            currentExpandedDay = day;
-        } else {
-            dayTimetableDiv.style.display = 'none';
-            currentExpandedDay = null;
-        }
-    }
-}
-
-// ============ COURSE CLICK HANDLER - FILTER BY COURSE AND EXPAND ============
-function filterTimetableByCourse(courseCode) {
-    if (!allTimetable || allTimetable.length === 0) {
-        showError('No timetable data available');
-        return;
-    }
-    
-    // Filter entries for selected course
-    const filtered = allTimetable.filter(entry => 
-        entry.course_code && entry.course_code.toString() === courseCode.toString()
-    );
-    
-    // Set filter dropdown
-    const courseFilter = document.getElementById('timetableCourseFilter');
-    if (courseFilter) {
-        courseFilter.value = courseCode;
-    }
-    
-    // Render filtered timetable
-    filteredTimetableData = filtered;
-    renderTimetableTable(filtered);
-    
-    // Auto-expand this course
-    setTimeout(() => {
-        const courseId = 'course-' + courseCode.replace(/[^a-zA-Z0-9]/g, '-');
-        toggleCourseDetails(courseId);
-    }, 100);
-}
-
-// ============ VIEW COURSE TIMETABLE IN MODAL ============
-function viewCourseTimetableDetails(courseCode, event) {
-    if (event) {
-        event.stopPropagation();
-    }
-    
-    if (!allTimetable || allTimetable.length === 0) {
-        showError('No timetable data available');
-        return;
-    }
-    
-    // Filter timetable for this course
-    const courseTimetable = allTimetable.filter(entry => 
-        entry.course_code && entry.course_code.toString() === courseCode.toString()
-    );
-    
-    if (courseTimetable.length === 0) {
-        showError(`No timetable found for course: ${courseCode}`);
-        return;
-    }
-    
-    // Group by day
-    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const groupedByDay = {};
-    
-    dayOrder.forEach(day => {
-        groupedByDay[day] = courseTimetable.filter(e => e.day_of_week === day);
-    });
-    
-    // Show in modal
-    showCourseTimetableModal(courseCode, groupedByDay);
-}
-
-// ============ SHOW COURSE TIMETABLE MODAL WITH DAY WISE TABS ============
-function showCourseTimetableModal(courseCode, groupedByDay) {
-    // Create modal if not exists
-    let modalEl = document.getElementById('courseTimetableModal');
-    
-    if (!modalEl) {
-        modalEl = document.createElement('div');
-        modalEl.id = 'courseTimetableModal';
-        modalEl.className = 'modal fade';
-        modalEl.setAttribute('tabindex', '-1');
-        document.body.appendChild(modalEl);
-    }
-    
-    // Create tabs
-    let tabsNav = '';
-    let tabsContent = '';
-    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    dayOrder.forEach((day, index) => {
-        const dayEntries = groupedByDay[day] || [];
-        const activeClass = index === 0 ? 'active' : '';
-        const showClass = index === 0 ? 'show active' : '';
-        
-        tabsNav += `
-            <li class="nav-item" role="presentation">
-                <button class="nav-link ${activeClass}" 
-                        id="${day}-tab" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#${day}" 
-                        type="button" 
-                        role="tab">
-                    <i class="fas fa-calendar-day me-1"></i> ${day}
-                    <span class="badge bg-primary ms-1">${dayEntries.length}</span>
-                </button>
-            </li>
-        `;
-        
-        let tableRows = '';
-        if (dayEntries.length === 0) {
-            tableRows = `
-                <tr>
-                    <td colspan="6" class="text-center py-4">
-                        <i class="fas fa-info-circle text-muted me-2"></i>
-                        No classes scheduled on ${day}
-                    </td>
-                </tr>
-            `;
-        } else {
-            dayEntries.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
-            
-            dayEntries.forEach((entry, idx) => {
-                const isActive = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
-                const statusClass = isActive ? 'success' : 'danger';
-                const statusText = isActive ? 'Active' : 'Inactive';
-                
-                tableRows += `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        <td>${formatTime(entry.start_time)} - ${formatTime(entry.end_time)}</td>
-                        <td>${escapeHtml(entry.subject || '-')}</td>
-                        <td>${escapeHtml(entry.teacher_name || '-')}</td>
-                        <td>${escapeHtml(entry.room_number || '-')}</td>
-                        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
-            });
-        }
-        
-        tabsContent += `
-            <div class="tab-pane fade ${showClass}" id="${day}" role="tabpanel">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Time</th>
-                                <th>Subject</th>
-                                <th>Teacher</th>
-                                <th>Room</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    });
-    
-    modalEl.innerHTML = `
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        Complete Timetable: ${escapeHtml(courseCode)}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" role="tablist">
-                        ${tabsNav}
-                    </ul>
-                    <div class="tab-content">
-                        ${tabsContent}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="addTimetableForCourse('${escapeHtml(courseCode)}')">
-                        <i class="fas fa-plus me-1"></i> Add New Class
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-}
-
-// ============ ADD TIMETABLE FOR SPECIFIC COURSE/DAY ============
-function addTimetableForCourse(courseCode, day = null, event) {
-    if (event) {
-        event.stopPropagation();
-    }
-    
-    resetTimetableForm();
-    document.getElementById('editTimetableId').value = '';
-    
-    // Set course in modal
-    const courseSelect = document.getElementById('timetableCourse');
-    if (courseSelect) {
-        Array.from(courseSelect.options).forEach(option => {
-            if (option.value === courseCode || option.text.includes(courseCode)) {
-                option.selected = true;
-            }
-        });
-    }
-    
-    // Set day if provided
-    if (day) {
-        const daySelect = document.getElementById('timetableDay');
-        if (daySelect) {
-            daySelect.value = day;
-        }
-    }
-    
-    document.querySelector('#timetableModal .modal-title').innerHTML = 
-        `<i class="fas fa-plus me-2"></i>Add Timetable Entry - ${escapeHtml(courseCode)}${day ? ` (${day})` : ''}`;
-    
-    const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
-    modal.show();
-}
-
-// ============ CRUD OPERATIONS ============
-
-
-
-// Reset form
-function resetTimetableForm() {
-    const form = document.getElementById('timetableForm');
-    if (form) form.reset();
-    
-    const statusCheck = document.getElementById('timetableStatus');
-    if (statusCheck) statusCheck.checked = true;
-}
-
-// ==================== GLOBAL VARIABLES ====================
-let teacherSubjectsCache = {}; // Cache for teacher subjects
-
-// ==================== LOAD TEACHERS FOR TIMETABLE ====================
-async function loadTeachersForTimetable() {
-    try {
-        const response = await fetch(`${API_URL}/api/teachers/all`);
-        const data = await response.json();
-        
-        if (data.success) {
-            teachersData = data.teachers || [];
-            
-            const teacherSelect = document.getElementById('timetableTeacher');
-            let options = '<option value="">Choose teacher...</option>';
-            
-            teachersData.forEach(teacher => {
-                options += `<option value="${teacher.teacher_id}">${teacher.name} (${teacher.teacher_id})</option>`;
-            });
-            
-            teacherSelect.innerHTML = options;
-        }
-    } catch (error) {
-        console.error('Error loading teachers:', error);
-        showError('Failed to load teachers');
-    }
-}
-
-// ==================== LOAD TEACHER SUBJECTS FOR TIMETABLE ====================
-async function loadTeacherSubjectsForTimetable() {
-    const teacherSelect = document.getElementById('timetableTeacher');
-    const subjectSelect = document.getElementById('timetableSubject');
-    const teacherId = teacherSelect.value;
-    
-    if (!teacherId) {
-        subjectSelect.innerHTML = '<option value="">Select teacher first...</option>';
-        return;
-    }
-    
-    // Show loading
-    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
-    subjectSelect.disabled = true;
-    
-    try {
-        // Check cache first
-        if (teacherSubjectsCache[teacherId]) {
-            populateSubjectDropdown(teacherSubjectsCache[teacherId], subjectSelect);
-            subjectSelect.disabled = false;
-            return;
-        }
-        
-        // Fetch from API
-        const response = await fetch(`${API_URL}/api/teacher-subjects/${teacherId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            // Store in cache
-            teacherSubjectsCache[teacherId] = data.subjects;
-            populateSubjectDropdown(data.subjects, subjectSelect);
-        } else {
-            subjectSelect.innerHTML = '<option value="">No subjects found</option>';
-        }
-    } catch (error) {
-        console.error('Error loading teacher subjects:', error);
-        subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
-    } finally {
-        subjectSelect.disabled = false;
-    }
-}
-
-// ==================== POPULATE SUBJECT DROPDOWN ====================
-function populateSubjectDropdown(subjects, subjectSelect) {
-    if (!subjects || subjects.length === 0) {
-        subjectSelect.innerHTML = '<option value="">No subjects assigned</option>';
-        return;
-    }
-    
-    let options = '<option value="">Select subject...</option>';
-    
-    // Show all subjects
-    subjects.forEach(item => {
-        options += `<option value="${item.subject}">${item.subject} (${item.course_code} - ${item.section_name})</option>`;
-    });
-    
-    // Also add option to show all subjects without section (if needed)
-    const uniqueSubjects = [...new Set(subjects.map(s => s.subject))];
-    if (uniqueSubjects.length > 0) {
-        options += '<option value="" disabled>━━━━━━━━━━━━━━━━━━</option>';
-        uniqueSubjects.forEach(subj => {
-            options += `<option value="${subj}">${subj} (All Sections)</option>`;
-        });
-    }
-    
-    subjectSelect.innerHTML = options;
-}
-
-// ==================== UPDATED: Show Add Timetable Modal ====================
+// ==================== SHOW ADD TIMETABLE MODAL ====================
 function showAddTimetableModal() {
     resetTimetableForm();
     document.getElementById('editTimetableId').value = '';
     
-    // Load courses
-    populateTimetableCourseDropdown();
+    populateTimetableCourseDropdowns();
     
-    // Load teachers
-    loadTeachersForTimetable();
+    const sectionSelect = document.getElementById('timetableSection');
+    sectionSelect.innerHTML = '<option value="">Select course first...</option>';
+    sectionSelect.disabled = true;
+    
+    // Reset teacher dropdown
+    const teacherSelect = document.getElementById('timetableTeacher');
+    if (teacherSelect && teachersData.length > 0) {
+        let options = '<option value="">Choose teacher...</option>';
+        teachersData.forEach(teacher => {
+            options += `<option value="${teacher.teacher_id}">${teacher.name} (${teacher.teacher_id})</option>`;
+        });
+        teacherSelect.innerHTML = options;
+    } else {
+        loadTeachersForTimetable();
+    }
     
     // Reset subject dropdown
-    document.getElementById('timetableSubject').innerHTML = '<option value="">Select teacher first...</option>';
+    const subjectSelect = document.getElementById('timetableSubject');
+    subjectSelect.innerHTML = '<option value="">Select teacher first...</option>';
     
     document.querySelector('#timetableModal .modal-title').innerHTML = 
         '<i class="fas fa-plus me-2"></i>Add Timetable Entry';
@@ -8526,77 +8273,41 @@ function showAddTimetableModal() {
     modal.show();
 }
 
-// ==================== UPDATED: Edit Timetable ====================
-async function editTimetable(timetableId, event) {
-    if (event) event.stopPropagation();
+// ==================== ADD TIMETABLE FOR SPECIFIC SECTION ====================
+function addTimetableForSection(courseCode, sectionId) {
+    showAddTimetableModal();
     
-    try {
-        const entry = allTimetable.find(t => t.timetable_id === timetableId);
-        if (!entry) {
-            showError('Entry not found');
-            return;
-        }
+    // Set course
+    const courseSelect = document.getElementById('timetableCourse');
+    if (courseSelect) {
+        courseSelect.value = courseCode;
         
-        // Set form values
-        document.getElementById('editTimetableId').value = entry.timetable_id;
-        document.getElementById('timetableCourse').value = entry.course_code;
-        document.getElementById('timetableDay').value = entry.day_of_week;
-        document.getElementById('timetableStartTime').value = entry.start_time;
-        document.getElementById('timetableEndTime').value = entry.end_time;
-        document.getElementById('timetableRoom').value = entry.room_number || '';
-        document.getElementById('timetableStatus').checked = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
-        
-        // Load teachers first
-        await loadTeachersForTimetable();
-        
-        // Set teacher
-        const teacherSelect = document.getElementById('timetableTeacher');
-        if (entry.teacher_name) {
-            // Find teacher by name (approximate)
-            const teacher = teachersData.find(t => t.name === entry.teacher_name);
-            if (teacher) {
-                teacherSelect.value = teacher.teacher_id;
-                
-                // Load subjects for this teacher
-                await loadTeacherSubjectsForTimetable();
-                
-                // Set subject after a delay
-                setTimeout(() => {
-                    document.getElementById('timetableSubject').value = entry.subject || '';
-                }, 500);
-            }
-        }
-        
-        document.querySelector('#timetableModal .modal-title').innerHTML = 
-            '<i class="fas fa-edit me-2"></i>Edit Timetable Entry';
-        
-        const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
-        modal.show();
-        
-    } catch (error) {
-        console.error('Error loading entry for edit:', error);
-        showError('Error loading entry');
+        // Load sections
+        setTimeout(() => {
+            loadSectionsForTimetable().then(() => {
+                const sectionSelect = document.getElementById('timetableSection');
+                if (sectionSelect) {
+                    sectionSelect.value = sectionId;
+                }
+            });
+        }, 300);
     }
 }
 
-// ==================== POPULATE TIMETABLE COURSE DROPDOWN ====================
-function populateTimetableCourseDropdown() {
-    const select = document.getElementById('timetableCourse');
-    if (!select) return;
+// ==================== RESET TIMETABLE FORM ====================
+function resetTimetableForm() {
+    const form = document.getElementById('timetableForm');
+    if (form) form.reset();
     
-    select.innerHTML = '<option value="">Select course...</option>';
-    
-    if (typeof coursesData !== 'undefined' && coursesData.length > 0) {
-        coursesData.filter(c => c.is_active).forEach(course => {
-            select.innerHTML += `<option value="${course.course_code}">${course.course_name} (${course.course_code})</option>`;
-        });
-    }
+    const statusCheck = document.getElementById('timetableStatus');
+    if (statusCheck) statusCheck.checked = true;
 }
 
-// ==================== UPDATED: Save Timetable ====================
+// ==================== SAVE TIMETABLE ====================
 async function saveTimetable() {
     const timetableId = document.getElementById('editTimetableId').value;
     const courseCode = document.getElementById('timetableCourse').value;
+    const sectionId = document.getElementById('timetableSection').value;
     const dayOfWeek = document.getElementById('timetableDay').value;
     const startTime = document.getElementById('timetableStartTime').value;
     const endTime = document.getElementById('timetableEndTime').value;
@@ -8605,9 +8316,9 @@ async function saveTimetable() {
     const roomNumber = document.getElementById('timetableRoom').value.trim();
     const isActive = document.getElementById('timetableStatus').checked;
     
-    // Validation
-    if (!courseCode || !dayOfWeek || !startTime || !endTime || !teacherId || !subject) {
-        showError('Please fill all required fields');
+    // Validation - SECTION IS NOW REQUIRED
+    if (!courseCode || !sectionId || !dayOfWeek || !startTime || !endTime || !teacherId || !subject) {
+        showError('Please fill all required fields (Course, Section, Day, Time, Teacher, Subject)');
         return;
     }
     
@@ -8615,9 +8326,27 @@ async function saveTimetable() {
     const teacher = teachersData.find(t => t.teacher_id === teacherId);
     const teacherName = teacher ? teacher.name : '';
     
+    // Get course name
+    let courseName = courseCode;
+    if (typeof coursesData !== 'undefined') {
+        const course = coursesData.find(c => c.course_code === courseCode);
+        if (course) courseName = course.course_name;
+    }
+    
+    // Get section name
+    let sectionName = '';
+    const sectionSelect = document.getElementById('timetableSection');
+    const selectedOption = sectionSelect.options[sectionSelect.selectedIndex];
+    if (selectedOption) {
+        sectionName = selectedOption.text;
+    }
+    
     const data = {
         timetable_id: timetableId || null,
         course_code: courseCode,
+        course_name: courseName,
+        section_id: sectionId,
+        section_name: sectionName,
         day_of_week: dayOfWeek,
         start_time: startTime,
         end_time: endTime,
@@ -8663,17 +8392,67 @@ async function saveTimetable() {
     }
 }
 
-
-// Delete timetable
-async function deleteTimetable(timetableId, event) {
-    if (event) {
-        event.stopPropagation();
+// ==================== EDIT TIMETABLE ====================
+async function editTimetable(timetableId) {
+    try {
+        const entry = allTimetable.find(t => t.timetable_id === timetableId);
+        if (!entry) {
+            showError('Entry not found');
+            return;
+        }
+        
+        resetTimetableForm();
+        
+        document.getElementById('editTimetableId').value = entry.timetable_id;
+        document.getElementById('timetableCourse').value = entry.course_code;
+        
+        // Load sections
+        await loadSectionsForTimetable();
+        
+        // Set values after sections load
+        setTimeout(() => {
+            document.getElementById('timetableSection').value = entry.section_id;
+            document.getElementById('timetableDay').value = entry.day_of_week;
+            document.getElementById('timetableStartTime').value = entry.start_time;
+            document.getElementById('timetableEndTime').value = entry.end_time;
+            document.getElementById('timetableRoom').value = entry.room_number || '';
+            document.getElementById('timetableStatus').checked = entry.is_active === true || entry.is_active === 1 || entry.is_active === '1';
+            
+            // Set teacher
+            const teacherSelect = document.getElementById('timetableTeacher');
+            if (entry.teacher_name) {
+                const teacher = teachersData.find(t => t.name === entry.teacher_name);
+                if (teacher) {
+                    teacherSelect.value = teacher.teacher_id;
+                    
+                    // Load subjects for this teacher
+                    setTimeout(() => {
+                        loadSubjectsForTimetable().then(() => {
+                            document.getElementById('timetableSubject').value = entry.subject || '';
+                        });
+                    }, 300);
+                }
+            }
+        }, 500);
+        
+        document.querySelector('#timetableModal .modal-title').innerHTML = 
+            '<i class="fas fa-edit me-2"></i>Edit Timetable Entry';
+        
+        const modal = new bootstrap.Modal(document.getElementById('timetableModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error editing timetable:', error);
+        showError('Error loading entry');
     }
-    
+}
+
+// ==================== DELETE TIMETABLE ====================
+async function deleteTimetable(timetableId) {
     if (!confirm('Are you sure you want to delete this timetable entry?')) return;
     
     try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/delete/${timetableId}`, {
+        const response = await fetch(`${API_URL}/api/timetable/delete/${timetableId}`, {
             method: 'DELETE'
         });
         
@@ -8686,18 +8465,15 @@ async function deleteTimetable(timetableId, event) {
             showError('Delete failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
+        console.error('Error deleting timetable:', error);
         showError('Error deleting entry');
     }
 }
 
-// Toggle status
-async function toggleTimetableStatus(timetableId, event) {
-    if (event) {
-        event.stopPropagation();
-    }
-    
+// ==================== TOGGLE TIMETABLE STATUS ====================
+async function toggleTimetableStatus(timetableId) {
     try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/timetable/toggle-status/${timetableId}`, {
+        const response = await fetch(`${API_URL}/api/timetable/toggle-status/${timetableId}`, {
             method: 'PUT'
         });
         
@@ -8710,48 +8486,26 @@ async function toggleTimetableStatus(timetableId, event) {
             showError('Update failed: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
+        console.error('Error updating status:', error);
         showError('Error updating status');
     }
 }
 
-// ============ UTILITY FUNCTIONS ============
-
-// Format time
-function formatTime(timeString) {
-    if (!timeString) return '-';
-    try {
-        if (timeString.includes(':')) {
-            const parts = timeString.split(':');
-            return `${parts[0]}:${parts[1]}`;
-        }
-        return timeString;
-    } catch {
-        return timeString;
-    }
-}
-
-// Escape HTML
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Export timetable
+// ==================== EXPORT TIMETABLE ====================
 function exportTimetable() {
-    const data = filteredTimetableData.length > 0 ? filteredTimetableData : allTimetable;
+    const data = filteredTimetable.length > 0 ? filteredTimetable : allTimetable;
     
     if (data.length === 0) {
         showError('No data to export');
         return;
     }
     
-    let csv = 'Course,Day,Start Time,End Time,Subject,Teacher,Room,Status\n';
+    let csv = 'Course,Section,Day,Start Time,End Time,Subject,Teacher,Room,Status\n';
     
     data.forEach(t => {
-        csv += `"${t.course_code || ''}","${t.day_of_week || ''}","${t.start_time || ''}","${t.end_time || ''}",`;
-        csv += `"${t.subject || ''}","${t.teacher_name || ''}","${t.room_number || ''}","${t.is_active ? 'Active' : 'Inactive'}"\n`;
+        csv += `"${t.course_code || ''}","${t.section_name || t.section_id || ''}","${t.day_of_week || ''}",`;
+        csv += `"${t.start_time || ''}","${t.end_time || ''}","${t.subject || ''}",`;
+        csv += `"${t.teacher_name || ''}","${t.room_number || ''}","${t.is_active ? 'Active' : 'Inactive'}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -8765,29 +8519,70 @@ function exportTimetable() {
     showSuccess('Timetable exported successfully');
 }
 
-// Refresh
+// ==================== REFRESH TIMETABLE ====================
 function refreshTimetable() {
     loadTimetableData();
+    showSuccess('Timetable refreshed');
 }
 
-// Loading/Error/Success UI functions
+// ==================== FORMAT TIME ====================
+function formatTime(timeString) {
+    if (!timeString) return '-';
+    try {
+        if (timeString.includes(':')) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+        return timeString;
+    } catch {
+        return timeString;
+    }
+}
+
+// ==================== UTILITY FUNCTIONS ====================
 function showLoading(message) {
-    console.log(message);
+    console.log('Loading:', message);
 }
 
 function hideLoading() {
-    console.log('Loading hidden');
+    console.log('Loading complete');
 }
 
 function showError(message) {
-    alert('Error: ' + message);
+    console.error('Error:', message);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: message,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert('❌ Error: ' + message);
+    }
 }
 
 function showSuccess(message) {
-    alert('Success: ' + message);
+    console.log('Success:', message);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: message,
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    } else {
+        alert('✅ ' + message);
+    }
 }
 
-console.log('✅ Time Table Management loaded with Course + Day-wise Toggle!');
+console.log('✅ Section-wise Time Table Management loaded successfully!');
 
 
 
@@ -11569,43 +11364,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ==================== LOAD TEACHER PERMISSIONS - COMPLETE ====================
 async function loadTeacherPermissions() {
     try {
-        const tbody = document.getElementById('permissionsTableBody');
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-5">
-                    <div class="spinner-border text-primary"></div>
-                    <p class="mt-2">Loading permissions...</p>
-                </td>
-            </tr>
-        `;
+        showLoading('Loading permissions...');
         
-        const response = await fetch(`${API_URL}/api/teacher-permissions/all`);
+        const response = await fetch(`${API_URL}/api/teacher-permissions/all?t=${Date.now()}`);
         const data = await response.json();
+        
+        hideLoading();
         
         if (data.success) {
             allPermissions = data.permissions || [];
-            filteredPermissions = allPermissions;
             displayPermissions(allPermissions);
             updatePermissionStats();
+            populatePermissionFilters(); // ✅ Now this function exists
+        } else {
+            showError('Failed to load permissions: ' + (data.message || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading permissions:', error);
-        showError('Failed to load permissions');
+        hideLoading();
+        showError('Error loading permissions');
     }
 }
 
+// ==================== DISPLAY PERMISSIONS - FIXED ====================
 function displayPermissions(permissions) {
     const tbody = document.getElementById('permissionsTableBody');
     const countSpan = document.getElementById('permissionsCount');
+    
+    if (!tbody) return;
     
     countSpan.textContent = permissions.length;
     
     if (permissions.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-5">
+                <td colspan="10" class="text-center py-5">
                     <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No permissions found</p>
                 </td>
@@ -11621,10 +11417,16 @@ function displayPermissions(permissions) {
         const expiryDate = new Date(perm.expiry_date);
         const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
         
+        // ✅ FIX: Check is_active properly
+        const isActive = perm.is_active === true || perm.is_active === 'true' || perm.is_active === 1;
+        
         let statusClass = 'success';
         let statusText = 'Active';
         
-        if (daysLeft < 0) {
+        if (!isActive) {
+            statusClass = 'secondary';
+            statusText = 'Revoked';
+        } else if (daysLeft < 0) {
             statusClass = 'danger';
             statusText = 'Expired';
         } else if (daysLeft <= 7) {
@@ -11632,38 +11434,48 @@ function displayPermissions(permissions) {
             statusText = `Expiring in ${daysLeft} days`;
         }
         
-        const marksBadge = perm.can_upload_marks ? 
-            '<span class="badge bg-success me-1">Marks</span>' : 
-            '<span class="badge bg-secondary me-1">Marks</span>';
+        const marksPermission = perm.can_upload_marks ? 
+            '<span class="badge bg-success me-1"><i class="fas fa-check"></i> Marks</span>' : 
+            '<span class="badge bg-secondary me-1"><i class="fas fa-times"></i> Marks</span>';
             
-        const pdfBadge = perm.can_upload_pdfs ? 
-            '<span class="badge bg-success me-1">PDFs</span>' : 
-            '<span class="badge bg-secondary me-1">PDFs</span>';
+        const pdfPermission = perm.can_upload_pdfs ? 
+            '<span class="badge bg-success me-1"><i class="fas fa-check"></i> PDFs</span>' : 
+            '<span class="badge bg-secondary me-1"><i class="fas fa-times"></i> PDFs</span>';
         
         html += `
             <tr>
                 <td>${index + 1}</td>
                 <td>
-                    <strong>${perm.teacher_name || 'N/A'}</strong>
+                    <strong>${perm.teacher_name || 'Unknown'}</strong>
                     <br>
                     <small class="text-muted">${perm.teacher_id}</small>
                 </td>
                 <td>${perm.section_name || 'N/A'}</td>
                 <td>${perm.course_code || 'N/A'}</td>
                 <td>
-                    <span class="badge bg-success me-1">Attendance</span>
-                    ${marksBadge}
-                    ${pdfBadge}
+                    <span class="badge bg-success me-1"><i class="fas fa-check"></i> Attendance</span>
+                    ${marksPermission}
+                    ${pdfPermission}
                 </td>
+                <td>${perm.granted_by || 'Admin'}</td>
+                <td>${new Date(perm.granted_at).toLocaleDateString()}</td>
                 <td>
                     ${new Date(perm.expiry_date).toLocaleDateString()}
-                    ${daysLeft > 0 ? `<br><small class="text-${statusClass}">${daysLeft} days left</small>` : ''}
+                    ${daysLeft > 0 && isActive ? `<br><small class="text-${statusClass}">${daysLeft} days left</small>` : ''}
                 </td>
                 <td><span class="badge bg-${statusClass}">${statusText}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-danger" onclick="revokePermission(${perm.id})">
-                        <i class="fas fa-ban"></i> Revoke
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        ${isActive ? `
+                            <button class="btn btn-danger" onclick="revokePermission(${perm.id})">
+                                <i class="fas fa-ban"></i> Revoke
+                            </button>
+                        ` : `
+                            <button class="btn btn-success" onclick="reactivatePermission(${perm.id})">
+                                <i class="fas fa-check"></i> Reactivate
+                            </button>
+                        `}
+                    </div>
                 </td>
             </tr>
         `;
@@ -11671,24 +11483,190 @@ function displayPermissions(permissions) {
     
     tbody.innerHTML = html;
 }
+// ==================== REACTIVATE PERMISSION ====================
+async function reactivatePermission(permissionId) {
+    if (!confirm('Reactivate this permission?')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/admin/reactivate-permission/${permissionId}`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Permission reactivated successfully');
+            
+            // Update local array
+            const perm = allPermissions.find(p => p.id == permissionId);
+            if (perm) {
+                perm.is_active = true;
+            }
+            
+            // Refresh display
+            displayPermissions(allPermissions);
+            updatePermissionStats();
+            
+            // Reload from server
+            setTimeout(() => {
+                loadTeacherPermissions();
+            }, 500);
+            
+        } else {
+            showError(result.message || 'Failed to reactivate permission');
+        }
+    } catch (error) {
+        console.error('Error reactivating permission:', error);
+        showError('Failed to reactivate permission');
+    }
+}
 
+// ==================== UPDATE PERMISSION STATS ====================
 function updatePermissionStats() {
     const today = new Date();
     const sevenDaysLater = new Date();
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
     
-    const active = allPermissions.filter(p => new Date(p.expiry_date) >= today);
-    const expiringSoon = allPermissions.filter(p => {
+    // Count active permissions
+    const active = allPermissions.filter(p => {
+        const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
         const expiry = new Date(p.expiry_date);
-        return expiry >= today && expiry <= sevenDaysLater;
+        return isActive && expiry >= today;
     });
-    const expired = allPermissions.filter(p => new Date(p.expiry_date) < today);
     
+    // Count expiring soon
+    const expiringSoon = allPermissions.filter(p => {
+        const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+        const expiry = new Date(p.expiry_date);
+        return isActive && expiry >= today && expiry <= sevenDaysLater;
+    });
+    
+    // Count expired
+    const expired = allPermissions.filter(p => {
+        const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+        const expiry = new Date(p.expiry_date);
+        return isActive && expiry < today;
+    });
+    
+    // Count revoked
+    const revoked = allPermissions.filter(p => {
+        const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+        return !isActive;
+    });
+    
+    // Update UI
     document.getElementById('totalTeachersWithPerm').textContent = 
         [...new Set(allPermissions.map(p => p.teacher_id))].length;
     document.getElementById('activePermissions').textContent = active.length;
     document.getElementById('expiringSoon').textContent = expiringSoon.length;
     document.getElementById('expiredPermissions').textContent = expired.length;
+    
+    // Optional: Add revoked count if element exists
+    const revokedEl = document.getElementById('revokedCount');
+    if (revokedEl) {
+        revokedEl.textContent = revoked.length;
+    }
+}
+
+// ==================== POPULATE PERMISSION FILTERS ====================
+function populatePermissionFilters() {
+    console.log('📊 Populating permission filters...');
+    
+    const teacherFilter = document.getElementById('permissionTeacherFilter');
+    const statusFilter = document.getElementById('permissionStatusFilter');
+    
+    if (!teacherFilter || !statusFilter) return;
+    
+    // Get unique teachers
+    const teachers = [...new Set(allPermissions.map(p => p.teacher_id))];
+    
+    let teacherOptions = '<option value="">All Teachers</option>';
+    teachers.forEach(teacherId => {
+        const perm = allPermissions.find(p => p.teacher_id === teacherId);
+        teacherOptions += `<option value="${teacherId}">${perm?.teacher_name || teacherId}</option>`;
+    });
+    teacherFilter.innerHTML = teacherOptions;
+    
+    // Status filter options
+    const statusOptions = `
+        <option value="">All</option>
+        <option value="active">Active</option>
+        <option value="expired">Expired</option>
+        <option value="expiring">Expiring Soon</option>
+        <option value="revoked">Revoked</option>
+    `;
+    statusFilter.innerHTML = statusOptions;
+}
+
+// ==================== FILTER PERMISSIONS ====================
+function filterPermissions() {
+    const teacherFilter = document.getElementById('permissionTeacherFilter')?.value;
+    const statusFilter = document.getElementById('permissionStatusFilter')?.value;
+    
+    let filtered = allPermissions;
+    
+    if (teacherFilter) {
+        filtered = filtered.filter(p => p.teacher_id === teacherFilter);
+    }
+    
+    const today = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+    
+    if (statusFilter === 'active') {
+        filtered = filtered.filter(p => {
+            const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+            const expiry = new Date(p.expiry_date);
+            return isActive && expiry >= today;
+        });
+    } else if (statusFilter === 'expired') {
+        filtered = filtered.filter(p => {
+            const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+            const expiry = new Date(p.expiry_date);
+            return isActive && expiry < today;
+        });
+    } else if (statusFilter === 'expiring') {
+        filtered = filtered.filter(p => {
+            const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+            const expiry = new Date(p.expiry_date);
+            return isActive && expiry >= today && expiry <= sevenDaysLater;
+        });
+    } else if (statusFilter === 'revoked') {
+        filtered = filtered.filter(p => {
+            const isActive = p.is_active === true || p.is_active === 1 || p.is_active === 'true';
+            return !isActive;
+        });
+    }
+    
+    displayPermissions(filtered);
+}
+
+// ==================== SEARCH PERMISSIONS ====================
+function searchPermissions() {
+    const searchTerm = document.getElementById('searchPermission')?.value.toLowerCase();
+    
+    if (!searchTerm) {
+        displayPermissions(allPermissions);
+        return;
+    }
+    
+    const searched = allPermissions.filter(p => 
+        (p.teacher_name && p.teacher_name.toLowerCase().includes(searchTerm)) ||
+        (p.teacher_id && p.teacher_id.toLowerCase().includes(searchTerm)) ||
+        (p.section_name && p.section_name.toLowerCase().includes(searchTerm)) ||
+        (p.course_code && p.course_code.toLowerCase().includes(searchTerm))
+    );
+    
+    displayPermissions(searched);
+}
+
+// ==================== RESET PERMISSION FILTERS ====================
+function resetPermissionFilters() {
+    document.getElementById('permissionTeacherFilter').value = '';
+    document.getElementById('permissionStatusFilter').value = '';
+    document.getElementById('searchPermission').value = '';
+    
+    displayPermissions(allPermissions);
 }
 
 async function openGrantPermissionModal() {
@@ -11779,6 +11757,7 @@ async function grantMarksPermission() {
     }
 }
 
+// ==================== REVOKE PERMISSION - FIXED ====================
 async function revokePermission(permissionId) {
     if (!confirm('Are you sure you want to revoke this permission?')) return;
     
@@ -11791,19 +11770,29 @@ async function revokePermission(permissionId) {
         
         if (result.success) {
             showSuccess('Permission revoked successfully');
-            loadTeacherPermissions();
+            
+            // ✅ FORCE REFRESH - Remove from local array and reload
+            allPermissions = allPermissions.filter(p => p.id != permissionId);
+            
+            // Update stats
+            updatePermissionStats();
+            
+            // Re-display with updated data
+            displayPermissions(allPermissions);
+            
+            // Also reload from server to be sure
+            setTimeout(() => {
+                loadTeacherPermissions();
+            }, 500);
+            
         } else {
-            showError(result.message);
+            showError(result.message || 'Failed to revoke permission');
         }
     } catch (error) {
         console.error('Error revoking permission:', error);
         showError('Failed to revoke permission');
     }
 }
-
-
-
-
 
 
 
