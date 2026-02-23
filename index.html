@@ -6,14 +6,52 @@
     <title>Aastha Computer Education Mission & Intermediate Coaching</title>
     <meta name="keywords" content="aacem, aastha computer education mission, aastha computer, computer institute in patepur, computer coaching center, intermediate coaching center, computer institute in bihar">
     <meta name="description" content="AASTHA Computer Education Mission (AACEM) is a computer and intermediate coaching center providing quality education.">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" as="image" href="/images/aacemimage.webp" fetchpriority="high" type="image/webp">
+    <link rel="preload" as="image" href="/images/aacemimage.png" fetchpriority="high" type="image/png">
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <!-- DNS Prefetch & Preconnect -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Bootstrap CSS (Critical) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts with display swap -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- WebP Detection Script -->
+    <script>
+        (function() {
+            // Check WebP support
+            var WebP = new Image();
+            WebP.onload = WebP.onerror = function() {
+                if (WebP.height == 2) {
+                    document.documentElement.classList.add('webp');
+                } else {
+                    document.documentElement.classList.add('no-webp');
+                }
+            };
+            WebP.src = 'data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==';
+        })();
+    </script>
+
     <style>
+        /* Critical CSS - Above the fold */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -28,8 +66,6 @@
             --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --gradient-2: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             --gradient-3: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
         }
         
         * {
@@ -44,9 +80,77 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             overflow-x: hidden;
             color: var(--dark);
+            font-display: swap;
         }
         
-        /* Animated Background */
+        /* Navbar Critical */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        /* Hero Section with WebP fallback */
+        .hero-section {
+            color: white;
+            padding: 160px 0 100px;
+            text-align: center;
+            margin-top: -76px;
+            min-height: 80vh;
+            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), #3a0ca3;
+        }
+        
+        .webp .hero-section {
+            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), url('/images/aacemimage.webp') center/cover;
+        }
+        
+        .no-webp .hero-section {
+            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), url('/images/aacemimage.png') center/cover;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero-section h1 {
+            font-weight: 800;
+            font-size: clamp(1.8rem, 5vw, 3.5rem);
+            animation: fadeInUp 1s ease;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero-section .lead {
+            animation: fadeInUp 1s ease 0.2s backwards;
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 300;
+        }
+        
+        /* Non-critical CSS will be loaded after */
+        .feature-icon { font-size: 3.5rem; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section { padding: 120px 0 80px; }
+        }
+    </style>
+    
+    <!-- Defer non-critical CSS -->
+    <link rel="preload" href="/css/non-critical.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/non-critical.css"></noscript>
+    
+    <!-- Or keep all CSS here if you prefer - it's already well organized -->
+    <style>
+        /* Rest of your existing CSS here */
         .animated-bg {
             position: fixed;
             top: 0;
@@ -70,15 +174,6 @@
         @keyframes moveBackground {
             0% { transform: translate(0, 0); }
             100% { transform: translate(50px, 50px); }
-        }
-        
-        /* Glassmorphism Navbar */
-        .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
         }
         
         .navbar.scrolled {
@@ -125,15 +220,6 @@
             transform: translateY(-2px);
         }
         
-        /* Hero Section with Parallax */
-        .hero-section {
-            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), url('../../aacemimage.png') center/cover;
-            color: white;
-            padding: 160px 0 100px;
-            text-align: center;
-            margin-top: -76px;
-        }
-        
         .hero-section::before {
             content: '';
             position: absolute;
@@ -150,31 +236,6 @@
             100% { transform: translate(60px, 60px); }
         }
         
-        .hero-section h1 {
-            font-weight: 800;
-            font-size: 3.5rem;
-            animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        .hero-section .lead {
-            animation: fadeInUp 1s ease 0.2s backwards;
-            font-size: 1.4rem;
-            font-weight: 300;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Floating Animation */
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
@@ -184,7 +245,6 @@
             animation: float 3s ease-in-out infinite;
         }
         
-        /* Feature Cards */
         .feature-icon {
             font-size: 3.5rem;
             background: var(--gradient-2);
@@ -203,14 +263,13 @@
             transform: scale(1.2) rotate(5deg);
         }
         
-        /* Section Styling */
         .section-title {
             text-align: center;
             margin-bottom: 60px;
             color: var(--dark);
             position: relative;
             font-weight: 800;
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem);
             font-family: 'Poppins', sans-serif;
         }
         
@@ -220,7 +279,7 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            font-size: 5rem;
+            font-size: clamp(3rem, 8vw, 5rem);
             font-weight: 900;
             color: rgba(99, 102, 241, 0.05);
             z-index: -1;
@@ -238,7 +297,7 @@
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
         
-        /* ---------- ANNOUNCEMENTS / NOTIFICATION CAROUSEL (ADDED) ---------- */
+        /* Notification Section */
         .notification-section {
             padding: 60px 0;
             background: rgba(255,255,255,0.6);
@@ -286,7 +345,7 @@
         .priority-low { background: linear-gradient(145deg, #6b7280, #4b5563); }
 
         .notification-title {
-            font-size: 1.9rem;
+            font-size: clamp(1.3rem, 4vw, 1.9rem);
             font-weight: 700;
             color: var(--dark);
             margin-bottom: 12px;
@@ -364,12 +423,11 @@
             background: rgba(255,255,255,0.7);
             border-radius: 32px;
         }
-        /* ---------- END ANNOUNCEMENTS STYLE ---------- */
         
-        /* Modern Course Cards */
+        /* Course Cards */
         .course-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 40px;
             margin: 60px 0;
         }
@@ -383,6 +441,7 @@
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(255, 255, 255, 0.5);
             position: relative;
+            height: 100%;
         }
         
         .course-card::before {
@@ -409,7 +468,7 @@
         }
         
         .course-title {
-            font-size: 1.6rem;
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
             margin-bottom: 15px;
             background: var(--gradient-2);
             -webkit-background-clip: text;
@@ -418,25 +477,6 @@
             line-height: 1.3;
             font-weight: 700;
             font-family: 'Poppins', sans-serif;
-        }
-        
-        .course-code {
-            font-size: 0.95rem;
-            color: var(--primary);
-            font-weight: 600;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-            padding: 10px 20px;
-            border-radius: 30px;
-            display: inline-block;
-            border: 2px solid rgba(99, 102, 241, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .course-card:hover .course-code {
-            background: var(--gradient-2);
-            color: white;
-            border-color: transparent;
         }
         
         .course-description {
@@ -477,7 +517,7 @@
         /* Academic Class Cards */
         .class-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 35px;
             margin: 60px 0;
         }
@@ -491,6 +531,7 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            height: 100%;
         }
         
         .class-card::before {
@@ -516,7 +557,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 20px;
-            font-size: 1.5rem;
+            font-size: clamp(1.3rem, 3vw, 1.5rem);
             font-weight: 700;
             font-family: 'Poppins', sans-serif;
         }
@@ -545,7 +586,7 @@
             font-size: 1.3rem;
         }
         
-        /* Modern Buttons */
+        /* Buttons */
         .btn-primary {
             background: var(--gradient-2);
             border: none;
@@ -612,6 +653,7 @@
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
+            height: 100%;
         }
         
         .dashboard-card::before {
@@ -673,6 +715,7 @@
             padding: 45px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.5);
+            height: 100%;
         }
         
         /* About Section */
@@ -687,9 +730,8 @@
             overflow: hidden;
             box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
             height: 100%;
-            min-height: 500px;
+            min-height: 400px;
             transition: all 0.5s ease;
-            display: block;
             background-color: #f0f0f0;
         }
         
@@ -697,7 +739,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            min-height: 500px;
+            min-height: 400px;
             display: block;
         }
         
@@ -714,6 +756,7 @@
             border-radius: 20px;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.5);
+            height: 100%;
         }
         
         .stat-item:hover {
@@ -722,7 +765,7 @@
         }
         
         .stat-number {
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 800;
             background: var(--gradient-2);
             -webkit-background-clip: text;
@@ -745,7 +788,7 @@
         
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 30px;
             margin: 50px 0;
         }
@@ -925,16 +968,8 @@
         
         /* Responsive */
         @media (max-width: 768px) {
-            .hero-section h1 {
-                font-size: 2.2rem;
-            }
-            
             .section-title {
                 font-size: 2rem;
-            }
-            
-            .section-title::before {
-                font-size: 3rem;
             }
             
             .course-cards, .class-cards {
@@ -943,7 +978,7 @@
             }
             
             .gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
             
             .stats-container {
@@ -954,8 +989,20 @@
             .notification-card {
                 padding: 30px 25px;
             }
-            .notification-title {
-                font-size: 1.5rem;
+            
+            .contact-form {
+                padding: 30px 25px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-primary, .btn-outline-primary {
+                padding: 12px 30px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -970,7 +1017,7 @@
             <a class="navbar-brand" href="index.html">
                 <i class="fas fa-graduation-cap me-2"></i>AACEM Institute
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -990,7 +1037,7 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section with Optimized Image -->
     <section class="hero-section">
         <div class="container">
             <h1 class="display-3 fw-bold mb-4">
@@ -1008,7 +1055,7 @@
         </div>
     </section>
 
-    <!-- ============ ANNOUNCEMENTS / NOTIFICATIONS CAROUSEL (ADDED) ============ -->
+    <!-- Announcements / Notifications Carousel -->
     <section class="notification-section">
         <div class="container">
             <h2 class="section-title fade-in" data-text="UPDATES">Latest Announcements</h2>
@@ -1034,7 +1081,6 @@
             </div>
         </div>
     </section>
-    <!-- ============ END ANNOUNCEMENTS SECTION ============ -->
 
     <!-- Features Overview -->
     <section class="py-5">
@@ -1112,7 +1158,11 @@
                 </div>
                 <div class="col-lg-6 fade-in">
                     <div class="about-image">
-                        <img src="aacemimage.png" alt="AACEM Institute">
+                        <img src="/images/aacemimage.png" 
+                             alt="AACEM Institute"
+                             width="600"
+                             height="400"
+                             loading="lazy">
                     </div>
                 </div>
             </div>
@@ -1126,9 +1176,13 @@
             <div class="row align-items-center">
                 <div class="col-md-4 text-center mb-4 mb-md-0 fade-in">
                     <div class="position-relative d-inline-block">
-                        <img src="director_photo.png" alt="Director Ajit Kumar Singh" 
+                        <img src="/images/director_photo.png" 
+                             alt="Director Ajit Kumar Singh" 
                              class="img-fluid rounded-circle mb-3" 
-                             style="max-width: 280px; border: 6px solid var(--primary); box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);">
+                             width="280"
+                             height="280"
+                             style="border: 6px solid var(--primary); box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);"
+                             loading="lazy">
                     </div>
                     <h4 class="fw-bold mt-3" style="color: var(--primary); font-size: 1.5rem;">Ajit Kumar Singh</h4>
                     <p class="text-muted fw-semibold">Director, AACEM Institute</p>
@@ -1168,12 +1222,6 @@
                         <p class="mt-3 text-muted fs-5">Loading computer courses...</p>
                     </div>
                 </div>
-
-                <!-- <div class="text-center mt-5 fade-in">
-                    <a href="courses.html" class="btn btn-primary btn-lg">
-                        <i class="fas fa-list me-2"></i>View All Computer Courses
-                    </a>
-                </div> -->
             </div>
 
             <!-- Academic Courses -->
@@ -1192,12 +1240,6 @@
                         <p class="mt-3 text-muted fs-5">Loading academic courses...</p>
                     </div>
                 </div>
-
-                <!-- <div class="text-center mt-5 fade-in">
-                    <a href="courses.html" class="btn btn-primary btn-lg">
-                        <i class="fas fa-list me-2"></i>View All Academic Courses
-                    </a>
-                </div> -->
             </div>
         </div>
     </section>
@@ -1211,54 +1253,48 @@
             </p>
             
             <div class="gallery-grid">
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_1.png">
-                    <img src="image_1.png" alt="Classroom Session">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_1.png">
+                    <img src="/images/image_1.png" alt="Classroom Session" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
                 
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_2.png">
-                    <img src="image_2.png" alt="Computer Lab">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_2.png">
+                    <img src="/images/image_2.png" alt="Computer Lab" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
                 
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_3.png">
-                    <img src="image_3.png" alt="Students in Library">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_3.png">
+                    <img src="/images/image_3.png" alt="Students in Library" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
                 
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_4.png">
-                    <img src="image_4.png" alt="Teaching Session">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_4.png">
+                    <img src="/images/image_4.png" alt="Teaching Session" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
                 
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_5.png">
-                    <img src="image_5.png" alt="Group Study">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_5.png">
+                    <img src="/images/image_5.png" alt="Group Study" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
                 
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_6.png">
-                    <img src="image_6.png" alt="Award Ceremony">
+                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="/images/image_6.png">
+                    <img src="/images/image_6.png" alt="Award Ceremony" loading="lazy" width="300" height="300">
                     <div class="gallery-overlay">
                         <i class="fas fa-search-plus"></i>
                     </div>
                 </div>
             </div>
-            
-            <!-- <div class="text-center mt-5 fade-in">
-                <a href="#" class="btn btn-primary btn-lg">
-                    <i class="fas fa-images me-2"></i>View More Photos
-                </a>
-            </div> -->
         </div>
     </section>
 
@@ -1437,10 +1473,10 @@
                     <a href="#contact" class="btn btn-primary mb-3">Contact Us</a>
 
                     <div class="social-icons">
-                        <a href="https://www.youtube.com/@aasthacomputereducationmis7772/featured"><i class="fab fa-youtube"></i></a>
-                        <a href="https://www.facebook.com/profile.php?id=100077894030395"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://www.youtube.com/@aasthacomputereducationmis7772/featured" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=100077894030395" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
             </div>
@@ -1468,7 +1504,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img id="modalImage" src="" alt="Gallery Image" class="img-fluid">
+                    <img id="modalImage" src="" alt="Gallery Image" class="img-fluid" loading="lazy">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1477,12 +1513,12 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script>
         // API Configuration
         const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
 
-        // Scroll Animations
+        // Scroll Animations Observer
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -1513,10 +1549,10 @@
             // Load courses
             loadCourses();
             
-            // ============ LOAD ANNOUNCEMENTS ============
+            // Load announcements
             loadAnnouncements();
 
-            // Auto close navbar on mobile when clicking nav links
+            // Auto close navbar on mobile
             const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
             const navbarToggler = document.querySelector('.navbar-toggler');
             const navbarCollapse = document.querySelector('.navbar-collapse');
@@ -1528,15 +1564,6 @@
                     }
                 });
             });
-            
-            const loginBtn = document.querySelector('.navbar a[href="choose-login.html"]');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', function() {
-                    if (navbarCollapse.classList.contains('show')) {
-                        navbarToggler.click();
-                    }
-                });
-            }
             
             // Contact form handling
             const contactForm = document.getElementById('contactForm');
@@ -1573,7 +1600,7 @@
             });
         });
 
-        // ============ ANNOUNCEMENTS: FETCH AND RENDER CAROUSEL ============
+        // Load announcements from API
         async function loadAnnouncements() {
             try {
                 const response = await fetch(`${API_BASE_URL}/announcements/all?is_active=true`);
@@ -1630,7 +1657,7 @@
             </div>`;
         }
 
-        // Load courses from API (your existing function, keep as is)
+        // Load courses from API
         async function loadCourses() {
             try {
                 const response = await fetch(`${API_BASE_URL}/courses`);
@@ -1642,15 +1669,78 @@
                     renderComputerCourses(computerCourses);
                     renderAcademicCourses(academicCourses);
                 } else {
-                    showError('No courses available at the moment.');
+                    showCourseError('No courses available at the moment.');
                 }
             } catch (error) {
                 console.error('Error loading courses:', error);
-                showError('Failed to load courses. Please try again later.');
+                showCourseError('Failed to load courses. Please try again later.');
             }
         }
 
-        // Submit contact form (your existing function)
+        function renderComputerCourses(courses) {
+            const container = document.getElementById('computer-courses-container');
+            if (!courses || courses.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-laptop-code fa-4x text-muted mb-3"></i><h5 class="text-muted">No computer courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
+                return;
+            }
+            let html = '';
+            courses.forEach((course, index) => {
+                const durationText = getDurationText(course.duration);
+                const feeAmount = parseFloat(course.fee_amount || 0);
+                html += `<div class="course-card fade-in" style="animation-delay: ${index * 0.1}s">
+                            <div class="course-content">
+                                <h3 class="course-title">${course.course_name}</h3>
+                                <p class="course-description">${course.description || 'Comprehensive course covering essential topics and practical skills.'}</p>
+                                <div class="mt-auto">
+                                    <div class="course-duration">
+                                        <i class="far fa-clock"></i>
+                                        <span>Duration: ${durationText}</span>
+                                    </div>
+                                    <div class="course-fee">
+                                        <i class="fas fa-rupee-sign"></i>
+                                        <span>₹${feeAmount.toLocaleString('en-IN')}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+            });
+            container.innerHTML = html;
+            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        }
+
+        function renderAcademicCourses(courses) {
+            const container = document.getElementById('academic-courses-container');
+            if (!courses || courses.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-book-open fa-4x text-muted mb-3"></i><h5 class="text-muted">No academic courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
+                return;
+            }
+            let html = '';
+            courses.forEach((course, index) => {
+                const durationText = getDurationText(course.duration);
+                const feeAmount = parseFloat(course.fee_amount || 0);
+                const facultyInfo = getFacultyInfo(course.course_name);
+                html += `<div class="class-card fade-in" style="animation-delay: ${index * 0.1}s">
+                            <h3>${course.course_name}</h3>
+                            <p class="class-subjects">${course.description || 'Comprehensive academic program designed for excellent results.'}</p>
+                            <div class="course-duration">
+                                <i class="far fa-clock"></i>
+                                <span>Duration: ${durationText}</span>
+                            </div>
+                            <div class="course-fee">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹${feeAmount.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div class="faculty">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>${facultyInfo}</span>
+                            </div>
+                        </div>`;
+            });
+            container.innerHTML = html;
+            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        }
+
+        // Submit contact form
         async function submitContactForm() {
             const form = document.getElementById('contactForm');
             const submitBtn = form.querySelector('button[type="submit"]');
@@ -1717,67 +1807,12 @@
             `;
         }
 
-        function renderComputerCourses(courses) {
-            const container = document.getElementById('computer-courses-container');
-            if (!courses || courses.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-laptop-code fa-4x text-muted mb-3"></i><h5 class="text-muted">No computer courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
-                return;
-            }
-            let html = '';
-            courses.forEach((course, index) => {
-                const durationText = getDurationText(course.duration);
-                const feeAmount = parseFloat(course.fee_amount || 0);
-                html += `<div class="course-card fade-in" style="animation-delay: ${index * 0.1}s">
-                            <div class="course-content">
-                                <h3 class="course-title">${course.course_name}</h3>
-                                <p class="course-description">${course.description || 'Comprehensive course covering essential topics and practical skills.'}</p>
-                                <div class="mt-auto">
-                                    <div class="course-duration">
-                                        <i class="far fa-clock"></i>
-                                        <span>Duration: ${durationText}</span>
-                                    </div>
-                                    <div class="course-fee">
-                                        <i class="fas fa-rupee-sign"></i>
-                                        <span>₹${feeAmount.toLocaleString('en-IN')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
-            });
-            container.innerHTML = html;
-            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-        }
-
-        function renderAcademicCourses(courses) {
-            const container = document.getElementById('academic-courses-container');
-            if (!courses || courses.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-book-open fa-4x text-muted mb-3"></i><h5 class="text-muted">No academic courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
-                return;
-            }
-            let html = '';
-            courses.forEach((course, index) => {
-                const durationText = getDurationText(course.duration);
-                const feeAmount = parseFloat(course.fee_amount || 0);
-                const facultyInfo = getFacultyInfo(course.course_name);
-                html += `<div class="class-card fade-in" style="animation-delay: ${index * 0.1}s">
-                            <h3>${course.course_name}</h3>
-                            <p class="class-subjects">${course.description || 'Comprehensive academic program designed for excellent results.'}</p>
-                            <div class="course-duration">
-                                <i class="far fa-clock"></i>
-                                <span>Duration: ${durationText}</span>
-                            </div>
-                            <div class="course-fee">
-                                <i class="fas fa-rupee-sign"></i>
-                                <span>₹${feeAmount.toLocaleString('en-IN')}</span>
-                            </div>
-                            <div class="faculty">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                <span>${facultyInfo}</span>
-                            </div>
-                        </div>`;
-            });
-            container.innerHTML = html;
-            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        function showCourseError(message) {
+            const computerContainer = document.getElementById('computer-courses-container');
+            const academicContainer = document.getElementById('academic-courses-container');
+            const errorHtml = `<div class="col-12 text-center py-5"><div class="alert alert-danger mx-auto" style="max-width: 500px;"><i class="fas fa-exclamation-triangle me-2"></i>${message}</div><button class="btn btn-primary mt-3" onclick="loadCourses()"><i class="fas fa-redo me-2"></i>Try Again</button></div>`;
+            if (computerContainer) computerContainer.innerHTML = errorHtml;
+            if (academicContainer) academicContainer.innerHTML = errorHtml;
         }
 
         function getDurationText(duration) {
@@ -1797,14 +1832,6 @@
                 else if (lowerName.includes('commerce')) return 'Commerce Department Faculty';
             }
             return 'Specialized Faculty Team';
-        }
-
-        function showError(message) {
-            const computerContainer = document.getElementById('computer-courses-container');
-            const academicContainer = document.getElementById('academic-courses-container');
-            const errorHtml = `<div class="col-12 text-center py-5"><div class="alert alert-danger mx-auto" style="max-width: 500px;"><i class="fas fa-exclamation-triangle me-2"></i>${message}</div><button class="btn btn-primary mt-3" onclick="loadCourses()"><i class="fas fa-redo me-2"></i>Try Again</button></div>`;
-            if (computerContainer) computerContainer.innerHTML = errorHtml;
-            if (academicContainer) academicContainer.innerHTML = errorHtml;
         }
 
         window.loadCourses = loadCourses;
