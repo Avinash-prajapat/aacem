@@ -3668,12 +3668,22 @@ function logout() {
     }
 }
 
+// ==================== EDIT STUDENT FUNCTION - FIXED ====================
 async function editStudent(studentId) {
+    console.log('✏️ Editing student:', studentId);
+    
+    // Pehle studentsData refresh karo (latest data ke liye)
+    if (!studentsData || studentsData.length === 0) {
+        await loadDashboardData();
+    }
+    
     const student = studentsData.find(s => s.student_id === studentId);
     if (!student) {
         showError('Student not found!');
         return;
     }
+
+    console.log('📦 Student data for edit:', student);
 
     const form = document.getElementById('studentForm');
     if (!form) {
@@ -3681,16 +3691,38 @@ async function editStudent(studentId) {
         return;
     }
 
-    // Set existing fields
+    // ========== BASIC FIELDS SET KARO ==========
     form.querySelector('input[name="fullName"]').value = student.name || '';
     form.querySelector('input[name="parentName"]').value = student.parent_name || '';
     form.querySelector('input[name="phone"]').value = student.phone || '';
     form.querySelector('input[name="email"]').value = student.email || '';
-    form.querySelector('select[name="course"]').value = student.course || '';
     form.querySelector('input[name="fee"]').value = student.fee_amount || '';
     form.querySelector('textarea[name="address"]').value = student.address || '';
     
-    // ========== NEW FIELDS - ADD THESE LINES ==========
+    // ========== COURSE DROPDOWN SET KARO (IMPORTANT!) ==========
+    const courseSelect = form.querySelector('select[name="course"]');
+    if (courseSelect && student.course) {
+        // Pehle ensure karo ki coursesData loaded hai
+        if (coursesData.length === 0) {
+            await loadDashboardData();
+        }
+        
+        // Course dropdown populate karo
+        courseSelect.innerHTML = '<option value="">Select Course</option>';
+        coursesData.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.course_code;
+            option.textContent = `${course.course_name} (${course.course_code})`;
+            if (course.course_code === student.course) {
+                option.selected = true;
+            }
+            courseSelect.appendChild(option);
+        });
+        
+        console.log('✅ Course set to:', student.course);
+    }
+    
+    // ========== NEW FIELDS SET KARO ==========
     const dobInput = document.getElementById('studentDob');
     const genderSelect = document.getElementById('studentGender');
     const categorySelect = document.getElementById('studentCategory');
@@ -3703,12 +3735,48 @@ async function editStudent(studentId) {
     if (fatherMobileInput) fatherMobileInput.value = student.father_mobile || '';
     if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
     
-    // Set qualifications
+    // ========== QUALIFICATIONS SET KARO ==========
     if (student.qualifications && student.qualifications.length > 0) {
+        console.log('📚 Setting qualifications:', student.qualifications);
         setQualificationsData(student.qualifications);
+    } else {
+        // Reset qualifications container to single empty entry
+        const container = document.getElementById('qualificationsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="qualification-entry mb-2 p-2 border rounded">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm qualification-level">
+                                <option value="">Select Level</option>
+                                <option value="10th">10th</option>
+                                <option value="12th">12th</option>
+                                <option value="Graduation">Graduation</option>
+                                <option value="Post Graduation">Post Graduation</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control form-control-sm" placeholder="Board/University">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control form-control-sm" placeholder="Marks">
+                        </div>
+                        <div class="col-md-1">
+                            <input type="text" class="form-control form-control-sm" placeholder="Year">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
     
-    // Set photo preview
+    // ========== STUDENT PHOTO PREVIEW SET KARO ==========
     if (student.student_photo) {
         const previewDiv = document.getElementById('photoPreview');
         const previewImg = document.getElementById('previewImage');
@@ -3716,14 +3784,17 @@ async function editStudent(studentId) {
             previewImg.src = student.student_photo;
             previewDiv.style.display = 'block';
         }
+    } else {
+        const previewDiv = document.getElementById('photoPreview');
+        if (previewDiv) previewDiv.style.display = 'none';
     }
-    // ========== END NEW FIELDS ==========
 
+    // ========== MODAL TITLE AND BUTTON UPDATE ==========
     const modal = document.getElementById('studentModal');
     const title = modal.querySelector('.modal-title');
     const saveBtn = modal.querySelector('.btn-primary');
     
-    if (title) title.textContent = 'Edit Student';
+    if (title) title.textContent = '✏️ Edit Student';
     if (saveBtn) {
         saveBtn.textContent = 'Update Student';
         saveBtn.onclick = function() { saveStudent(); };
@@ -3732,6 +3803,8 @@ async function editStudent(studentId) {
     currentEditId = studentId;
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
+    
+    console.log('✅ Edit modal opened for student:', studentId);
 }
 
 // Edit Teacher Function
