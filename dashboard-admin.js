@@ -3017,61 +3017,72 @@ function resetModalToAddMode(modalId) {
 
 // ==================== NEW FUNCTIONS FOR STUDENT EXTRA FIELDS ====================
 
-// Add qualification entry
+// ==================== ADD QUALIFICATION ====================
 function addQualification() {
     const container = document.getElementById('qualificationsContainer');
     if (!container) return;
     
     const entry = document.createElement('div');
-    entry.className = 'qualification-entry mb-3 p-3 border rounded';
+    entry.className = 'qualification-entry mb-2 p-2 border rounded';
     entry.innerHTML = `
         <div class="row g-2">
             <div class="col-md-3">
-                <select class="form-select qualification-level">
+                <select class="form-select form-select-sm qualification-level">
                     <option value="">Select Level</option>
                     <option value="10th">10th</option>
                     <option value="12th">12th</option>
                     <option value="Graduation">Graduation</option>
                     <option value="Post Graduation">Post Graduation</option>
-                    <option value="Diploma">Diploma</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" class="form-control" placeholder="Institute/School Name">
+                <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
             </div>
             <div class="col-md-2">
-                <input type="text" class="form-control" placeholder="Board/University">
+                <input type="text" class="form-control form-control-sm" placeholder="Board/University">
             </div>
             <div class="col-md-2">
-                <input type="text" class="form-control" placeholder="Marks (e.g., 85%)">
+                <input type="text" class="form-control form-control-sm" placeholder="Marks">
             </div>
             <div class="col-md-1">
-                <input type="text" class="form-control" placeholder="Year">
+                <input type="text" class="form-control form-control-sm" placeholder="Year">
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
             </div>
         </div>
     `;
+    
     container.appendChild(entry);
+    console.log('✅ New qualification entry added');
 }
 
-// Remove qualification entry
+// ==================== REMOVE QUALIFICATION ====================
 function removeQualification(button) {
     const entry = button.closest('.qualification-entry');
-    if (document.querySelectorAll('.qualification-entry').length > 1) {
+    const container = document.getElementById('qualificationsContainer');
+    const entries = container.querySelectorAll('.qualification-entry');
+    
+    if (entries.length > 1) {
         entry.remove();
+        console.log('✅ Qualification entry removed');
     } else {
+        // Clear the inputs instead of removing
         entry.querySelectorAll('input').forEach(input => input.value = '');
-        const select = entry.querySelector('.qualification-level');
-        if (select) select.value = '';
+        const levelSelect = entry.querySelector('.qualification-level');
+        if (levelSelect) levelSelect.value = '';
+        console.log('✅ Cleared last qualification entry');
     }
 }
 
-// Get all qualifications as JSON
+// ==================== GET QUALIFICATIONS DATA (Multiple entries support) ====================
 function getQualificationsData() {
     const qualifications = [];
-    document.querySelectorAll('.qualification-entry').forEach(entry => {
+    const entries = document.querySelectorAll('.qualification-entry');
+    
+    console.log('📚 Total qualification entries found:', entries.length);
+    
+    entries.forEach((entry, index) => {
         const levelSelect = entry.querySelector('.qualification-level');
         const inputs = entry.querySelectorAll('input');
         
@@ -3081,43 +3092,129 @@ function getQualificationsData() {
         const marks = inputs[2] ? inputs[2].value : '';
         const year = inputs[3] ? inputs[3].value : '';
         
-        if (level) {
-            qualifications.push({ level, institute, board, marks, year });
+        console.log(`Entry ${index + 1}: Level="${level}", Institute="${institute}", Board="${board}", Marks="${marks}", Year="${year}"`);
+        
+        // Sirf wahi entries add karo jinka level select kiya hai
+        if (level && level !== '') {
+            qualifications.push({ 
+                level: level, 
+                institute: institute, 
+                board: board, 
+                marks: marks, 
+                year: year 
+            });
         }
     });
+    
+    console.log('✅ Final qualifications to save:', qualifications);
     return qualifications;
 }
 
-// Set qualifications data to form (for editing)
+// ==================== SET QUALIFICATIONS DATA (Multiple entries support) ====================
 function setQualificationsData(qualifications) {
     const container = document.getElementById('qualificationsContainer');
-    if (!container || !qualifications || qualifications.length === 0) return;
+    if (!container) return;
     
+    console.log('🔄 Setting qualifications data:', qualifications);
+    
+    if (!qualifications || qualifications.length === 0) {
+        // Reset to single empty entry
+        container.innerHTML = `
+            <div class="qualification-entry mb-2 p-2 border rounded">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm qualification-level">
+                            <option value="">Select Level</option>
+                            <option value="10th">10th</option>
+                            <option value="12th">12th</option>
+                            <option value="Graduation">Graduation</option>
+                            <option value="Post Graduation">Post Graduation</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="Board/University">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="Marks">
+                    </div>
+                    <div class="col-md-1">
+                        <input type="text" class="form-control form-control-sm" placeholder="Year">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Clear container
     container.innerHTML = '';
+    
+    // Add each qualification as a new entry
     qualifications.forEach((qual, index) => {
-        if (index === 0) {
-            const firstEntry = document.querySelector('.qualification-entry');
-            if (firstEntry) {
-                firstEntry.querySelector('.qualification-level').value = qual.level || '';
-                const inputs = firstEntry.querySelectorAll('input');
-                if (inputs[0]) inputs[0].value = qual.institute || '';
-                if (inputs[1]) inputs[1].value = qual.board || '';
-                if (inputs[2]) inputs[2].value = qual.marks || '';
-                if (inputs[3]) inputs[3].value = qual.year || '';
-            }
-        } else {
-            addQualification();
-            const newEntry = container.lastElementChild;
-            if (newEntry) {
-                newEntry.querySelector('.qualification-level').value = qual.level || '';
-                const inputs = newEntry.querySelectorAll('input');
-                if (inputs[0]) inputs[0].value = qual.institute || '';
-                if (inputs[1]) inputs[1].value = qual.board || '';
-                if (inputs[2]) inputs[2].value = qual.marks || '';
-                if (inputs[3]) inputs[3].value = qual.year || '';
-            }
+        const entry = document.createElement('div');
+        entry.className = 'qualification-entry mb-2 p-2 border rounded';
+        entry.innerHTML = `
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm qualification-level">
+                        <option value="">Select Level</option>
+                        <option value="10th">10th</option>
+                        <option value="12th">12th</option>
+                        <option value="Graduation">Graduation</option>
+                        <option value="Post Graduation">Post Graduation</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="Institute Name" value="${escapeHtmlStatic(qual.institute || '')}">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="Board/University" value="${escapeHtmlStatic(qual.board || '')}">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="Marks" value="${escapeHtmlStatic(qual.marks || '')}">
+                </div>
+                <div class="col-md-1">
+                    <input type="text" class="form-control form-control-sm" placeholder="Year" value="${escapeHtmlStatic(qual.year || '')}">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                </div>
+            </div>
+        `;
+        
+        // Set the selected level
+        const levelSelect = entry.querySelector('.qualification-level');
+        if (levelSelect && qual.level) {
+            levelSelect.value = qual.level;
+        }
+        
+        container.appendChild(entry);
+    });
+    
+    // Enable delete buttons for all entries
+    const entries = document.querySelectorAll('.qualification-entry');
+    entries.forEach(entry => {
+        const delBtn = entry.querySelector('button');
+        if (delBtn) {
+            delBtn.disabled = false;
         }
     });
+    
+    console.log('✅ Set', qualifications.length, 'qualifications');
+}
+
+// Helper function to escape HTML
+function escapeHtmlStatic(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Convert file to base64
@@ -3159,6 +3256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== END NEW FUNCTIONS ====================
 
+// ==================== SAVE STUDENT - COMPLETE WORKING FUNCTION ====================
 async function saveStudent() {
     const form = document.getElementById('studentForm');
     if (!form) {
@@ -3168,6 +3266,7 @@ async function saveStudent() {
     
     const formData = new FormData(form);
     
+    // Required fields validation
     const requiredFields = ['fullName', 'parentName', 'phone', 'course', 'fee'];
     const missingFields = requiredFields.filter(field => !formData.get(field));
     
@@ -3176,42 +3275,61 @@ async function saveStudent() {
         return;
     }
     
+    // Get Save button
+    const button = document.getElementById('studentSaveBtn');
+    const originalText = button.innerHTML;
+    
     try {
-        const button = document.getElementById('studentSaveBtn');
-        const originalText = button.innerHTML;
         button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         button.disabled = true;
         
-        // ========== NEW FIELDS - ADD THESE LINES ==========
+        // ========== GET BASIC FIELDS ==========
+        const fullName = formData.get('fullName');
+        const parentName = formData.get('parentName');
+        const phone = formData.get('phone');
+        const email = formData.get('email');
+        const course = formData.get('course');
+        const fee = formData.get('fee');
+        const address = formData.get('address');
+        
+        // ========== GET NEW FIELDS ==========
         const dob = document.getElementById('studentDob')?.value || null;
         const gender = document.getElementById('studentGender')?.value || null;
         const category = document.getElementById('studentCategory')?.value || null;
         const fatherMobile = document.getElementById('studentFatherMobile')?.value || null;
         const fatherOccupation = document.getElementById('studentFatherOccupation')?.value || null;
-        const qualifications = getQualificationsData();
         
+        // ========== GET QUALIFICATIONS (Multiple entries) ==========
+        const qualifications = getQualificationsData();
+        console.log('📚 Saving qualifications:', qualifications);
+        
+        // ========== HANDLE PHOTO UPLOAD ==========
         let studentPhoto = null;
         const photoFile = document.getElementById('studentPhoto')?.files[0];
+        
         if (photoFile) {
+            // New photo uploaded - convert to base64
             studentPhoto = await convertToBase64(photoFile);
+            console.log('📸 New photo uploaded, size:', studentPhoto.length);
+        } else if (currentEditId) {
+            // Editing mode - keep existing photo
+            // We'll get it from existing student data
+            const existingStudent = studentsData.find(s => s.student_id === currentEditId);
+            if (existingStudent && existingStudent.student_photo) {
+                studentPhoto = existingStudent.student_photo;
+                console.log('📸 Keeping existing photo');
+            }
         }
-        // ========== END NEW FIELDS ==========
         
-        const url = currentEditId ? 
-            `https://aacem-backend.onrender.com/api/update-student/${currentEditId}` :
-            'https://aacem-backend.onrender.com/api/add-student';
-        
-        const method = currentEditId ? 'PUT' : 'POST';
-        
+        // ========== PREPARE REQUEST BODY ==========
         const requestBody = {
-            fullName: formData.get('fullName'),
-            parentName: formData.get('parentName'),
-            phone: formData.get('phone'),
-            email: formData.get('email'),
-            course: formData.get('course'),
-            fee: formData.get('fee'),
-            address: formData.get('address'),
-            // ========== ADD THESE NEW FIELDS IN BODY ==========
+            fullName: fullName,
+            parentName: parentName,
+            phone: phone,
+            email: email,
+            course: course,
+            fee: parseFloat(fee),
+            address: address,
             dob: dob,
             gender: gender,
             category: category,
@@ -3219,9 +3337,17 @@ async function saveStudent() {
             fatherOccupation: fatherOccupation,
             studentPhoto: studentPhoto,
             qualifications: qualifications
-            // ========== END NEW FIELDS ==========
         };
         
+        console.log('📤 Sending data to server:', requestBody);
+        
+        // Determine URL and method
+        const url = currentEditId 
+            ? `https://aacem-backend.onrender.com/api/update-student/${currentEditId}`
+            : 'https://aacem-backend.onrender.com/api/add-student';
+        const method = currentEditId ? 'PUT' : 'POST';
+        
+        // Send to server
         const response = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
@@ -3229,19 +3355,63 @@ async function saveStudent() {
         });
         
         const result = await response.json();
+        console.log('📥 Server response:', result);
         
         button.innerHTML = originalText;
         button.disabled = false;
         
         if (result.success) {
-            await loadDashboardData();
+            showSuccess(currentEditId ? 'Student updated successfully!' : 'Student added successfully!');
+            
+            // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
             if (modal) modal.hide();
-            showSuccess(currentEditId ? 'Student updated successfully!' : 'Student added successfully!');
             
             // Reset form
             document.getElementById('studentForm').reset();
             document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('editSyllabusId').value = '';
+            
+            // Reset qualifications to single empty entry
+            const container = document.getElementById('qualificationsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="qualification-entry mb-2 p-2 border rounded">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm qualification-level">
+                                    <option value="">Select Level</option>
+                                    <option value="10th">10th</option>
+                                    <option value="12th">12th</option>
+                                    <option value="Graduation">Graduation</option>
+                                    <option value="Post Graduation">Post Graduation</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" placeholder="Board/University">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" placeholder="Marks">
+                            </div>
+                            <div class="col-md-1">
+                                <input type="text" class="form-control form-control-sm" placeholder="Year">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            currentEditId = null;
+            
+            // Reload dashboard data
+            await loadDashboardData();
+            
         } else {
             showError('Error: ' + (result.message || 'Unknown error'));
         }
@@ -3249,11 +3419,8 @@ async function saveStudent() {
     } catch (error) {
         console.error('Error saving student:', error);
         showError('Failed to save student: ' + error.message);
-        const button = document.getElementById('studentSaveBtn');
-        if (button) {
-            button.innerHTML = 'Save Student';
-            button.disabled = false;
-        }
+        button.innerHTML = originalText;
+        button.disabled = false;
     }
 }
 // Save teacher function
@@ -3668,14 +3835,12 @@ function logout() {
     }
 }
 
-// ==================== EDIT STUDENT FUNCTION - FIXED ====================
+// ==================== EDIT STUDENT - COMPLETE WORKING FUNCTION ====================
 async function editStudent(studentId) {
     console.log('✏️ Editing student:', studentId);
     
-    // Pehle studentsData refresh karo (latest data ke liye)
-    if (!studentsData || studentsData.length === 0) {
-        await loadDashboardData();
-    }
+    // Refresh student data first
+    await loadDashboardData();
     
     const student = studentsData.find(s => s.student_id === studentId);
     if (!student) {
@@ -3691,7 +3856,7 @@ async function editStudent(studentId) {
         return;
     }
 
-    // ========== BASIC FIELDS SET KARO ==========
+    // ========== BASIC FIELDS ==========
     form.querySelector('input[name="fullName"]').value = student.name || '';
     form.querySelector('input[name="parentName"]').value = student.parent_name || '';
     form.querySelector('input[name="phone"]').value = student.phone || '';
@@ -3699,30 +3864,26 @@ async function editStudent(studentId) {
     form.querySelector('input[name="fee"]').value = student.fee_amount || '';
     form.querySelector('textarea[name="address"]').value = student.address || '';
     
-    // ========== COURSE DROPDOWN SET KARO (IMPORTANT!) ==========
+    // ========== COURSE DROPDOWN ==========
     const courseSelect = form.querySelector('select[name="course"]');
     if (courseSelect && student.course) {
-        // Pehle ensure karo ki coursesData loaded hai
-        if (coursesData.length === 0) {
-            await loadDashboardData();
-        }
-        
-        // Course dropdown populate karo
         courseSelect.innerHTML = '<option value="">Select Course</option>';
-        coursesData.forEach(course => {
+        
+        for (let i = 0; i < coursesData.length; i++) {
+            const course = coursesData[i];
             const option = document.createElement('option');
             option.value = course.course_code;
             option.textContent = `${course.course_name} (${course.course_code})`;
-            if (course.course_code === student.course) {
+            
+            if (String(course.course_code) === String(student.course)) {
                 option.selected = true;
             }
             courseSelect.appendChild(option);
-        });
-        
+        }
         console.log('✅ Course set to:', student.course);
     }
     
-    // ========== NEW FIELDS SET KARO ==========
+    // ========== NEW FIELDS ==========
     const dobInput = document.getElementById('studentDob');
     const genderSelect = document.getElementById('studentGender');
     const categorySelect = document.getElementById('studentCategory');
@@ -3735,12 +3896,30 @@ async function editStudent(studentId) {
     if (fatherMobileInput) fatherMobileInput.value = student.father_mobile || '';
     if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
     
-    // ========== QUALIFICATIONS SET KARO ==========
+    // ========== STUDENT PHOTO ==========
+    if (student.student_photo) {
+        const previewDiv = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('previewImage');
+        if (previewDiv && previewImg) {
+            previewImg.src = student.student_photo;
+            previewDiv.style.display = 'block';
+        }
+        console.log('📸 Existing photo found');
+    } else {
+        const previewDiv = document.getElementById('photoPreview');
+        if (previewDiv) previewDiv.style.display = 'none';
+    }
+    
+    // Clear file input (so user can upload new photo if needed)
+    const photoInput = document.getElementById('studentPhoto');
+    if (photoInput) photoInput.value = '';
+    
+    // ========== QUALIFICATIONS ==========
     if (student.qualifications && student.qualifications.length > 0) {
         console.log('📚 Setting qualifications:', student.qualifications);
         setQualificationsData(student.qualifications);
     } else {
-        // Reset qualifications container to single empty entry
+        // Reset to single empty entry
         const container = document.getElementById('qualificationsContainer');
         if (container) {
             container.innerHTML = `
@@ -3775,21 +3954,8 @@ async function editStudent(studentId) {
             `;
         }
     }
-    
-    // ========== STUDENT PHOTO PREVIEW SET KARO ==========
-    if (student.student_photo) {
-        const previewDiv = document.getElementById('photoPreview');
-        const previewImg = document.getElementById('previewImage');
-        if (previewDiv && previewImg) {
-            previewImg.src = student.student_photo;
-            previewDiv.style.display = 'block';
-        }
-    } else {
-        const previewDiv = document.getElementById('photoPreview');
-        if (previewDiv) previewDiv.style.display = 'none';
-    }
 
-    // ========== MODAL TITLE AND BUTTON UPDATE ==========
+    // ========== UPDATE MODAL UI ==========
     const modal = document.getElementById('studentModal');
     const title = modal.querySelector('.modal-title');
     const saveBtn = modal.querySelector('.btn-primary');
@@ -3797,14 +3963,11 @@ async function editStudent(studentId) {
     if (title) title.textContent = '✏️ Edit Student';
     if (saveBtn) {
         saveBtn.textContent = 'Update Student';
-        saveBtn.onclick = function() { saveStudent(); };
     }
 
     currentEditId = studentId;
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
-    
-    console.log('✅ Edit modal opened for student:', studentId);
 }
 
 // Edit Teacher Function
