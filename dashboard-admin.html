@@ -3552,6 +3552,104 @@
                             <label class="form-label">Address</label>
                             <textarea class="form-control" name="address" rows="3" placeholder="Enter complete address"></textarea>
                         </div>
+                        <!-- 🔽 YEH POORA SECTION ADD KARO address field ke BAAD -->
+
+                        <!-- NEW FIELDS SECTION -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <hr>
+                                <h6 class="mb-3 text-primary"><i class="fas fa-user-plus me-2"></i>Additional Information (Optional)</h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Date of Birth</label>
+                                <input type="date" class="form-control" name="dob" id="studentDob">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Gender</label>
+                                <select class="form-select" name="gender" id="studentGender">
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Category</label>
+                                <select class="form-select" name="category" id="studentCategory">
+                                    <option value="">Select</option>
+                                    <option value="General">General</option>
+                                    <option value="OBC">OBC</option>
+                                    <option value="SC">SC</option>
+                                    <option value="ST">ST</option>
+                                    <option value="EWS">EWS</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Father's Mobile</label>
+                                <input type="tel" class="form-control" name="fatherMobile" id="studentFatherMobile" placeholder="Father's contact number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Father's Occupation</label>
+                                <input type="text" class="form-control" name="fatherOccupation" id="studentFatherOccupation" placeholder="e.g., Farmer, Business, Service">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label>Student Photo</label>
+                                <input type="file" class="form-control" name="studentPhoto" id="studentPhoto" accept="image/*">
+                                <small class="text-muted">Upload photo (Optional)</small>
+                                <div id="photoPreview" class="mt-2" style="display: none;">
+                                    <img id="previewImage" style="width: 80px; height: 80px; border-radius: 10px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- QUALIFICATIONS SECTION -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="fw-bold">Qualifications (Optional)</label>
+                                <div id="qualificationsContainer">
+                                    <div class="qualification-entry mb-2 p-2 border rounded">
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <select class="form-select form-select-sm qualification-level">
+                                                    <option value="">Select Level</option>
+                                                    <option value="10th">10th</option>
+                                                    <option value="12th">12th</option>
+                                                    <option value="Graduation">Graduation</option>
+                                                    <option value="Post Graduation">Post Graduation</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="text" class="form-control form-control-sm" placeholder="Board/University">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="text" class="form-control form-control-sm" placeholder="Marks">
+                                            </div>
+                                            <div class="col-md-1">
+                                                <input type="text" class="form-control form-control-sm" placeholder="Year">
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-info mt-1" onclick="addQualification()">
+                                    <i class="fas fa-plus"></i> Add More
+                                </button>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
