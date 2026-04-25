@@ -3015,11 +3015,154 @@ function resetModalToAddMode(modalId) {
     currentEditId = null;
 }
 
-// Save student function
+// ==================== NEW FUNCTIONS FOR STUDENT EXTRA FIELDS ====================
+
+// Add qualification entry
+function addQualification() {
+    const container = document.getElementById('qualificationsContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'qualification-entry mb-3 p-3 border rounded';
+    entry.innerHTML = `
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select class="form-select qualification-level">
+                    <option value="">Select Level</option>
+                    <option value="10th">10th</option>
+                    <option value="12th">12th</option>
+                    <option value="Graduation">Graduation</option>
+                    <option value="Post Graduation">Post Graduation</option>
+                    <option value="Diploma">Diploma</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" placeholder="Institute/School Name">
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" placeholder="Board/University">
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" placeholder="Marks (e.g., 85%)">
+            </div>
+            <div class="col-md-1">
+                <input type="text" class="form-control" placeholder="Year">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+            </div>
+        </div>
+    `;
+    container.appendChild(entry);
+}
+
+// Remove qualification entry
+function removeQualification(button) {
+    const entry = button.closest('.qualification-entry');
+    if (document.querySelectorAll('.qualification-entry').length > 1) {
+        entry.remove();
+    } else {
+        entry.querySelectorAll('input').forEach(input => input.value = '');
+        const select = entry.querySelector('.qualification-level');
+        if (select) select.value = '';
+    }
+}
+
+// Get all qualifications as JSON
+function getQualificationsData() {
+    const qualifications = [];
+    document.querySelectorAll('.qualification-entry').forEach(entry => {
+        const levelSelect = entry.querySelector('.qualification-level');
+        const inputs = entry.querySelectorAll('input');
+        
+        const level = levelSelect ? levelSelect.value : '';
+        const institute = inputs[0] ? inputs[0].value : '';
+        const board = inputs[1] ? inputs[1].value : '';
+        const marks = inputs[2] ? inputs[2].value : '';
+        const year = inputs[3] ? inputs[3].value : '';
+        
+        if (level) {
+            qualifications.push({ level, institute, board, marks, year });
+        }
+    });
+    return qualifications;
+}
+
+// Set qualifications data to form (for editing)
+function setQualificationsData(qualifications) {
+    const container = document.getElementById('qualificationsContainer');
+    if (!container || !qualifications || qualifications.length === 0) return;
+    
+    container.innerHTML = '';
+    qualifications.forEach((qual, index) => {
+        if (index === 0) {
+            const firstEntry = document.querySelector('.qualification-entry');
+            if (firstEntry) {
+                firstEntry.querySelector('.qualification-level').value = qual.level || '';
+                const inputs = firstEntry.querySelectorAll('input');
+                if (inputs[0]) inputs[0].value = qual.institute || '';
+                if (inputs[1]) inputs[1].value = qual.board || '';
+                if (inputs[2]) inputs[2].value = qual.marks || '';
+                if (inputs[3]) inputs[3].value = qual.year || '';
+            }
+        } else {
+            addQualification();
+            const newEntry = container.lastElementChild;
+            if (newEntry) {
+                newEntry.querySelector('.qualification-level').value = qual.level || '';
+                const inputs = newEntry.querySelectorAll('input');
+                if (inputs[0]) inputs[0].value = qual.institute || '';
+                if (inputs[1]) inputs[1].value = qual.board || '';
+                if (inputs[2]) inputs[2].value = qual.marks || '';
+                if (inputs[3]) inputs[3].value = qual.year || '';
+            }
+        }
+    });
+}
+
+// Convert file to base64
+function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Preview photo before upload
+function previewPhoto(input) {
+    const previewDiv = document.getElementById('photoPreview');
+    const previewImg = document.getElementById('previewImage');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewDiv.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewDiv.style.display = 'none';
+    }
+}
+
+// Add event listener for photo preview
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('studentPhoto');
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            previewPhoto(this);
+        });
+    }
+});
+
+// ==================== END NEW FUNCTIONS ====================
+
 async function saveStudent() {
     const form = document.getElementById('studentForm');
     if (!form) {
-        alert('Student form not found');
+        showError('Student form not found');
         return;
     }
     
@@ -3029,15 +3172,30 @@ async function saveStudent() {
     const missingFields = requiredFields.filter(field => !formData.get(field));
     
     if (missingFields.length > 0) {
-        alert('Please fill all required fields: ' + missingFields.join(', '));
+        showError('Please fill all required fields: ' + missingFields.join(', '));
         return;
     }
     
     try {
         const button = document.getElementById('studentSaveBtn');
         const originalText = button.innerHTML;
-        button.innerHTML = '<span class="loading-spinner"></span> Saving...';
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         button.disabled = true;
+        
+        // ========== NEW FIELDS - ADD THESE LINES ==========
+        const dob = document.getElementById('studentDob')?.value || null;
+        const gender = document.getElementById('studentGender')?.value || null;
+        const category = document.getElementById('studentCategory')?.value || null;
+        const fatherMobile = document.getElementById('studentFatherMobile')?.value || null;
+        const fatherOccupation = document.getElementById('studentFatherOccupation')?.value || null;
+        const qualifications = getQualificationsData();
+        
+        let studentPhoto = null;
+        const photoFile = document.getElementById('studentPhoto')?.files[0];
+        if (photoFile) {
+            studentPhoto = await convertToBase64(photoFile);
+        }
+        // ========== END NEW FIELDS ==========
         
         const url = currentEditId ? 
             `https://aacem-backend.onrender.com/api/update-student/${currentEditId}` :
@@ -3045,20 +3203,29 @@ async function saveStudent() {
         
         const method = currentEditId ? 'PUT' : 'POST';
         
+        const requestBody = {
+            fullName: formData.get('fullName'),
+            parentName: formData.get('parentName'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            course: formData.get('course'),
+            fee: formData.get('fee'),
+            address: formData.get('address'),
+            // ========== ADD THESE NEW FIELDS IN BODY ==========
+            dob: dob,
+            gender: gender,
+            category: category,
+            fatherMobile: fatherMobile,
+            fatherOccupation: fatherOccupation,
+            studentPhoto: studentPhoto,
+            qualifications: qualifications
+            // ========== END NEW FIELDS ==========
+        };
+        
         const response = await fetch(url, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                fullName: formData.get('fullName'),
-                parentName: formData.get('parentName'),
-                phone: formData.get('phone'),
-                email: formData.get('email'),
-                course: formData.get('course'),
-                fee: formData.get('fee'),
-                address: formData.get('address')
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
         });
         
         const result = await response.json();
@@ -3071,21 +3238,24 @@ async function saveStudent() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
             if (modal) modal.hide();
             showSuccess(currentEditId ? 'Student updated successfully!' : 'Student added successfully!');
+            
+            // Reset form
+            document.getElementById('studentForm').reset();
+            document.getElementById('photoPreview').style.display = 'none';
         } else {
-            alert('Error: ' + (result.message || 'Unknown error'));
+            showError('Error: ' + (result.message || 'Unknown error'));
         }
         
     } catch (error) {
         console.error('Error saving student:', error);
+        showError('Failed to save student: ' + error.message);
         const button = document.getElementById('studentSaveBtn');
         if (button) {
             button.innerHTML = 'Save Student';
             button.disabled = false;
         }
-        alert('Failed to save student. Please try again. Error: ' + error.message);
     }
 }
-
 // Save teacher function
 async function saveTeacher() {
     const form = document.getElementById('teacherForm');
@@ -3498,20 +3668,20 @@ function logout() {
     }
 }
 
-// Edit Student Function
 async function editStudent(studentId) {
     const student = studentsData.find(s => s.student_id === studentId);
     if (!student) {
-        alert('Student not found!');
+        showError('Student not found!');
         return;
     }
 
     const form = document.getElementById('studentForm');
     if (!form) {
-        alert('Student form not found');
+        showError('Student form not found');
         return;
     }
 
+    // Set existing fields
     form.querySelector('input[name="fullName"]').value = student.name || '';
     form.querySelector('input[name="parentName"]').value = student.parent_name || '';
     form.querySelector('input[name="phone"]').value = student.phone || '';
@@ -3519,6 +3689,35 @@ async function editStudent(studentId) {
     form.querySelector('select[name="course"]').value = student.course || '';
     form.querySelector('input[name="fee"]').value = student.fee_amount || '';
     form.querySelector('textarea[name="address"]').value = student.address || '';
+    
+    // ========== NEW FIELDS - ADD THESE LINES ==========
+    const dobInput = document.getElementById('studentDob');
+    const genderSelect = document.getElementById('studentGender');
+    const categorySelect = document.getElementById('studentCategory');
+    const fatherMobileInput = document.getElementById('studentFatherMobile');
+    const fatherOccupationInput = document.getElementById('studentFatherOccupation');
+    
+    if (dobInput) dobInput.value = student.dob || '';
+    if (genderSelect) genderSelect.value = student.gender || '';
+    if (categorySelect) categorySelect.value = student.category || '';
+    if (fatherMobileInput) fatherMobileInput.value = student.father_mobile || '';
+    if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
+    
+    // Set qualifications
+    if (student.qualifications && student.qualifications.length > 0) {
+        setQualificationsData(student.qualifications);
+    }
+    
+    // Set photo preview
+    if (student.student_photo) {
+        const previewDiv = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('previewImage');
+        if (previewDiv && previewImg) {
+            previewImg.src = student.student_photo;
+            previewDiv.style.display = 'block';
+        }
+    }
+    // ========== END NEW FIELDS ==========
 
     const modal = document.getElementById('studentModal');
     const title = modal.querySelector('.modal-title');
