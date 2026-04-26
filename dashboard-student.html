@@ -884,35 +884,62 @@
           document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><p>No section assigned</p></div>';
           return;
         }
+        
         let pdfs = [];
+        let response = null;
+        
+        // Try different API endpoints
         try {
-          // Try multiple endpoints for PDFs
-          let response = await fetch(`${API_BASE_URL}/section-pdfs/section/${student.section_id}`);
+          response = await fetch(`${API_BASE_URL}/section-pdfs/section/${student.section_id}`);
+          if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${student.section_id}`);
           if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${student.section_id}`);
-          if (!response.ok) response = await fetch(`${API_BASE_URL}/pdfs/section/${student.section_id}`);
+          
           const data = await response.json();
+          console.log("PDF API Response:", data); // Debug ke liye
+          
+          // Multiple response format handle
           if (data.success && data.pdfs) pdfs = data.pdfs;
           else if (data.pdfs) pdfs = data.pdfs;
+          else if (data.data && data.data.pdfs) pdfs = data.data.pdfs;
           else if (Array.isArray(data)) pdfs = data;
           else if (data.data && Array.isArray(data.data)) pdfs = data.data;
-        } catch(e) { console.error('PDF fetch error:', e); }
+          else if (data.pdf_list) pdfs = data.pdf_list;
+        } catch(e) {
+          console.error('PDF fetch error:', e);
+        }
         
-        if (pdfs && pdfs.length) {
+        if (pdfs && pdfs.length > 0) {
           let html = '';
-          pdfs.forEach(p => {
-            const pdfId = p.pdf_id || p.id;
-            const title = p.pdf_title || p.title || 'Study Material';
-            const subject = p.subject || p.subject_name || 'General';
-            const date = p.created_at ? new Date(p.created_at).toLocaleDateString() : new Date().toLocaleDateString();
-            html += `<div class="pdf-card"><div class="card-top"><div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div><div class="pdf-title">${title}</div><div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div><div class="pdf-meta"><i class="fas fa-calendar"></i> ${date}</div></div><div class="pdf-actions"><button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title}')"><i class="fas fa-eye"></i> View</button><button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title}')"><i class="fas fa-download"></i> Download</button></div></div>`;
+          pdfs.forEach(pdf => {
+            // Handle different field names
+            const pdfId = pdf.pdf_id || pdf.id || pdf._id;
+            const title = pdf.pdf_title || pdf.title || pdf.name || 'Study Material';
+            const subject = pdf.subject || pdf.subject_name || pdf.course || 'General';
+            const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
+            const fileUrl = pdf.file_url || pdf.pdf_url || pdf.url;
+            
+            html += `
+              <div class="pdf-card">
+                <div class="card-top">
+                  <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
+                  <div class="pdf-title">${title}</div>
+                  <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
+                  <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
+                </div>
+                <div class="pdf-actions">
+                  <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title}','${fileUrl}')"><i class="fas fa-eye"></i> View</button>
+                  <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title}','${fileUrl}')"><i class="fas fa-download"></i> Download</button>
+                </div>
+              </div>
+            `;
           });
           document.getElementById('pdfsContent').innerHTML = html;
         } else {
-          document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><p>No study materials available</p></div>';
+          document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><p>No study materials available for your section</p><button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px;">Refresh</button></div>';
         }
       } catch(e) { 
-        console.error(e);
-        document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load materials</p></div>';
+        console.error('loadStudyMaterials error:', e);
+        document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load materials</p><button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px;">Retry</button></div>';
       }
     }
 
@@ -926,17 +953,63 @@
     function nextPage() { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } }
     async function renderPage(page) { if (!pdfDoc) return; const pageData = await pdfDoc.getPage(page); const viewport = pageData.getViewport({ scale: 1.2 }); const canvas = document.getElementById('pdfCanvas'); if (canvas) { canvas.height = viewport.height; canvas.width = viewport.width; pageData.render({ canvasContext: canvas.getContext('2d'), viewport }); } document.getElementById('currentPage').innerHTML = page; }
 
-    async function viewStudentPdf(pdfId, pdfTitle) {
+    async function viewStudentPdf(pdfId, pdfTitle, fileUrl) {
       document.getElementById('pdfPreviewTitle').innerHTML = `<i class="fas fa-file-pdf"></i> ${pdfTitle}`;
       document.getElementById('pdfPreviewModal').classList.add('show');
-      const pdfUrl = `${API_BASE_URL}/view-section-pdf/${pdfId}`;
-      document.getElementById('pdfViewer').src = pdfUrl;
       document.getElementById('pdfControls').style.display = 'flex';
+      
+      let pdfSrc = null;
+      
+      // Try different URL formats
+      if (fileUrl) {
+        pdfSrc = fileUrl;
+      } else if (pdfId) {
+        // Try multiple endpoint patterns
+        pdfSrc = `${API_BASE_URL}/view-section-pdf/${pdfId}`;
+      }
+      
+      // Also try direct iframe approach
+      const iframe = document.getElementById('pdfViewer');
+      iframe.src = pdfSrc;
+      
+      // If iframe fails, try PDF.js
+      iframe.onerror = () => {
+        try {
+          const loadingTask = pdfjsLib.getDocument(pdfSrc);
+          loadingTask.promise.then(pdf => {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            document.getElementById('totalPages').innerHTML = totalPages;
+            currentPage = 1;
+            renderPage(currentPage);
+            document.getElementById('pdfIframeContainer').style.display = 'none';
+            const canvasContainer = document.getElementById('pdfViewerContainer');
+            if (canvasContainer) canvasContainer.style.display = 'block';
+          }).catch(err => {
+            console.error('PDF load error:', err);
+            document.getElementById('pdfAlternativeView').style.display = 'block';
+          });
+        } catch(e) {
+          console.error('PDF.js error:', e);
+        }
+      };
     }
-
-    function downloadStudentPdf(pdfId, pdfTitle) {
-      window.open(`${API_BASE_URL}/view-section-pdf/${pdfId}?download=true`, '_blank');
-      showToast('Download started: ' + pdfTitle, 'success');
+    
+    function downloadStudentPdf(pdfId, pdfTitle, fileUrl) {
+      let downloadUrl = null;
+      
+      if (fileUrl) {
+        downloadUrl = fileUrl;
+      } else if (pdfId) {
+        downloadUrl = `${API_BASE_URL}/view-section-pdf/${pdfId}?download=true`;
+      }
+      
+      if (downloadUrl) {
+        window.open(downloadUrl, '_blank');
+        showToast('Download started: ' + pdfTitle, 'success');
+      } else {
+        showToast('Download URL not available', 'error');
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
