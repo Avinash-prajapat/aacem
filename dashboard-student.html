@@ -1343,6 +1343,7 @@
           const data = await res.json();
           if (data.success && data.pdfs) pdfs = data.pdfs;
         } catch(e) {}
+        
         if (pdfs.length) {
           let html = `<div class="row">`;
           pdfs.forEach(p => {
@@ -1350,11 +1351,12 @@
           });
           html += `</div>`;
           document.getElementById('pdfsContent').innerHTML = html;
-        }
         } else {
           document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><p>No study materials available</p></div>';
         }
-      } catch(e) { console.error(e); }
+      } catch(e) { 
+        console.error(e); 
+      }
     }
     
     async function loadStudentData() {
