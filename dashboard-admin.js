@@ -3022,6 +3022,9 @@ function addQualification() {
     const container = document.getElementById('qualificationsContainer');
     if (!container) return;
     
+    const entries = container.querySelectorAll('.qualification-entry');
+    const newIndex = entries.length + 1;
+    
     const entry = document.createElement('div');
     entry.className = 'qualification-entry mb-2 p-2 border rounded';
     entry.innerHTML = `
@@ -3048,13 +3051,21 @@ function addQualification() {
                 <input type="text" class="form-control form-control-sm" placeholder="Year">
             </div>
             <div class="col-md-1">
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                <button type="button" class="btn btn-danger btn-sm delete-qual-btn" onclick="removeQualification(this)">✖</button>
             </div>
         </div>
     `;
     
     container.appendChild(entry);
-    console.log('✅ New qualification entry added');
+    
+    // Enable delete button on first entry (if it was disabled)
+    const firstEntry = entries[0];
+    if (firstEntry) {
+        const firstDelBtn = firstEntry.querySelector('.delete-qual-btn');
+        if (firstDelBtn) firstDelBtn.disabled = false;
+    }
+    
+    console.log('✅ Added new qualification entry, total:', container.children.length);
 }
 
 // ==================== REMOVE QUALIFICATION ====================
@@ -3065,7 +3076,14 @@ function removeQualification(button) {
     
     if (entries.length > 1) {
         entry.remove();
-        console.log('✅ Qualification entry removed');
+        console.log('✅ Qualification entry removed, remaining:', entries.length - 1);
+        
+        // If only one left, disable its delete button
+        const remainingEntries = container.querySelectorAll('.qualification-entry');
+        if (remainingEntries.length === 1) {
+            const lastDelBtn = remainingEntries[0].querySelector('.delete-qual-btn');
+            if (lastDelBtn) lastDelBtn.disabled = true;
+        }
     } else {
         // Clear the inputs instead of removing
         entry.querySelectorAll('input').forEach(input => input.value = '');
@@ -3075,12 +3093,10 @@ function removeQualification(button) {
     }
 }
 
-// ==================== GET QUALIFICATIONS DATA (Multiple entries support) ====================
+// ==================== GET QUALIFICATIONS DATA ====================
 function getQualificationsData() {
     const qualifications = [];
     const entries = document.querySelectorAll('.qualification-entry');
-    
-    console.log('📚 Total qualification entries found:', entries.length);
     
     entries.forEach((entry, index) => {
         const levelSelect = entry.querySelector('.qualification-level');
@@ -3091,8 +3107,6 @@ function getQualificationsData() {
         const board = inputs[1] ? inputs[1].value : '';
         const marks = inputs[2] ? inputs[2].value : '';
         const year = inputs[3] ? inputs[3].value : '';
-        
-        console.log(`Entry ${index + 1}: Level="${level}", Institute="${institute}", Board="${board}", Marks="${marks}", Year="${year}"`);
         
         // Sirf wahi entries add karo jinka level select kiya hai
         if (level && level !== '') {
@@ -3106,56 +3120,26 @@ function getQualificationsData() {
         }
     });
     
-    console.log('✅ Final qualifications to save:', qualifications);
+    console.log('📚 Final qualifications to save:', qualifications);
     return qualifications;
 }
 
-// ==================== SET QUALIFICATIONS DATA (Multiple entries support) ====================
+// ==================== SET QUALIFICATIONS DATA - FIXED ====================
 function setQualificationsData(qualifications) {
     const container = document.getElementById('qualificationsContainer');
     if (!container) return;
     
-    console.log('🔄 Setting qualifications data:', qualifications);
+    console.log('🔄 Setting', qualifications.length, 'qualifications:', qualifications);
     
     if (!qualifications || qualifications.length === 0) {
-        // Reset to single empty entry
-        container.innerHTML = `
-            <div class="qualification-entry mb-2 p-2 border rounded">
-                <div class="row g-2">
-                    <div class="col-md-3">
-                        <select class="form-select form-select-sm qualification-level">
-                            <option value="">Select Level</option>
-                            <option value="10th">10th</option>
-                            <option value="12th">12th</option>
-                            <option value="Graduation">Graduation</option>
-                            <option value="Post Graduation">Post Graduation</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Board/University">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Marks">
-                    </div>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control form-control-sm" placeholder="Year">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        resetQualificationsContainer();
         return;
     }
     
     // Clear container
     container.innerHTML = '';
     
-    // Add each qualification as a new entry
+    // Add each qualification as a separate entry
     qualifications.forEach((qual, index) => {
         const entry = document.createElement('div');
         entry.className = 'qualification-entry mb-2 p-2 border rounded';
@@ -3171,19 +3155,19 @@ function setQualificationsData(qualifications) {
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control form-control-sm" placeholder="Institute Name" value="${escapeHtmlStatic(qual.institute || '')}">
+                    <input type="text" class="form-control form-control-sm" placeholder="Institute Name" value="${escapeHtmlForQual(qual.institute || '')}">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" class="form-control form-control-sm" placeholder="Board/University" value="${escapeHtmlStatic(qual.board || '')}">
+                    <input type="text" class="form-control form-control-sm" placeholder="Board/University" value="${escapeHtmlForQual(qual.board || '')}">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" class="form-control form-control-sm" placeholder="Marks" value="${escapeHtmlStatic(qual.marks || '')}">
+                    <input type="text" class="form-control form-control-sm" placeholder="Marks" value="${escapeHtmlForQual(qual.marks || '')}">
                 </div>
                 <div class="col-md-1">
-                    <input type="text" class="form-control form-control-sm" placeholder="Year" value="${escapeHtmlStatic(qual.year || '')}">
+                    <input type="text" class="form-control form-control-sm" placeholder="Year" value="${escapeHtmlForQual(qual.year || '')}">
                 </div>
                 <div class="col-md-1">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
+                    <button type="button" class="btn btn-danger btn-sm delete-qual-btn" onclick="removeQualification(this)">✖</button>
                 </div>
             </div>
         `;
@@ -3191,32 +3175,77 @@ function setQualificationsData(qualifications) {
         // Set the selected level
         const levelSelect = entry.querySelector('.qualification-level');
         if (levelSelect && qual.level) {
-            levelSelect.value = qual.level;
+            // Match exact value
+            const options = levelSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === qual.level) {
+                    options[i].selected = true;
+                    break;
+                }
+            }
         }
         
         container.appendChild(entry);
     });
     
-    // Enable delete buttons for all entries
+    // Enable delete buttons for all entries (if more than 1)
     const entries = document.querySelectorAll('.qualification-entry');
     entries.forEach(entry => {
-        const delBtn = entry.querySelector('button');
+        const delBtn = entry.querySelector('.delete-qual-btn');
         if (delBtn) {
-            delBtn.disabled = false;
+            delBtn.disabled = (entries.length === 1);
         }
     });
     
-    console.log('✅ Set', qualifications.length, 'qualifications');
+    console.log('✅ Set', qualifications.length, 'qualification entries');
 }
 
 // Helper function to escape HTML
-function escapeHtmlStatic(text) {
+function escapeHtmlForQual(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#39;');
 }
 
+// ==================== RESET QUALIFICATIONS CONTAINER ====================
+function resetQualificationsContainer() {
+    const container = document.getElementById('qualificationsContainer');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="qualification-entry mb-2 p-2 border rounded">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm qualification-level">
+                        <option value="">Select Level</option>
+                        <option value="10th">10th</option>
+                        <option value="12th">12th</option>
+                        <option value="Graduation">Graduation</option>
+                        <option value="Post Graduation">Post Graduation</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="Board/University">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="Marks">
+                </div>
+                <div class="col-md-1">
+                    <input type="text" class="form-control form-control-sm" placeholder="Year">
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-danger btn-sm delete-qual-btn" onclick="removeQualification(this)" disabled>✖</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
 // Convert file to base64
 function convertToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -3256,7 +3285,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== END NEW FUNCTIONS ====================
 
-// ==================== SAVE STUDENT - COMPLETE WORKING FUNCTION ====================
+// ==================== SAVE STUDENT - UPDATED ====================
 async function saveStudent() {
     const form = document.getElementById('studentForm');
     if (!form) {
@@ -3266,7 +3295,6 @@ async function saveStudent() {
     
     const formData = new FormData(form);
     
-    // Required fields validation
     const requiredFields = ['fullName', 'parentName', 'phone', 'course', 'fee'];
     const missingFields = requiredFields.filter(field => !formData.get(field));
     
@@ -3275,7 +3303,6 @@ async function saveStudent() {
         return;
     }
     
-    // Get Save button
     const button = document.getElementById('studentSaveBtn');
     const originalText = button.innerHTML;
     
@@ -3283,7 +3310,7 @@ async function saveStudent() {
         button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         button.disabled = true;
         
-        // ========== GET BASIC FIELDS ==========
+        // Basic fields
         const fullName = formData.get('fullName');
         const parentName = formData.get('parentName');
         const phone = formData.get('phone');
@@ -3292,36 +3319,31 @@ async function saveStudent() {
         const fee = formData.get('fee');
         const address = formData.get('address');
         
-        // ========== GET NEW FIELDS ==========
+        // New fields
         const dob = document.getElementById('studentDob')?.value || null;
         const gender = document.getElementById('studentGender')?.value || null;
         const category = document.getElementById('studentCategory')?.value || null;
         const fatherMobile = document.getElementById('studentFatherMobile')?.value || null;
         const fatherOccupation = document.getElementById('studentFatherOccupation')?.value || null;
         
-        // ========== GET QUALIFICATIONS (Multiple entries) ==========
+        // Get qualifications from all entries
         const qualifications = getQualificationsData();
         console.log('📚 Saving qualifications:', qualifications);
         
-        // ========== HANDLE PHOTO UPLOAD ==========
+        // Handle photo
         let studentPhoto = null;
         const photoFile = document.getElementById('studentPhoto')?.files[0];
         
         if (photoFile) {
-            // New photo uploaded - convert to base64
             studentPhoto = await convertToBase64(photoFile);
-            console.log('📸 New photo uploaded, size:', studentPhoto.length);
+            console.log('📸 New photo uploaded');
         } else if (currentEditId) {
-            // Editing mode - keep existing photo
-            // We'll get it from existing student data
             const existingStudent = studentsData.find(s => s.student_id === currentEditId);
             if (existingStudent && existingStudent.student_photo) {
                 studentPhoto = existingStudent.student_photo;
-                console.log('📸 Keeping existing photo');
             }
         }
         
-        // ========== PREPARE REQUEST BODY ==========
         const requestBody = {
             fullName: fullName,
             parentName: parentName,
@@ -3339,15 +3361,13 @@ async function saveStudent() {
             qualifications: qualifications
         };
         
-        console.log('📤 Sending data to server:', requestBody);
+        console.log('📤 Sending to server:', requestBody);
         
-        // Determine URL and method
         const url = currentEditId 
             ? `https://aacem-backend.onrender.com/api/update-student/${currentEditId}`
             : 'https://aacem-backend.onrender.com/api/add-student';
         const method = currentEditId ? 'PUT' : 'POST';
         
-        // Send to server
         const response = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
@@ -3355,7 +3375,6 @@ async function saveStudent() {
         });
         
         const result = await response.json();
-        console.log('📥 Server response:', result);
         
         button.innerHTML = originalText;
         button.disabled = false;
@@ -3363,55 +3382,16 @@ async function saveStudent() {
         if (result.success) {
             showSuccess(currentEditId ? 'Student updated successfully!' : 'Student added successfully!');
             
-            // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
             if (modal) modal.hide();
             
-            // Reset form
             document.getElementById('studentForm').reset();
             document.getElementById('photoPreview').style.display = 'none';
-            document.getElementById('editSyllabusId').value = '';
             
-            // Reset qualifications to single empty entry
-            const container = document.getElementById('qualificationsContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div class="qualification-entry mb-2 p-2 border rounded">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <select class="form-select form-select-sm qualification-level">
-                                    <option value="">Select Level</option>
-                                    <option value="10th">10th</option>
-                                    <option value="12th">12th</option>
-                                    <option value="Graduation">Graduation</option>
-                                    <option value="Post Graduation">Post Graduation</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
-                            </div>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control form-control-sm" placeholder="Board/University">
-                            </div>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control form-control-sm" placeholder="Marks">
-                            </div>
-                            <div class="col-md-1">
-                                <input type="text" class="form-control form-control-sm" placeholder="Year">
-                            </div>
-                            <div class="col-md-1">
-                                <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+            resetQualificationsContainer();
             
             currentEditId = null;
-            
-            // Reload dashboard data
             await loadDashboardData();
-            
         } else {
             showError('Error: ' + (result.message || 'Unknown error'));
         }
@@ -3835,12 +3815,22 @@ function logout() {
     }
 }
 
-// ==================== EDIT STUDENT - COMPLETE WORKING FUNCTION ====================
+// ==================== EDIT STUDENT - COMPLETE FIXED ====================
 async function editStudent(studentId) {
     console.log('✏️ Editing student:', studentId);
     
-    // Refresh student data first
-    await loadDashboardData();
+    // Force fresh data load
+    try {
+        const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
+        const freshData = await response.json();
+        if (freshData.success && freshData.student) {
+            const index = studentsData.findIndex(s => s.student_id === studentId);
+            if (index !== -1) studentsData[index] = freshData.student;
+            else studentsData.push(freshData.student);
+        }
+    } catch (error) {
+        console.warn('Could not fetch fresh data:', error);
+    }
     
     const student = studentsData.find(s => s.student_id === studentId);
     if (!student) {
@@ -3848,7 +3838,8 @@ async function editStudent(studentId) {
         return;
     }
 
-    console.log('📦 Student data for edit:', student);
+    console.log('📦 Student course:', student.course);
+    console.log('📚 Qualifications:', student.qualifications);
 
     const form = document.getElementById('studentForm');
     if (!form) {
@@ -3864,23 +3855,46 @@ async function editStudent(studentId) {
     form.querySelector('input[name="fee"]').value = student.fee_amount || '';
     form.querySelector('textarea[name="address"]').value = student.address || '';
     
-    // ========== COURSE DROPDOWN ==========
+    // ========== COURSE DROPDOWN - AUTO SELECT FIX ==========
     const courseSelect = form.querySelector('select[name="course"]');
-    if (courseSelect && student.course) {
+    if (courseSelect) {
+        // Ensure courses are loaded
+        if (coursesData.length === 0) {
+            await loadDashboardData();
+        }
+        
+        // Clear and repopulate
         courseSelect.innerHTML = '<option value="">Select Course</option>';
         
+        let courseFound = false;
         for (let i = 0; i < coursesData.length; i++) {
             const course = coursesData[i];
             const option = document.createElement('option');
             option.value = course.course_code;
             option.textContent = `${course.course_name} (${course.course_code})`;
             
+            // Compare as strings to avoid type issues
             if (String(course.course_code) === String(student.course)) {
                 option.selected = true;
+                courseFound = true;
+                console.log('✅ Course auto-selected:', course.course_code);
             }
             courseSelect.appendChild(option);
         }
-        console.log('✅ Course set to:', student.course);
+        
+        if (!courseFound && student.course) {
+            // Add the missing course as an option and select it
+            const option = document.createElement('option');
+            option.value = student.course;
+            option.textContent = `${student.course} (${student.course})`;
+            option.selected = true;
+            courseSelect.appendChild(option);
+            console.log('✅ Added missing course:', student.course);
+        }
+        
+        // Force select value
+        courseSelect.value = student.course;
+        console.log('📌 Final course value:', courseSelect.value);
     }
     
     // ========== NEW FIELDS ==========
@@ -3897,62 +3911,29 @@ async function editStudent(studentId) {
     if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
     
     // ========== STUDENT PHOTO ==========
-    if (student.student_photo) {
+    if (student.student_photo && student.student_photo !== 'null') {
         const previewDiv = document.getElementById('photoPreview');
         const previewImg = document.getElementById('previewImage');
         if (previewDiv && previewImg) {
             previewImg.src = student.student_photo;
             previewDiv.style.display = 'block';
         }
-        console.log('📸 Existing photo found');
     } else {
         const previewDiv = document.getElementById('photoPreview');
         if (previewDiv) previewDiv.style.display = 'none';
     }
     
-    // Clear file input (so user can upload new photo if needed)
+    // Clear file input
     const photoInput = document.getElementById('studentPhoto');
     if (photoInput) photoInput.value = '';
     
-    // ========== QUALIFICATIONS ==========
+    // ========== QUALIFICATIONS - FIX MULTIPLE ENTRIES ==========
     if (student.qualifications && student.qualifications.length > 0) {
-        console.log('📚 Setting qualifications:', student.qualifications);
+        console.log('📚 Setting', student.qualifications.length, 'qualifications');
         setQualificationsData(student.qualifications);
     } else {
         // Reset to single empty entry
-        const container = document.getElementById('qualificationsContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="qualification-entry mb-2 p-2 border rounded">
-                    <div class="row g-2">
-                        <div class="col-md-3">
-                            <select class="form-select form-select-sm qualification-level">
-                                <option value="">Select Level</option>
-                                <option value="10th">10th</option>
-                                <option value="12th">12th</option>
-                                <option value="Graduation">Graduation</option>
-                                <option value="Post Graduation">Post Graduation</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control form-control-sm" placeholder="Institute Name">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Board/University">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Marks">
-                        </div>
-                        <div class="col-md-1">
-                            <input type="text" class="form-control form-control-sm" placeholder="Year">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="removeQualification(this)">✖</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        resetQualificationsContainer();
     }
 
     // ========== UPDATE MODAL UI ==========
@@ -3961,9 +3942,7 @@ async function editStudent(studentId) {
     const saveBtn = modal.querySelector('.btn-primary');
     
     if (title) title.textContent = '✏️ Edit Student';
-    if (saveBtn) {
-        saveBtn.textContent = 'Update Student';
-    }
+    if (saveBtn) saveBtn.textContent = 'Update Student';
 
     currentEditId = studentId;
     const bsModal = new bootstrap.Modal(modal);
@@ -4142,167 +4121,167 @@ async function deleteStudent(studentId) {
         }
     }
 }
-// REPLACE ये सारे functions:
 
-// 1. Student View
-function viewStudent(studentId) {
-    const student = studentsData.find(s => s.student_id === studentId);
-    if (!student) {
-        showError('Student not found!');
-        return;
-    }
 
-    const studentFees = feesData.filter(f => f.student_id === studentId);
-    const totalPaid = studentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
-    const dueAmount = (student.fee_amount || 0) - totalPaid;
+// ==================== VIEW STUDENT - FETCH LATEST DATA ====================
+async function viewStudent(studentId) {
+    console.log('👁️ Viewing student (fresh data):', studentId);
     
-    const modalHTML = `
-        <div class="modal fade" id="viewModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-user-graduate me-2"></i>
-                            ${student.name} - Student Details
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    // Show loading indicator
+    showLoading('viewModal');
+    
+    try {
+        // ✅ Fetch LATEST data from server
+        const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
+        const result = await response.json();
+        
+        hideLoading('viewModal');
+        
+        if (!result.success || !result.student) {
+            showError('Student not found!');
+            return;
+        }
+        
+        const student = result.student;
+        console.log('📦 Latest student data:', student);
+        
+        // ✅ Update local cache
+        const index = studentsData.findIndex(s => s.student_id === studentId);
+        if (index !== -1) {
+            studentsData[index] = student;
+        }
+        
+        // ✅ Get fee details
+        let feeHistory = [];
+        let totalPaid = student.paid_amount || 0;
+        let dueAmount = student.due_amount || (student.fee_amount - totalPaid);
+        
+        try {
+            const feeResponse = await fetch(`https://aacem-backend.onrender.com/api/student-fee-details/${studentId}`);
+            const feeResult = await feeResponse.json();
+            if (feeResult.success) {
+                feeHistory = feeResult.fee_history || [];
+                totalPaid = feeResult.fee_summary?.paid_amount || totalPaid;
+                dueAmount = feeResult.fee_summary?.due_amount || dueAmount;
+            }
+        } catch(e) { console.warn('Fee fetch failed:', e); }
+        
+        // ✅ Build qualifications HTML
+        let qualificationsHtml = '';
+        if (student.qualifications && student.qualifications.length > 0) {
+            qualificationsHtml = `
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Qualifications</h6>
                     </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary border-bottom pb-2">
-                                            <i class="fas fa-info-circle me-2"></i>Basic Information
-                                        </h6>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Student ID:</div>
-                                            <div class="col-7 fw-bold">${student.student_id}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Full Name:</div>
-                                            <div class="col-7">${student.name}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Parent Name:</div>
-                                            <div class="col-7">${student.parent_name || 'N/A'}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Class:</div>
-                                            <div class="col-7">
-                                                <span class="badge bg-primary">${student.course || 'N/A'}</span>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-5 text-muted">Join Date:</div>
-                                            <div class="col-7">${formatDate(student.join_date)}</div>
-                                        </div>
-                                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light"><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead>
+                            <tbody>
+                                ${student.qualifications.map(q => `<tr><td><strong>${q.level}</strong></td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ✅ Build photo HTML
+        let photoHtml = '';
+        if (student.student_photo && student.student_photo !== 'null') {
+            photoHtml = `
+                <div class="card mb-3">
+                    <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-camera me-2"></i>Student Photo</h6></div>
+                    <div class="card-body text-center">
+                        <img src="${student.student_photo}" style="max-width: 150px; max-height: 150px; border-radius: 10px;">
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ✅ Show modal
+        const modalHTML = `
+            <div class="modal fade" id="viewModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>${student.name} - Student Details</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6></div>
+                                    <div class="card-body"><table class="table table-sm table-borderless">
+                                        <tr><th width="40%">Student ID:</th><td><span class="badge bg-dark">${student.student_id}</span></td></tr>
+                                        <tr><th>Name:</th><td><strong>${student.name}</strong></td></tr>
+                                        <tr><th>Parent Name:</th><td>${student.parent_name || 'N/A'}</td></tr>
+                                        <tr><th>Course:</th><td><span class="badge bg-primary">${student.course}</span></td></tr>
+                                        <tr><th>Join Date:</th><td>${formatDate(student.join_date)}</td></tr>
+                                    </table></div></div>
+                                    
+                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>Additional Info</h6></div>
+                                    <div class="card-body"><table class="table table-sm table-borderless">
+                                        <tr><th width="40%">Date of Birth:</th><td>${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</td></tr>
+                                        <tr><th>Gender:</th><td>${student.gender || 'Not provided'}</td></tr>
+                                        <tr><th>Category:</th><td>${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</td></tr>
+                                        <tr><th>Father's Mobile:</th><td>${student.father_mobile || 'Not provided'}</td></tr>
+                                        <tr><th>Father's Occupation:</th><td>${student.father_occupation || 'Not provided'}</td></tr>
+                                    </table></div></div>
                                 </div>
-                                
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary border-bottom pb-2">
-                                            <i class="fas fa-address-card me-2"></i>Contact Information
-                                        </h6>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Phone:</div>
-                                            <div class="col-7">
-                                                <i class="fas fa-phone text-success me-1"></i>
-                                                ${student.phone || 'N/A'}
-                                            </div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-5 text-muted">Email:</div>
-                                            <div class="col-7">
-                                                <i class="fas fa-envelope text-primary me-1"></i>
-                                                ${student.email || 'N/A'}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-5 text-muted">Address:</div>
-                                            <div class="col-7">${student.address || 'N/A'}</div>
-                                        </div>
-                                    </div>
+                                <div class="col-md-6">
+                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact</h6></div>
+                                    <div class="card-body"><table class="table table-sm table-borderless">
+                                        <tr><th>Phone:</th><td><i class="fas fa-phone text-success me-1"></i> ${student.phone || 'N/A'}</td></tr>
+                                        <tr><th>Email:</th><td><i class="fas fa-envelope text-primary me-1"></i> ${student.email || 'N/A'}</td></tr>
+                                        <tr><th>Address:</th><td>${student.address || 'N/A'}</td></tr>
+                                    </table></div></div>
+                                    
+                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Fee Details</h6></div>
+                                    <div class="card-body"><table class="table table-sm table-borderless">
+                                        <tr><th>Total Fee:</th><td class="text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</td></tr>
+                                        <tr><th>Paid:</th><td class="text-end text-success fw-bold">₹${totalPaid.toLocaleString()}</td></tr>
+                                        <tr><th>Due:</th><td class="text-end ${dueAmount > 0 ? 'text-danger' : 'text-success'} fw-bold">₹${dueAmount.toLocaleString()}</td></tr>
+                                        <tr><th>Status:</th><td class="text-end"><span class="badge ${getFeeStatusClass(student.fee_status)}">${student.fee_status || 'Unknown'}</span></td></tr>
+                                    </table>
+                                    <div class="progress mt-2" style="height: 6px;"><div class="progress-bar bg-${dueAmount > 0 ? 'warning' : 'success'}" style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%"></div></div>
+                                    </div></div>
+                                    
+                                    ${photoHtml}
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary border-bottom pb-2">
-                                            <i class="fas fa-money-bill-wave me-2"></i>Fee Information
-                                        </h6>
-                                        <div class="row mb-2">
-                                            <div class="col-6 text-muted">Total Fee:</div>
-                                            <div class="col-6 text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-6 text-muted">Paid Amount:</div>
-                                            <div class="col-6 text-end text-success fw-bold">
-                                                ₹${totalPaid.toLocaleString()}
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col-6 text-muted">Due Amount:</div>
-                                            <div class="col-6 text-end">
-                                                <span class="fw-bold ${dueAmount > 0 ? 'text-danger' : 'text-success'}">
-                                                    ₹${dueAmount.toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-6 text-muted">Status:</div>
-                                            <div class="col-6 text-end">
-                                                <span class="badge ${getFeeStatusClass(student.fee_status)}">
-                                                    ${student.fee_status || 'Unknown'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary border-bottom pb-2">
-                                            <i class="fas fa-chart-line me-2"></i>Quick Stats
-                                        </h6>
-                                        <div class="row text-center">
-                                            <div class="col-4">
-                                                <div class="text-primary fw-bold fs-5">${studentFees.length}</div>
-                                                <small class="text-muted">Payments</small>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="text-success fw-bold fs-5">₹${totalPaid.toLocaleString()}</div>
-                                                <small class="text-muted">Total Paid</small>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="${dueAmount > 0 ? 'text-danger' : 'text-success'} fw-bold fs-5">
-                                                    ₹${dueAmount.toLocaleString()}
-                                                </div>
-                                                <small class="text-muted">Pending</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            ${qualificationsHtml}
+                            
+                            ${feeHistory.length > 0 ? `
+                            <div class="card"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-history me-2"></i>Payment History</h6></div>
+                            <div class="card-body p-0"><table class="table table-sm table-bordered mb-0">
+                                <thead class="table-light"><tr><th>Date</th><th>Receipt No.</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead>
+                                <tbody>${feeHistory.map(p => `<tr><td>${formatDate(p.payment_date)}</td><td><strong>${p.receipt_no}</strong></td><td class="text-success fw-bold">₹${(p.amount || 0).toLocaleString()}</td><td>${p.payment_mode || 'Cash'}</td><td><span class="badge bg-success">${p.status || 'Completed'}</span></td></tr>`).join('')}</tbody>
+                            </table></div></div>
+                            ` : ''}
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="editStudent('${studentId}')">
-                            <i class="fas fa-edit me-1"></i> Edit
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="viewStudentFeeHistory('${studentId}')">
-                            <i class="fas fa-history me-1"></i> Fee History
-                        </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-warning" onclick="editStudent('${student.student_id}')"><i class="fas fa-edit me-1"></i> Edit</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    showModal(modalHTML);
+        `;
+        
+        const existingModal = document.getElementById('viewModal');
+        if (existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error viewing student:', error);
+        hideLoading('viewModal');
+        showError('Failed to load student details');
+    }
 }
 
 // 2. Teacher View
