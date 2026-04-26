@@ -900,214 +900,90 @@
       .profile-grid { grid-template-columns: repeat(2, 1fr); }
     }
     
+    /* ==================== FINAL MOBILE FIXES ==================== */
     @media (max-width: 768px) {
-      body, html {
-        overflow-x: hidden !important;
-        width: 100% !important;
+      /* Force remove all margins from containers */
+      .main-content,
+      #mainContent,
+      .container,
+      .container-fluid {
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
       }
       
-      .top-header { 
-        padding: 0 12px; 
-        height: 64px; 
-      }
-      
-      .main-content { 
-        margin-top: 64px; 
-        padding: 8px !important; 
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-x: hidden !important;
-      }
-      
-      .sidebar { 
-        top: 64px; 
-        width: 280px; 
-        height: calc(100vh - 64px); 
-      }
-      
-      .main-content.sidebar-expanded { 
-        margin-left: 0; 
-      }
-      
-      .welcome-text { 
-        display: none; 
-      }
-      
-      /* ===== CARD FULL WIDTH FIX ===== */
-      .dashboard-card, 
-      .modern-card {
-        padding: 12px !important;
-        margin: 0 0 12px 0 !important;
+      /* All cards full width */
+      .dashboard-card,
+      .modern-card,
+      .subject-card,
+      .fee-card,
+      .pdf-card,
+      .profile-column {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         width: 100% !important;
         box-sizing: border-box !important;
-        border-radius: 12px !important;
       }
       
-      /* Remove extra spacing from all containers */
-      .container, 
-      .container-fluid, 
-      .row,
+      /* Row fixes */
+      .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+      
       [class*="col-"] {
-        margin: 0 !important;
-        padding: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
       }
       
-      /* Stats grid */
-      .stats-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 8px; 
-        margin: 0 0 12px 0 !important;
-        width: 100% !important;
-      }
-      
-      .stat-card { 
-        padding: 10px; 
-        gap: 8px;
-        margin: 0 !important;
-      }
-      
-      .stat-icon { 
-        width: 35px; 
-        height: 35px; 
-        font-size: 0.9rem; 
-      }
-      
-      .stat-info h3 { 
-        font-size: 1.1rem; 
-      }
-      
-      /* Subject grid */
-      .subject-grid { 
-        grid-template-columns: 1fr; 
-        gap: 10px;
-        margin: 0 0 12px 0 !important;
-      }
-      
-      .subject-card {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 14px !important;
-      }
-      
-      /* Fee stats */
-      .fee-stats { 
-        grid-template-columns: 1fr; 
-        gap: 10px;
-        margin: 0 0 12px 0 !important;
+      /* Fee screen specific */
+      .fee-stats {
+        flex-direction: column !important;
+        gap: 10px !important;
       }
       
       .fee-card {
         width: 100% !important;
-        margin: 0 !important;
         padding: 14px !important;
       }
       
-      /* Profile section */
-      .profile-grid { 
-        grid-template-columns: 1fr; 
-        gap: 10px;
-        margin: 0 0 12px 0 !important;
+      .fee-card .amount {
+        font-size: 1.2rem !important;
       }
       
-      .profile-column {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 12px !important;
+      .payment-history {
+        overflow-x: auto !important;
       }
       
-      .profile-photo-section { 
-        flex-direction: column; 
-        text-align: center; 
-        padding: 14px !important;
-        margin: 0 0 12px 0 !important;
-      }
-      
-      .profile-item { 
-        flex-direction: column; 
-        gap: 3px; 
-      }
-      
-      .profile-value { 
-        text-align: left; 
-      }
-      
-      /* Subject view header */
-      .subject-view-header { 
-        flex-direction: column; 
-        text-align: center; 
-        gap: 12px; 
-        padding: 14px !important;
-        margin: 0 0 12px 0 !important;
-      }
-      
-      .subject-summary-cards { 
-        grid-template-columns: 1fr; 
-        gap: 8px;
-        margin: 0 0 12px 0 !important;
-      }
-      
-      .summary-card {
-        padding: 12px !important;
-      }
-      
-      /* Tables */
-      .table-wrap { 
-        overflow-x: auto; 
-        width: 100% !important;
-        margin: 0 0 12px 0 !important;
-      }
-      
-      .modern-table, 
-      .history-table { 
-        min-width: 500px; 
-      }
-      
-      /* PDF cards */
-      .pdf-card { 
-        margin: 0 0 12px 0 !important;
-        width: 100% !important;
-      }
-      
-      .pdf-actions { 
-        flex-direction: row !important;
-        gap: 8px;
-      }
-      
-      .pdf-btn { 
-        flex: 1; 
-        padding: 8px !important;
-      }
-      
-      /* Office info */
-      .office-info { 
-        flex-direction: column; 
-        text-align: center; 
-        padding: 14px !important;
-        margin: 12px 0 0 0 !important;
-      }
-      
-      /* Toast */
-      .toast-container { 
-        left: 8px; 
-        right: 8px; 
-        top: 70px; 
-      }
-      
-      .toast-msg { 
-        width: auto; 
-      }
-      
-      /* Payment table mobile fix */
       .history-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
+        min-width: 400px !important;
       }
       
-      .history-table th, 
+      .history-table th,
       .history-table td {
         padding: 6px 8px !important;
         font-size: 0.65rem !important;
+        white-space: nowrap !important;
+      }
+      
+      /* Stats grid */
+      .stats-grid {
+        gap: 6px !important;
+      }
+      
+      .stat-card {
+        padding: 8px !important;
+      }
+      
+      .stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+      }
+      
+      .stat-info h3 {
+        font-size: 1rem !important;
       }
     }
     
