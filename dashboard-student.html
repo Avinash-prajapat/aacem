@@ -3358,6 +3358,47 @@ async function loadProfile() {
       document.getElementById('feeContent').style.display = 'none';
       document.getElementById('feeError').style.display = 'block';
     }
+
+    // Add this function at the end of your JavaScript (before closing </script>)
+    function forceMobileFullScreen() {
+        if (window.innerWidth <= 768) {
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) {
+                mainContent.style.width = '100%';
+                mainContent.style.maxWidth = '100%';
+                mainContent.style.overflowX = 'hidden';
+                mainContent.style.padding = '12px';
+            }
+            
+            // Fix all cards
+            document.querySelectorAll('.dashboard-card, .modern-card').forEach(card => {
+                card.style.width = '100%';
+                card.style.marginLeft = '0';
+                card.style.marginRight = '0';
+                card.style.boxSizing = 'border-box';
+            });
+            
+            // Fix all grids
+            document.querySelectorAll('.stats-grid, .subject-grid, .fee-stats, .profile-grid').forEach(grid => {
+                grid.style.width = '100%';
+            });
+        }
+    }
+    
+    // Call this after DOM load and after window resize
+    window.addEventListener('DOMContentLoaded', function() {
+        forceMobileFullScreen();
+        showMainView(); 
+        setupPullToRefresh();
+    });
+    
+    window.addEventListener('resize', function() {
+        forceMobileFullScreen();
+    });
+    
+    window.addEventListener('orientationchange', function() {
+        setTimeout(forceMobileFullScreen, 100);
+    });
   </script>
 </body>
 </html>
