@@ -640,383 +640,703 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
-    let studentData = null, STUDENT_ID = null;
-    let pdfDoc = null, currentPage = 1, totalPages = 0;
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast-msg ${type}`;
-      toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i><span style="font-size:0.75rem;">${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    function checkAuthentication() {
-      const data = sessionStorage.getItem('studentData');
-      if (!data) { document.getElementById('loginModal').classList.add('show'); return null; }
-      try { return JSON.parse(data); } catch(e) { document.getElementById('loginModal').classList.add('show'); return null; }
-    }
-
-    studentData = checkAuthentication();
-    STUDENT_ID = studentData ? studentData.student_id : null;
-    function redirectToLogin() { window.location.href = 'student-login.html'; }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      if (sidebar.classList.contains('expanded')) {
-        sidebar.classList.remove('expanded');
-        overlay.classList.remove('show');
-      } else {
-        sidebar.classList.add('expanded');
-        overlay.classList.add('show');
-      }
-    }
-
-    function showSection(sectionId) {
-      document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active');
-      document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-      if (event && event.currentTarget) event.currentTarget.classList.add('active');
-      // Auto close sidebar
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar && sidebar.classList.contains('expanded')) toggleSidebar();
-    }
-
-    function showLogoutConfirmation() { document.getElementById('logoutModal').classList.add('show'); }
-    function cancelLogout() { document.getElementById('logoutModal').classList.remove('show'); }
-    function confirmLogout() { sessionStorage.clear(); document.getElementById('logoutModal').classList.remove('show'); showToast('Logged out', 'success'); setTimeout(() => window.location.href = "index.html", 1000); }
-
-    // Profile
-    async function loadProfile() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        const data = await res.json();
-        if (data.success && data.student) {
-          const s = data.student;
-          document.getElementById('sidebarStudentName').innerHTML = s.name;
-          document.getElementById('sidebarStudentCourse').innerHTML = s.course;
-          document.getElementById('sidebarStudentId').innerHTML = `ID: ${s.student_id}`;
-          document.getElementById('welcomeText').innerHTML = `Hi, ${s.name.split(' ')[0]}`;
-          let qualHtml = '';
-          if (s.qualifications && s.qualifications.length) {
-            qualHtml = `<div class="profile-item full-width"><label>Qualifications</label><div class="profile-value"><table style="width:100%; font-size:0.65rem;"><thead><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead><tbody>`;
-            s.qualifications.forEach(q => { qualHtml += `<tr><td>${q.level}</td><td>${q.institute}</td><td>${q.board}</td><td>${q.marks}</td><td>${q.year}</td></tr>`; });
-            qualHtml += `</tbody></table></div></div>`;
+        const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
+        let studentData = null, STUDENT_ID = null;
+        
+        // PDF variables
+        let pdfDoc = null;
+        let currentPageNum = 1;
+        let totalPagesNum = 0;
+        let currentScale = 1.2;
+        let currentPdfId = null;
+        let currentPdfTitle = null;
+        
+        // Attendance variables
+        let allAttendanceRecords = [];
+        let subjectStats = {};
+        let currentSubjectName = null;
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        
+        function showToast(message, type = 'info') {
+          const container = document.getElementById('toastContainer');
+          if (!container) return;
+          const toast = document.createElement('div');
+          toast.className = `toast-msg ${type}`;
+          toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span style="font-size:0.75rem;">${message}</span>`;
+          container.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function checkAuthentication() {
+          const data = sessionStorage.getItem('studentData');
+          if (!data) { 
+            document.getElementById('loginModal').classList.add('show'); 
+            return null; 
           }
-          document.getElementById('profileContent').innerHTML = `
-            <div class="profile-photo-section"><div class="profile-photo">${s.student_photo && s.student_photo !== 'null' ? `<img src="${s.student_photo}">` : `<i class="fas fa-user-graduate"></i>`}</div><div class="profile-name-title"><h2>${s.name}</h2><p><span class="badge">${s.course}</span> ${s.section_name ? `<span class="badge">Sec ${s.section_name}</span>` : ''}</p></div></div>
-            <div class="profile-grid"><div class="profile-column"><div class="profile-section-title">Student Info</div><div class="profile-item"><label>ID</label><div class="profile-value">${s.student_id}</div></div><div class="profile-item"><label>DOB</label><div class="profile-value">${s.dob ? new Date(s.dob).toLocaleDateString() : '-'}</div></div><div class="profile-item"><label>Gender</label><div class="profile-value">${s.gender || '-'}</div></div><div class="profile-item"><label>Category</label><div class="profile-value">${s.category || '-'}</div></div></div>
-            <div class="profile-column"><div class="profile-section-title">Parent Info</div><div class="profile-item"><label>Parent Name</label><div class="profile-value">${s.parent_name || '-'}</div></div><div class="profile-item"><label>Father's Mobile</label><div class="profile-value">${s.father_mobile || '-'}</div></div><div class="profile-item"><label>Occupation</label><div class="profile-value">${s.father_occupation || '-'}</div></div></div>
-            <div class="profile-column"><div class="profile-section-title">Contact</div><div class="profile-item"><label>Phone</label><div class="profile-value">${s.phone || '-'}</div></div><div class="profile-item"><label>Email</label><div class="profile-value">${s.email || '-'}</div></div><div class="profile-item"><label>Address</label><div class="profile-value">${s.address || '-'}</div></div></div>
-            <div class="profile-column"><div class="profile-section-title">Fee Info</div><div class="profile-item"><label>Total</label><div class="profile-value">₹${(s.fee_amount || 0).toLocaleString()}</div></div><div class="profile-item"><label>Paid</label><div class="profile-value text-success">₹${(s.paid_amount || 0).toLocaleString()}</div></div><div class="profile-item"><label>Due</label><div class="profile-value text-danger">₹${(s.due_amount || 0).toLocaleString()}</div></div><div class="profile-item"><label>Status</label><div class="profile-value"><span class="badge ${s.fee_status === 'Paid' ? 'bg-success' : 'bg-danger'}">${s.fee_status || 'Pending'}</span></div></div></div></div>${qualHtml}`;
+          try { 
+            return JSON.parse(data); 
+          } catch(e) { 
+            document.getElementById('loginModal').classList.add('show'); 
+            return null; 
+          }
         }
-      } catch(e) { console.error(e); }
-    }
-
-    function showMainView() {
-      const main = document.getElementById('attendanceMainView');
-      const sub = document.getElementById('attendanceSubjectView');
-      if (main) main.style.display = 'block';
-      if (sub) sub.style.display = 'none';
-    }
-
-    function filterSubjectCards(val) {
-      document.querySelectorAll('.subject-card').forEach(card => {
-        const name = card.querySelector('.subject-name')?.textContent.toLowerCase() || '';
-        card.style.display = name.includes(val.toLowerCase()) ? 'block' : 'none';
-      });
-    }
-    function filterAttendanceRecords(val) {
-      document.querySelectorAll('#subjectDetailRecords tr').forEach(row => {
-        if (val === 'all') row.style.display = '';
-        else { const status = row.querySelector('.grade-badge')?.textContent || ''; row.style.display = status === val ? '' : 'none'; }
-      });
-    }
-
-    async function loadAttendance() {
-      try {
-        const details = await (await fetch(`${API_BASE_URL}/student-attendance-details/${STUDENT_ID}`)).json();
-        if (details.success) {
-          let stats = {}, totalPresent = 0, totalAbsent = 0;
-          details.attendance_details.forEach(r => {
-            const sub = r.subject || 'General';
-            if (!stats[sub]) stats[sub] = { present: 0, absent: 0, total: 0 };
-            if (r.status === 'Present') { stats[sub].present++; totalPresent++; }
-            else { stats[sub].absent++; totalAbsent++; }
-            stats[sub].total++;
+        
+        studentData = checkAuthentication();
+        STUDENT_ID = studentData ? studentData.student_id : null;
+        
+        function redirectToLogin() { 
+          window.location.href = 'student-login.html'; 
+        }
+        
+        // ==================== SIDEBAR FUNCTIONS ====================
+        
+        function toggleSidebar() {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          if (sidebar.classList.contains('expanded')) {
+            sidebar.classList.remove('expanded');
+            overlay.classList.remove('show');
+          } else {
+            sidebar.classList.add('expanded');
+            overlay.classList.add('show');
+          }
+        }
+        
+        function showSection(sectionId) {
+          document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+          document.getElementById(sectionId).classList.add('active');
+          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+          if (event && event.currentTarget) event.currentTarget.classList.add('active');
+          
+          // Auto close sidebar
+          const sidebar = document.getElementById('sidebar');
+          if (sidebar && sidebar.classList.contains('expanded')) toggleSidebar();
+        }
+        
+        function showLogoutConfirmation() { 
+          document.getElementById('logoutModal').classList.add('show'); 
+        }
+        
+        function cancelLogout() { 
+          document.getElementById('logoutModal').classList.remove('show'); 
+        }
+        
+        function confirmLogout() { 
+          sessionStorage.clear(); 
+          document.getElementById('logoutModal').classList.remove('show'); 
+          showToast('Logged out successfully', 'success'); 
+          setTimeout(() => window.location.href = "index.html", 1000); 
+        }
+        
+        // ==================== PROFILE FUNCTIONS ====================
+        
+        async function loadProfile() {
+          try {
+            const res = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+            const data = await res.json();
+            if (data.success && data.student) {
+              const s = data.student;
+              document.getElementById('sidebarStudentName').innerHTML = s.name;
+              document.getElementById('sidebarStudentCourse').innerHTML = s.course;
+              document.getElementById('sidebarStudentId').innerHTML = `ID: ${s.student_id}`;
+              document.getElementById('welcomeText').innerHTML = `Hi, ${s.name.split(' ')[0]}`;
+              
+              let qualHtml = '';
+              if (s.qualifications && s.qualifications.length) {
+                qualHtml = `<div class="profile-item full-width"><label>Qualifications</label><div class="profile-value"><table style="width:100%; font-size:0.65rem;"><thead><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead><tbody>`;
+                s.qualifications.forEach(q => { 
+                  qualHtml += `<tr><td>${q.level || '-'}</td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`; 
+                });
+                qualHtml += `</tbody></table></div></div>`;
+              }
+              
+              document.getElementById('profileContent').innerHTML = `
+                <div class="profile-photo-section">
+                  <div class="profile-photo">${s.student_photo && s.student_photo !== 'null' ? `<img src="${s.student_photo}">` : `<i class="fas fa-user-graduate"></i>`}</div>
+                  <div class="profile-name-title">
+                    <h2>${s.name}</h2>
+                    <p><span class="badge">${s.course}</span> ${s.section_name ? `<span class="badge">Sec ${s.section_name}</span>` : ''}</p>
+                  </div>
+                </div>
+                <div class="profile-grid">
+                  <div class="profile-column">
+                    <div class="profile-section-title">Student Info</div>
+                    <div class="profile-item"><label>ID</label><div class="profile-value">${s.student_id}</div></div>
+                    <div class="profile-item"><label>DOB</label><div class="profile-value">${s.dob ? new Date(s.dob).toLocaleDateString() : '-'}</div></div>
+                    <div class="profile-item"><label>Gender</label><div class="profile-value">${s.gender || '-'}</div></div>
+                    <div class="profile-item"><label>Category</label><div class="profile-value">${s.category || '-'}</div></div>
+                  </div>
+                  <div class="profile-column">
+                    <div class="profile-section-title">Parent Info</div>
+                    <div class="profile-item"><label>Parent Name</label><div class="profile-value">${s.parent_name || '-'}</div></div>
+                    <div class="profile-item"><label>Father's Mobile</label><div class="profile-value">${s.father_mobile || '-'}</div></div>
+                    <div class="profile-item"><label>Occupation</label><div class="profile-value">${s.father_occupation || '-'}</div></div>
+                  </div>
+                  <div class="profile-column">
+                    <div class="profile-section-title">Contact</div>
+                    <div class="profile-item"><label>Phone</label><div class="profile-value">${s.phone || '-'}</div></div>
+                    <div class="profile-item"><label>Email</label><div class="profile-value">${s.email || '-'}</div></div>
+                    <div class="profile-item"><label>Address</label><div class="profile-value">${s.address || '-'}</div></div>
+                  </div>
+                  <div class="profile-column">
+                    <div class="profile-section-title">Fee Info</div>
+                    <div class="profile-item"><label>Total</label><div class="profile-value">₹${(s.fee_amount || 0).toLocaleString()}</div></div>
+                    <div class="profile-item"><label>Paid</label><div class="profile-value text-success">₹${(s.paid_amount || 0).toLocaleString()}</div></div>
+                    <div class="profile-item"><label>Due</label><div class="profile-value text-danger">₹${(s.due_amount || 0).toLocaleString()}</div></div>
+                    <div class="profile-item"><label>Status</label><div class="profile-value"><span class="badge ${s.fee_status === 'Paid' ? 'bg-success' : 'bg-danger'}">${s.fee_status || 'Pending'}</span></div></div>
+                  </div>
+                </div>
+                ${qualHtml}
+              `;
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('profileContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
+          }
+        }
+        
+        // ==================== ATTENDANCE FUNCTIONS ====================
+        
+        function showMainView() {
+          const main = document.getElementById('attendanceMainView');
+          const sub = document.getElementById('attendanceSubjectView');
+          if (main) main.style.display = 'block';
+          if (sub) sub.style.display = 'none';
+          currentSubjectName = null;
+        }
+        
+        function filterSubjectCards(val) {
+          document.querySelectorAll('.subject-card').forEach(card => {
+            const name = card.querySelector('.subject-name')?.textContent.toLowerCase() || '';
+            card.style.display = name.includes(val.toLowerCase()) ? 'block' : 'none';
           });
-          const totalDays = totalPresent + totalAbsent;
-          const percentage = totalDays ? Math.round((totalPresent / totalDays) * 100) : 0;
-          document.getElementById('overallPercentage').innerHTML = percentage + '%';
-          document.getElementById('presentDays').innerHTML = totalPresent;
-          document.getElementById('absentDays').innerHTML = totalAbsent;
-          document.getElementById('totalDays').innerHTML = totalDays;
-          document.getElementById('attendanceProgressBar').style.width = percentage + '%';
-          document.getElementById('progressLabel').innerHTML = percentage + '%';
-          let html = '';
-          Object.entries(stats).forEach(([subject, s]) => {
-            const pct = s.total ? Math.round((s.present / s.total) * 100) : 0;
-            html += `<div class="subject-card" onclick="alert('${subject}\nPresent: ${s.present}\nAbsent: ${s.absent}\n${pct}%')"><div class="subject-header"><span class="subject-name">${subject}</span><span class="subject-badge">${s.total} classes</span></div><div class="subject-stats"><div class="subject-stat"><div class="value" style="color:#06d6a0;">${s.present}</div><div class="label">Present</div></div><div class="subject-stat"><div class="value" style="color:#ef476f;">${s.absent}</div><div class="label">Absent</div></div><div class="subject-stat"><div class="value" style="color:#667eea;">${pct}%</div><div class="label">%</div></div></div><div class="progress"><div class="progress-bar" style="width:${pct}%; background:#667eea;"></div></div></div>`;
-          });
-          document.getElementById('subjectCardsContainer').innerHTML = html;
         }
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadTimetable() {
-      try {
-        const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
-        let timetable = [];
-        if (student.section_id) {
-          const res = await fetch(`${API_BASE_URL}/timetable/section/${student.section_id}`);
-          const data = await res.json();
-          if (data.success && data.timetable) timetable = data.timetable;
-        }
-        if (!timetable.length) {
-          const res = await fetch(`${API_BASE_URL}/timetable/course/${student.course}`);
-          const data = await res.json();
-          if (data.success && data.timetable) timetable = data.timetable;
-        }
-        if (timetable.length) {
-          const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-          const today = days[new Date().getDay()];
-          let html = '';
-          days.forEach(day => {
-            const classes = timetable.filter(c => c.day_of_week === day && c.is_active);
-            if (classes.length) {
-              html += `<div class="day-card${day === today ? ' today' : ''}"><div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge">${classes.length}</span></div><div class="day-body">`;
-              classes.forEach(c => {
-                html += `<div class="class-card"><div class="time-badge"><i class="fas fa-clock"></i>${c.start_time} - ${c.end_time}</div><div class="class-subject">${c.subject}</div><div class="class-details-grid"><div class="detail-item"><i class="fas fa-chalkboard-teacher"></i>${c.teacher_name || 'N/A'}</div><div class="detail-item"><i class="fas fa-door-open"></i>Room ${c.room_number || 'N/A'}</div></div></div>`;
-              });
-              html += `</div></div>`;
+        
+        function filterAttendanceRecords(val) {
+          document.querySelectorAll('#subjectDetailRecords tr').forEach(row => {
+            if (val === 'all') row.style.display = '';
+            else { 
+              const status = row.querySelector('.grade-badge')?.textContent || ''; 
+              row.style.display = status === val ? '' : 'none'; 
             }
           });
-          document.getElementById('timetableContent').innerHTML = html;
-        } else {
-          document.getElementById('timetableContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No timetable</p></div>';
         }
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadFees() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('totalFee').innerHTML = `₹${(data.fee_summary.fee_amount || 0).toLocaleString()}`;
-          document.getElementById('paidAmount').innerHTML = `₹${(data.fee_summary.paid_amount || 0).toLocaleString()}`;
-          document.getElementById('dueAmount').innerHTML = `₹${(data.fee_summary.due_amount || 0).toLocaleString()}`;
-          const progress = data.fee_summary.fee_amount ? Math.round((data.fee_summary.paid_amount / data.fee_summary.fee_amount) * 100) : 0;
-          document.getElementById('progressPercentage').innerHTML = `${progress}%`;
-          document.getElementById('progressBar').style.width = `${progress}%`;
-          if (data.fee_history && data.fee_history.length) {
-            let histHtml = '';
-            data.fee_history.forEach(p => {
-              histHtml += `<tr><td>${new Date(p.payment_date).toLocaleDateString()}</td><td>${p.receipt_no || '-'}</td><td>₹${(p.amount || 0).toLocaleString()}</td><td>${p.payment_mode || 'Cash'}</td><td><span class="status-badge">${p.status || 'Completed'}</span></td></tr>`;
-            });
-            document.getElementById('paymentHistoryBody').innerHTML = histHtml;
+        
+        async function loadAttendance() {
+          try {
+            document.getElementById('subjectCardsContainer').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading attendance...</p></div>`;
+            
+            const details = await (await fetch(`${API_BASE_URL}/student-attendance-details/${STUDENT_ID}`)).json();
+            if (details.success) {
+              let stats = {}, totalPresent = 0, totalAbsent = 0;
+              details.attendance_details.forEach(r => {
+                const sub = r.subject || 'General';
+                if (!stats[sub]) stats[sub] = { present: 0, absent: 0, total: 0 };
+                if (r.status === 'Present') { stats[sub].present++; totalPresent++; }
+                else { stats[sub].absent++; totalAbsent++; }
+                stats[sub].total++;
+              });
+              
+              const totalDays = totalPresent + totalAbsent;
+              const percentage = totalDays ? Math.round((totalPresent / totalDays) * 100) : 0;
+              
+              document.getElementById('overallPercentage').innerHTML = percentage + '%';
+              document.getElementById('presentDays').innerHTML = totalPresent;
+              document.getElementById('absentDays').innerHTML = totalAbsent;
+              document.getElementById('totalDays').innerHTML = totalDays;
+              document.getElementById('attendanceProgressBar').style.width = percentage + '%';
+              document.getElementById('progressLabel').innerHTML = percentage + '%';
+              
+              let html = '';
+              Object.entries(stats).forEach(([subject, s]) => {
+                const pct = s.total ? Math.round((s.present / s.total) * 100) : 0;
+                html += `
+                  <div class="subject-card" onclick="alert('${subject}\\nPresent: ${s.present}\\nAbsent: ${s.absent}\\n${pct}%')">
+                    <div class="subject-header">
+                      <span class="subject-name">${subject}</span>
+                      <span class="subject-badge">${s.total} classes</span>
+                    </div>
+                    <div class="subject-stats">
+                      <div class="subject-stat"><div class="value" style="color:#06d6a0;">${s.present}</div><div class="label">Present</div></div>
+                      <div class="subject-stat"><div class="value" style="color:#ef476f;">${s.absent}</div><div class="label">Absent</div></div>
+                      <div class="subject-stat"><div class="value" style="color:#667eea;">${pct}%</div><div class="label">%</div></div>
+                    </div>
+                    <div class="progress"><div class="progress-bar" style="width:${pct}%; background:#667eea;"></div></div>
+                  </div>
+                `;
+              });
+              document.getElementById('subjectCardsContainer').innerHTML = html;
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('subjectCardsContainer').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load attendance</p></div>';
           }
-          document.getElementById('feeLoading').style.display = 'none';
-          document.getElementById('feeContent').style.display = 'block';
         }
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadNotices() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/student-notices`);
-        const data = await res.json();
-        if (data.success && data.notices.length) {
-          let html = '';
-          data.notices.forEach(n => {
-            html += `<div class="notice-item ${n.priority || 'low'}"><div class="notice-title">${n.title}</div><div class="notice-msg">${n.message}</div><div class="notice-meta"><small>${new Date(n.created_at).toLocaleDateString()}</small><span class="badge">${n.priority || 'low'}</span></div></div>`;
-          });
-          document.getElementById('noticesContent').innerHTML = html;
+        
+        // ==================== TIMETABLE FUNCTIONS ====================
+        
+        function formatTimeTo12Hour(time24) {
+          if (!time24) return 'N/A';
+          if (time24.includes('AM') || time24.includes('PM')) return time24;
+          try {
+            const [hours, minutes] = time24.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) return time24;
+            const period = hours >= 12 ? 'PM' : 'AM';
+            let h12 = hours % 12;
+            h12 = h12 === 0 ? 12 : h12;
+            return `${h12}:${minutes.toString().padStart(2, '0')} ${period}`;
+          } catch { return time24; }
         }
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadSyllabus() {
-      try {
-        const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
-        const res = await fetch(`${API_BASE_URL}/syllabus/course/${student.course}`);
-        const data = await res.json();
-        if (data.success && data.syllabus.length) {
-          let html = '';
-          data.syllabus.forEach(s => {
-            if (s.is_active) {
-              html += `<div class="table-wrap"><div class="table-wrap-header"><i class="fas fa-book-open"></i> ${s.syllabus_title} <span class="section-badge">${s.total_duration} hrs</span></div><table class="modern-table"><thead><tr><th>Subject</th><th>Duration</th><th>Topics</th></tr></thead><tbody>`;
-              if (s.subjects) s.subjects.forEach(sub => {
-                html += `<tr><td><strong>${sub.subject_name}</strong></td><td>${sub.duration_hours} hrs</td><td>${sub.topics ? sub.topics.split(',').slice(0,2).join(', ') : '-'}</td></tr>`;
+        
+        async function loadTimetable() {
+          try {
+            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
+            let timetable = [];
+            
+            if (student.section_id) {
+              const res = await fetch(`${API_BASE_URL}/timetable/section/${student.section_id}`);
+              const data = await res.json();
+              if (data.success && data.timetable) timetable = data.timetable;
+            }
+            if (!timetable.length) {
+              const res = await fetch(`${API_BASE_URL}/timetable/course/${student.course}`);
+              const data = await res.json();
+              if (data.success && data.timetable) timetable = data.timetable;
+            }
+            
+            if (timetable.length) {
+              const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+              const today = days[new Date().getDay()];
+              let html = '';
+              
+              days.forEach(day => {
+                const classes = timetable.filter(c => c.day_of_week === day && c.is_active);
+                if (classes.length) {
+                  html += `
+                    <div class="day-card${day === today ? ' today' : ''}">
+                      <div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge">${classes.length}</span></div>
+                      <div class="day-body">
+                  `;
+                  classes.forEach(c => {
+                    html += `
+                      <div class="class-card">
+                        <div class="time-badge"><i class="fas fa-clock"></i>${c.start_time} - ${c.end_time}</div>
+                        <div class="class-subject">${c.subject}</div>
+                        <div class="class-details-grid">
+                          <div class="detail-item"><i class="fas fa-chalkboard-teacher"></i>${c.teacher_name || 'N/A'}</div>
+                          <div class="detail-item"><i class="fas fa-door-open"></i>Room ${c.room_number || 'N/A'}</div>
+                        </div>
+                      </div>
+                    `;
+                  });
+                  html += `</div></div>`;
+                }
+              });
+              document.getElementById('timetableContent').innerHTML = html;
+            } else {
+              document.getElementById('timetableContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No timetable available</p></div>';
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load timetable</div>';
+          }
+        }
+        
+        // ==================== FEES FUNCTIONS ====================
+        
+        async function loadFees() {
+          try {
+            const res = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
+            const data = await res.json();
+            if (data.success) {
+              const total = data.fee_summary.fee_amount || 0;
+              const paid = data.fee_summary.paid_amount || 0;
+              const due = data.fee_summary.due_amount || 0;
+              const progress = total ? Math.round((paid / total) * 100) : 0;
+              
+              document.getElementById('totalFee').innerHTML = `₹${total.toLocaleString()}`;
+              document.getElementById('paidAmount').innerHTML = `₹${paid.toLocaleString()}`;
+              document.getElementById('dueAmount').innerHTML = `₹${due.toLocaleString()}`;
+              document.getElementById('progressPercentage').innerHTML = `${progress}%`;
+              document.getElementById('progressBar').style.width = `${progress}%`;
+              
+              if (data.fee_history && data.fee_history.length) {
+                let histHtml = '';
+                data.fee_history.forEach(p => {
+                  histHtml += `
+                    <tr>
+                      <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+                      <td>${p.receipt_no || '-'}</td>
+                      <td>₹${(p.amount || 0).toLocaleString()}</td>
+                      <td>${p.payment_mode || 'Cash'}</td>
+                      <td><span class="status-badge">${p.status || 'Completed'}</span></td>
+                    </tr>
+                  `;
+                });
+                document.getElementById('paymentHistoryBody').innerHTML = histHtml;
+              }
+              document.getElementById('feeLoading').style.display = 'none';
+              document.getElementById('feeContent').style.display = 'block';
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('feeLoading').style.display = 'none';
+            document.getElementById('feeError').style.display = 'block';
+          }
+        }
+        
+        // ==================== NOTICES FUNCTIONS ====================
+        
+        async function loadNotices() {
+          try {
+            const res = await fetch(`${API_BASE_URL}/student-notices`);
+            const data = await res.json();
+            if (data.success && data.notices.length) {
+              let html = '';
+              data.notices.forEach(n => {
+                html += `
+                  <div class="notice-item ${n.priority || 'low'}">
+                    <div class="notice-title">${n.title}</div>
+                    <div class="notice-msg">${n.message}</div>
+                    <div class="notice-meta">
+                      <small>${new Date(n.created_at).toLocaleDateString()}</small>
+                      <span class="badge">${n.priority || 'low'}</span>
+                    </div>
+                  </div>
+                `;
+              });
+              document.getElementById('noticesContent').innerHTML = html;
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('noticesContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-bullhorn"></i></div><p>No notices</p></div>';
+          }
+        }
+        
+        // ==================== SYLLABUS FUNCTIONS ====================
+        
+        async function loadSyllabus() {
+          try {
+            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
+            const res = await fetch(`${API_BASE_URL}/syllabus/course/${student.course}`);
+            const data = await res.json();
+            
+            if (data.success && data.syllabus.length) {
+              let html = '';
+              data.syllabus.forEach(s => {
+                if (s.is_active) {
+                  html += `
+                    <div class="table-wrap">
+                      <div class="table-wrap-header">
+                        <i class="fas fa-book-open"></i> ${s.syllabus_title}
+                        <span class="section-badge">${s.total_duration} hrs</span>
+                      </div>
+                      <table class="modern-table">
+                        <thead><tr><th>Subject</th><th>Duration</th><th>Topics</th></tr></thead>
+                        <tbody>
+                  `;
+                  if (s.subjects) {
+                    s.subjects.forEach(sub => {
+                      html += `
+                        <tr>
+                          <td><strong>${sub.subject_name}</strong></td>
+                          <td>${sub.duration_hours} hrs</td>
+                          <td>${sub.topics ? sub.topics.split(',').slice(0, 2).join(', ') : '-'}</td>
+                        </tr>
+                      `;
+                    });
+                  }
+                  html += `</tbody></table></div>`;
+                }
+              });
+              document.getElementById('syllabusContent').innerHTML = html;
+            } else {
+              document.getElementById('syllabusContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><p>Syllabus not available</p></div>';
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('syllabusContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load syllabus</div>';
+          }
+        }
+        
+        // ==================== RESULTS FUNCTIONS ====================
+        
+        function calculateGrade(pct) {
+          if (pct >= 90) return 'A+';
+          if (pct >= 80) return 'A';
+          if (pct >= 70) return 'B+';
+          if (pct >= 60) return 'B';
+          if (pct >= 50) return 'C+';
+          if (pct >= 40) return 'C';
+          return 'F';
+        }
+        
+        async function loadResults() {
+          try {
+            const res = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
+            const data = await res.json();
+            
+            if (data.success && data.results.length) {
+              let html = `
+                <div class="table-wrap">
+                  <table class="modern-table">
+                    <thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>%</th><th>Grade</th><th>Date</th></tr></thead>
+                    <tbody>
+              `;
+              data.results.forEach(r => {
+                const pct = Math.round((r.marks_obtained / r.total_marks) * 100);
+                html += `
+                  <tr>
+                    <td><strong>${r.subject}</strong></td>
+                    <td>${r.exam_type}</td>
+                    <td>${r.marks_obtained}/${r.total_marks}</td>
+                    <td>${pct}%</td>
+                    <td><span class="grade-badge ${pct >= 60 ? 'grade-a' : 'grade-d'}">${r.grade}</span></td>
+                    <td>${new Date(r.exam_date).toLocaleDateString()}</td>
+                  </tr>
+                `;
               });
               html += `</tbody></table></div>`;
+              document.getElementById('resultsContent').innerHTML = html;
+            } else {
+              document.getElementById('resultsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-chart-bar"></i></div><p>No results available</p></div>';
             }
-          });
-          document.getElementById('syllabusContent').innerHTML = html;
-        }
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadResults() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
-        const data = await res.json();
-        if (data.success && data.results.length) {
-          let html = `<div class="table-wrap"><table class="modern-table"><thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>%</th><th>Grade</th><th>Date</th></tr></thead><tbody>`;
-          data.results.forEach(r => {
-            const pct = Math.round((r.marks_obtained / r.total_marks) * 100);
-            html += `<tr><td><strong>${r.subject}</strong></td><td>${r.exam_type}</td><td>${r.marks_obtained}/${r.total_marks}</td><td>${pct}%</td><td><span class="grade-badge ${pct >= 60 ? 'grade-a' : 'grade-d'}">${r.grade}</span></td><td>${new Date(r.exam_date).toLocaleDateString()}</td></tr>`;
-          });
-          html += `</tbody></table></div>`;
-          document.getElementById('resultsContent').innerHTML = html;
-        }
-      } catch(e) { console.error(e); }
-    }
-
-    // FIXED: Study Materials with correct API endpoint
-    async function loadStudyMaterials() {
-      try {
-        const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
-        if (!student.section_id) {
-          document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><p>No section assigned</p></div>';
-          return;
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('resultsContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load results</div>';
+          }
         }
         
-        let pdfs = [];
-        let response = null;
+        // ==================== STUDY MATERIALS PDF FUNCTIONS ====================
         
-        // Try different API endpoints
-        try {
-          response = await fetch(`${API_BASE_URL}/section-pdfs/section/${student.section_id}`);
-          if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${student.section_id}`);
-          if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${student.section_id}`);
-          
-          const data = await response.json();
-          console.log("PDF API Response:", data); // Debug ke liye
-          
-          // Multiple response format handle
-          if (data.success && data.pdfs) pdfs = data.pdfs;
-          else if (data.pdfs) pdfs = data.pdfs;
-          else if (data.data && data.data.pdfs) pdfs = data.data.pdfs;
-          else if (Array.isArray(data)) pdfs = data;
-          else if (data.data && Array.isArray(data.data)) pdfs = data.data;
-          else if (data.pdf_list) pdfs = data.pdf_list;
-        } catch(e) {
-          console.error('PDF fetch error:', e);
-        }
-        
-        if (pdfs && pdfs.length > 0) {
-          let html = '';
-          pdfs.forEach(pdf => {
-            // Handle different field names
-            const pdfId = pdf.pdf_id || pdf.id || pdf._id;
-            const title = pdf.pdf_title || pdf.title || pdf.name || 'Study Material';
-            const subject = pdf.subject || pdf.subject_name || pdf.course || 'General';
-            const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
-            const fileUrl = pdf.file_url || pdf.pdf_url || pdf.url;
+        async function loadStudyMaterials() {
+          try {
+            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
+            if (!student.section_id) {
+              document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><p>No section assigned</p></div>';
+              return;
+            }
             
-            html += `
-              <div class="pdf-card">
-                <div class="card-top">
-                  <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
-                  <div class="pdf-title">${title}</div>
-                  <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
-                  <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
+            let pdfs = [];
+            try {
+              let response = await fetch(`${API_BASE_URL}/section-pdfs/section/${student.section_id}`);
+              if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${student.section_id}`);
+              if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${student.section_id}`);
+              
+              const data = await response.json();
+              
+              if (data.success && data.pdfs) pdfs = data.pdfs;
+              else if (data.pdfs) pdfs = data.pdfs;
+              else if (Array.isArray(data)) pdfs = data;
+              else if (data.data && Array.isArray(data.data)) pdfs = data.data;
+            } catch(e) {
+              console.error('PDF fetch error:', e);
+            }
+            
+            if (pdfs && pdfs.length > 0) {
+              let html = '';
+              pdfs.forEach(pdf => {
+                const pdfId = pdf.pdf_id || pdf.id || pdf._id;
+                const title = pdf.pdf_title || pdf.title || pdf.name || 'Study Material';
+                const subject = pdf.subject || pdf.subject_name || pdf.course || 'General';
+                const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
+                
+                html += `
+                  <div class="pdf-card">
+                    <div class="card-top">
+                      <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
+                      <div class="pdf-title">${title}</div>
+                      <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
+                      <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
+                    </div>
+                    <div class="pdf-actions">
+                      <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-eye"></i> View</button>
+                      <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-download"></i> Download</button>
+                    </div>
+                  </div>
+                `;
+              });
+              document.getElementById('pdfsContent').innerHTML = html;
+            } else {
+              document.getElementById('pdfsContent').innerHTML = `
+                <div class="section-required-state">
+                  <div class="section-required-icon"><i class="fas fa-file-pdf"></i></div>
+                  <p>No study materials available</p>
+                  <button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px; cursor:pointer;">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
                 </div>
-                <div class="pdf-actions">
-                  <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title}','${fileUrl}')"><i class="fas fa-eye"></i> View</button>
-                  <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title}','${fileUrl}')"><i class="fas fa-download"></i> Download</button>
-                </div>
-              </div>
-            `;
-          });
-          document.getElementById('pdfsContent').innerHTML = html;
-        } else {
-          document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><p>No study materials available for your section</p><button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px;">Refresh</button></div>';
+              `;
+            }
+          } catch(e) { 
+            console.error(e);
+            document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load materials</p></div>';
+          }
         }
-      } catch(e) { 
-        console.error('loadStudyMaterials error:', e);
-        document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load materials</p><button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px;">Retry</button></div>';
-      }
-    }
-
-    async function loadStudentData() {
-      await Promise.all([loadProfile(), loadFees(), loadNotices(), loadAttendance(), loadTimetable(), loadSyllabus(), loadResults(), loadStudyMaterials()]);
-    }
-
-    // PDF Functions
-    function closePdfPreview() { document.getElementById('pdfPreviewModal').classList.remove('show'); document.getElementById('pdfControls').style.display = 'none'; }
-    function prevPage() { if (currentPage > 1) { currentPage--; renderPage(currentPage); } }
-    function nextPage() { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } }
-    async function renderPage(page) { if (!pdfDoc) return; const pageData = await pdfDoc.getPage(page); const viewport = pageData.getViewport({ scale: 1.2 }); const canvas = document.getElementById('pdfCanvas'); if (canvas) { canvas.height = viewport.height; canvas.width = viewport.width; pageData.render({ canvasContext: canvas.getContext('2d'), viewport }); } document.getElementById('currentPage').innerHTML = page; }
-
-    async function viewStudentPdf(pdfId, pdfTitle, fileUrl) {
-      document.getElementById('pdfPreviewTitle').innerHTML = `<i class="fas fa-file-pdf"></i> ${pdfTitle}`;
-      document.getElementById('pdfPreviewModal').classList.add('show');
-      document.getElementById('pdfControls').style.display = 'flex';
-      
-      let pdfSrc = null;
-      
-      // Try different URL formats
-      if (fileUrl) {
-        pdfSrc = fileUrl;
-      } else if (pdfId) {
-        // Try multiple endpoint patterns
-        pdfSrc = `${API_BASE_URL}/view-section-pdf/${pdfId}`;
-      }
-      
-      // Also try direct iframe approach
-      const iframe = document.getElementById('pdfViewer');
-      iframe.src = pdfSrc;
-      
-      // If iframe fails, try PDF.js
-      iframe.onerror = () => {
-        try {
-          const loadingTask = pdfjsLib.getDocument(pdfSrc);
-          loadingTask.promise.then(pdf => {
-            pdfDoc = pdf;
-            totalPages = pdf.numPages;
-            document.getElementById('totalPages').innerHTML = totalPages;
-            currentPage = 1;
-            renderPage(currentPage);
-            document.getElementById('pdfIframeContainer').style.display = 'none';
-            const canvasContainer = document.getElementById('pdfViewerContainer');
-            if (canvasContainer) canvasContainer.style.display = 'block';
-          }).catch(err => {
-            console.error('PDF load error:', err);
-            document.getElementById('pdfAlternativeView').style.display = 'block';
-          });
-        } catch(e) {
-          console.error('PDF.js error:', e);
+        
+        // ==================== PDF VIEW & DOWNLOAD FUNCTIONS ====================
+        
+        async function viewStudentPdf(pdfId, pdfTitle) {
+          currentPdfId = pdfId;
+          currentPdfTitle = pdfTitle;
+          
+          const modal = document.getElementById('pdfPreviewModal');
+          const titleEl = document.getElementById('pdfPreviewTitle');
+          if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-pdf me-2"></i> ${pdfTitle}`;
+          modal.classList.add('show');
+          
+          const iframeContainer = document.getElementById('pdfIframeContainer');
+          const viewerContainer = document.getElementById('pdfViewerContainer');
+          const altView = document.getElementById('pdfAlternativeView');
+          const controls = document.getElementById('pdfControls');
+          
+          if (iframeContainer) iframeContainer.style.display = 'none';
+          if (viewerContainer) viewerContainer.style.display = 'none';
+          if (altView) altView.style.display = 'none';
+          if (controls) controls.style.display = 'none';
+          
+          const pdfUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}`;
+          const iframe = document.getElementById('pdfViewer');
+          
+          if (iframe) {
+            iframe.src = pdfUrl;
+            iframe.onload = () => {
+              if (iframeContainer) iframeContainer.style.display = 'block';
+              if (controls) controls.style.display = 'flex';
+            };
+            iframe.onerror = () => {
+              loadPdfWithPdfJs(pdfUrl);
+            };
+          } else {
+            loadPdfWithPdfJs(pdfUrl);
+          }
         }
-      };
-    }
-    
-    function downloadStudentPdf(pdfId, pdfTitle, fileUrl) {
-      let downloadUrl = null;
-      
-      if (fileUrl) {
-        downloadUrl = fileUrl;
-      } else if (pdfId) {
-        downloadUrl = `${API_BASE_URL}/view-section-pdf/${pdfId}?download=true`;
-      }
-      
-      if (downloadUrl) {
-        window.open(downloadUrl, '_blank');
-        showToast('Download started: ' + pdfTitle, 'success');
-      } else {
-        showToast('Download URL not available', 'error');
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!studentData) { document.getElementById('loginModal').classList.add('show'); return; }
-      loadStudentData();
-      showMainView();
-    });
+        
+        async function loadPdfWithPdfJs(pdfUrl) {
+          try {
+            const loadingTask = pdfjsLib.getDocument(pdfUrl + '?t=' + Date.now());
+            pdfDoc = await loadingTask.promise;
+            totalPagesNum = pdfDoc.numPages;
+            
+            const totalPagesSpan = document.getElementById('totalPages');
+            const viewerContainer = document.getElementById('pdfViewerContainer');
+            const iframeContainer = document.getElementById('pdfIframeContainer');
+            const controls = document.getElementById('pdfControls');
+            
+            if (totalPagesSpan) totalPagesSpan.textContent = totalPagesNum;
+            if (viewerContainer) viewerContainer.style.display = 'block';
+            if (iframeContainer) iframeContainer.style.display = 'none';
+            if (controls) controls.style.display = 'flex';
+            
+            currentPageNum = 1;
+            renderPdfPage(currentPageNum);
+          } catch (error) {
+            console.error('PDF.js error:', error);
+            const altView = document.getElementById('pdfAlternativeView');
+            if (altView) altView.style.display = 'block';
+          }
+        }
+        
+        async function renderPdfPage(pageNum) {
+          if (!pdfDoc) return;
+          try {
+            const page = await pdfDoc.getPage(pageNum);
+            const canvas = document.getElementById('pdfCanvas');
+            if (!canvas) return;
+            
+            const context = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: currentScale });
+            
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            await page.render({ canvasContext: context, viewport }).promise;
+            
+            const currentPageSpan = document.getElementById('currentPage');
+            if (currentPageSpan) currentPageSpan.textContent = pageNum;
+          } catch (error) {
+            console.error('Render page error:', error);
+          }
+        }
+        
+        function prevPage() {
+          if (currentPageNum <= 1) return;
+          currentPageNum--;
+          if (pdfDoc) renderPdfPage(currentPageNum);
+        }
+        
+        function nextPage() {
+          if (currentPageNum >= totalPagesNum) return;
+          currentPageNum++;
+          if (pdfDoc) renderPdfPage(currentPageNum);
+        }
+        
+        function zoomPdf(value) {
+          currentScale = parseFloat(value);
+          if (pdfDoc) renderPdfPage(currentPageNum);
+        }
+        
+        function downloadStudentPdf(pdfId, pdfTitle) {
+          if (!pdfId) {
+            showToast('PDF ID not available', 'error');
+            return;
+          }
+          const downloadUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}?download=true`;
+          window.open(downloadUrl, '_blank');
+          showToast(`Download started: ${pdfTitle || 'PDF'}`, 'success');
+        }
+        
+        function downloadCurrentPdf() {
+          if (currentPdfId) {
+            downloadStudentPdf(currentPdfId, currentPdfTitle);
+          } else {
+            showToast('No PDF selected', 'error');
+          }
+        }
+        
+        function closePdfPreview() {
+          const modal = document.getElementById('pdfPreviewModal');
+          modal.classList.remove('show');
+          
+          const iframe = document.getElementById('pdfViewer');
+          if (iframe) iframe.src = 'about:blank';
+          
+          const controls = document.getElementById('pdfControls');
+          if (controls) controls.style.display = 'none';
+          
+          pdfDoc = null;
+          currentPageNum = 1;
+          totalPagesNum = 0;
+          currentPdfId = null;
+          currentPdfTitle = null;
+        }
+        
+        // ==================== MAIN LOAD FUNCTION ====================
+        
+        async function loadStudentData() {
+          await Promise.all([
+            loadProfile(), 
+            loadFees(), 
+            loadNotices(), 
+            loadAttendance(), 
+            loadTimetable(), 
+            loadSyllabus(), 
+            loadResults(), 
+            loadStudyMaterials()
+          ]);
+        }
+        
+        // ==================== DOM CONTENT LOADED ====================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+          if (!studentData) { 
+            document.getElementById('loginModal').classList.add('show'); 
+            return; 
+          }
+          loadStudentData();
+          showMainView();
+        });
   </script>
 </body>
 </html>
