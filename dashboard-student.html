@@ -2531,10 +2531,16 @@ async function loadProfile() {
 
     /* ===== ATTENDANCE ===== */
 
+    // ==================== SHOW MAIN VIEW - WITH NULL CHECK ====================
     function showMainView() {
-      document.getElementById('attendanceMainView').style.display = 'block';
-      document.getElementById('attendanceSubjectView').style.display = 'none';
-      currentSubjectName = null;
+        const mainView = document.getElementById('attendanceMainView');
+        const subjectView = document.getElementById('attendanceSubjectView');
+        
+        // ✅ NULL CHECK ADD KARO
+        if (mainView) mainView.style.display = 'block';
+        if (subjectView) subjectView.style.display = 'none';
+        
+        currentSubjectName = null;
     }
 
     function showSubjectView(subject) {
