@@ -719,7 +719,7 @@
     .profile-photo {
       width: 80px;
       height: 80px;
-      border-radius: 50%;
+      border-radius: 12px;
       background: rgba(255,255,255,0.2);
       display: flex;
       align-items: center;
@@ -902,10 +902,15 @@
     
     @media (max-width: 768px) {
       .top-header { padding: 0 12px; height: 64px; }
-      .main-content { margin-top: 64px; padding: 12px; }
+      .main-content { margin-top: 64px; padding: 8px; }
       .sidebar { top: 64px; width: 280px; height: calc(100vh - 64px); }
       .main-content.sidebar-expanded { margin-left: 0; }
       .welcome-text { display: none; }
+        /* Extra fix for cards */
+        .dashboard-card, .modern-card {
+          padding: 12px !important;
+          margin: 0 0 12px 0 !important;
+        }
       
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .stat-card { padding: 12px; gap: 10px; }
@@ -930,6 +935,17 @@
       .office-info { flex-direction: column; text-align: center; }
       .toast-container { left: 10px; right: 10px; top: 70px; }
       .toast-msg { width: auto; }
+      /* Payment table mobile fix */
+      .history-table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+      }
+      .history-table th, 
+      .history-table td {
+          padding: 8px 10px !important;
+          font-size: 0.7rem !important;
+      }
     }
     
     @media (max-width: 480px) {
@@ -1330,10 +1346,11 @@
         if (pdfs.length) {
           let html = `<div class="row">`;
           pdfs.forEach(p => {
-            html += `<div class="col-md-6"><div class="pdf-card"><div class="card-top"><div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div><div class="pdf-title">${p.pdf_title}</div><div class="pdf-meta"><i class="fas fa-book"></i> ${p.subject || 'General'}</div><div class="pdf-meta"><i class="fas fa-calendar"></i> ${new Date(p.created_at).toLocaleDateString()}</div></div><div class="pdf-actions"><button class="pdf-btn download" onclick="alert('Download: ${p.pdf_title}')"><i class="fas fa-download"></i> Download</button></div></div></div>`;
+            html += `<div class="col-md-6"><div class="pdf-card"><div class="card-top"><div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div><div class="pdf-title">${p.pdf_title}</div><div class="pdf-meta"><i class="fas fa-book"></i> ${p.subject || 'General'}</div><div class="pdf-meta"><i class="fas fa-calendar"></i> ${new Date(p.created_at).toLocaleDateString()}</div></div><div class="pdf-actions"><button class="pdf-btn view" onclick="viewStudentPdf('${p.pdf_id}','${p.pdf_title}')"><i class="fas fa-eye"></i> View</button><button class="pdf-btn download" onclick="downloadStudentPdf('${p.pdf_id}','${p.pdf_title}')"><i class="fas fa-download"></i> Download</button></div></div></div>`;
           });
           html += `</div>`;
           document.getElementById('pdfsContent').innerHTML = html;
+        }
         } else {
           document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><p>No study materials available</p></div>';
         }
@@ -1356,6 +1373,24 @@
     function nextPage() {}
     function zoomPdf(v) {}
     function downloadCurrentPdf() {}
+    
+    async function viewStudentPdf(pdfId, pdfTitle) {
+        const modal = document.getElementById('pdfPreviewModal');
+        const title = document.getElementById('pdfPreviewTitle');
+        title.innerHTML = `<i class="fas fa-file-pdf"></i> ${pdfTitle}`;
+        modal.classList.add('show');
+        
+        const pdfUrl = `${API_BASE_URL}/view-section-pdf/${pdfId}`;
+        document.getElementById('pdfIframeContainer').style.display = 'block';
+        document.getElementById('pdfControls').style.display = 'flex';
+        document.getElementById('pdfViewer').src = pdfUrl;
+    }
+    
+    function downloadStudentPdf(pdfId, pdfTitle) {
+        const downloadUrl = `${API_BASE_URL}/view-section-pdf/${pdfId}?download=true`;
+        window.open(downloadUrl, '_blank');
+        showToast('Download started: ' + pdfTitle, 'success');
+    }
   </script>
 </body>
 </html>
