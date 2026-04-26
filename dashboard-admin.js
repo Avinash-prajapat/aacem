@@ -3817,16 +3817,22 @@ function logout() {
 
 // ==================== EDIT STUDENT - COMPLETE FIXED ====================
 async function editStudent(studentId) {
-    console.log('✏️ Editing student:', studentId);
+    console.log('✏️ EDIT STUDENT CALLED FOR:', studentId);
     
-    // Force fresh data load
+    // ✅ Step 1: Pehle fresh data fetch karo server se
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
         const freshData = await response.json();
+        
         if (freshData.success && freshData.student) {
+            // Update local array
             const index = studentsData.findIndex(s => s.student_id === studentId);
-            if (index !== -1) studentsData[index] = freshData.student;
-            else studentsData.push(freshData.student);
+            if (index !== -1) {
+                studentsData[index] = freshData.student;
+            } else {
+                studentsData.push(freshData.student);
+            }
+            console.log('✅ Fresh data fetched for edit');
         }
     } catch (error) {
         console.warn('Could not fetch fresh data:', error);
@@ -3839,9 +3845,12 @@ async function editStudent(studentId) {
     }
 
     console.log('📦 Student course:', student.course);
-    console.log('📚 Qualifications:', student.qualifications);
+    console.log('📦 Student qualifications:', student.qualifications);
+    console.log('📦 Student photo exists?', student.student_photo ? 'Yes' : 'No');
 
+    const modal = document.getElementById('studentModal');
     const form = document.getElementById('studentForm');
+    
     if (!form) {
         showError('Student form not found');
         return;
@@ -3866,35 +3875,25 @@ async function editStudent(studentId) {
         // Clear and repopulate
         courseSelect.innerHTML = '<option value="">Select Course</option>';
         
-        let courseFound = false;
         for (let i = 0; i < coursesData.length; i++) {
             const course = coursesData[i];
             const option = document.createElement('option');
             option.value = course.course_code;
             option.textContent = `${course.course_name} (${course.course_code})`;
             
-            // Compare as strings to avoid type issues
+            // Compare as strings
             if (String(course.course_code) === String(student.course)) {
                 option.selected = true;
-                courseFound = true;
                 console.log('✅ Course auto-selected:', course.course_code);
             }
             courseSelect.appendChild(option);
         }
         
-        if (!courseFound && student.course) {
-            // Add the missing course as an option and select it
-            const option = document.createElement('option');
-            option.value = student.course;
-            option.textContent = `${student.course} (${student.course})`;
-            option.selected = true;
-            courseSelect.appendChild(option);
-            console.log('✅ Added missing course:', student.course);
+        // Double-check selected value
+        if (courseSelect.value !== student.course) {
+            courseSelect.value = student.course;
+            console.log('📌 Force set course value:', courseSelect.value);
         }
-        
-        // Force select value
-        courseSelect.value = student.course;
-        console.log('📌 Final course value:', courseSelect.value);
     }
     
     // ========== NEW FIELDS ==========
@@ -3910,13 +3909,14 @@ async function editStudent(studentId) {
     if (fatherMobileInput) fatherMobileInput.value = student.father_mobile || '';
     if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
     
-    // ========== STUDENT PHOTO ==========
-    if (student.student_photo && student.student_photo !== 'null') {
+    // ========== STUDENT PHOTO PREVIEW ==========
+    if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
         const previewDiv = document.getElementById('photoPreview');
         const previewImg = document.getElementById('previewImage');
         if (previewDiv && previewImg) {
             previewImg.src = student.student_photo;
             previewDiv.style.display = 'block';
+            console.log('📸 Photo preview set');
         }
     } else {
         const previewDiv = document.getElementById('photoPreview');
@@ -3927,17 +3927,15 @@ async function editStudent(studentId) {
     const photoInput = document.getElementById('studentPhoto');
     if (photoInput) photoInput.value = '';
     
-    // ========== QUALIFICATIONS - FIX MULTIPLE ENTRIES ==========
+    // ========== QUALIFICATIONS ==========
     if (student.qualifications && student.qualifications.length > 0) {
         console.log('📚 Setting', student.qualifications.length, 'qualifications');
         setQualificationsData(student.qualifications);
     } else {
-        // Reset to single empty entry
         resetQualificationsContainer();
     }
 
-    // ========== UPDATE MODAL UI ==========
-    const modal = document.getElementById('studentModal');
+    // ========== UPDATE MODAL ==========
     const title = modal.querySelector('.modal-title');
     const saveBtn = modal.querySelector('.btn-primary');
     
@@ -3945,8 +3943,12 @@ async function editStudent(studentId) {
     if (saveBtn) saveBtn.textContent = 'Update Student';
 
     currentEditId = studentId;
+    
+    // Show modal
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
+    
+    console.log('✅ Edit modal opened for student:', studentId);
 }
 
 // Edit Teacher Function
@@ -4125,17 +4127,15 @@ async function deleteStudent(studentId) {
 
 // ==================== VIEW STUDENT - FETCH LATEST DATA ====================
 async function viewStudent(studentId) {
-    console.log('👁️ Viewing student (fresh data):', studentId);
+    console.log('👁️ VIEW STUDENT CALLED FOR:', studentId);
     
-    // Show loading indicator
-    showLoading('viewModal');
+    // Show loading
+    const modalBody = document.getElementById('viewModalContent');
     
     try {
-        // ✅ Fetch LATEST data from server
+        // ✅ FETCH FRESH DATA FROM SERVER
         const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
         const result = await response.json();
-        
-        hideLoading('viewModal');
         
         if (!result.success || !result.student) {
             showError('Student not found!');
@@ -4143,7 +4143,7 @@ async function viewStudent(studentId) {
         }
         
         const student = result.student;
-        console.log('📦 Latest student data:', student);
+        console.log('📦 Latest student data fetched:', student);
         
         // ✅ Update local cache
         const index = studentsData.findIndex(s => s.student_id === studentId);
@@ -4151,7 +4151,7 @@ async function viewStudent(studentId) {
             studentsData[index] = student;
         }
         
-        // ✅ Get fee details
+        // ✅ Fetch fee details
         let feeHistory = [];
         let totalPaid = student.paid_amount || 0;
         let dueAmount = student.due_amount || (student.fee_amount - totalPaid);
@@ -4164,23 +4164,40 @@ async function viewStudent(studentId) {
                 totalPaid = feeResult.fee_summary?.paid_amount || totalPaid;
                 dueAmount = feeResult.fee_summary?.due_amount || dueAmount;
             }
-        } catch(e) { console.warn('Fee fetch failed:', e); }
+        } catch(e) {
+            console.warn('Fee fetch failed:', e);
+        }
         
         // ✅ Build qualifications HTML
         let qualificationsHtml = '';
         if (student.qualifications && student.qualifications.length > 0) {
+            let qualRows = '';
+            for (let i = 0; i < student.qualifications.length; i++) {
+                const q = student.qualifications[i];
+                qualRows += `
+                    <tr>
+                        <td><strong>${q.level || '-'}</strong></td>
+                        <td>${q.institute || '-'}</td>
+                        <td>${q.board || '-'}</td>
+                        <td>${q.marks || '-'}</td>
+                        <td>${q.year || '-'}</td>
+                    </tr>
+                `;
+            }
             qualificationsHtml = `
                 <div class="card mb-3">
                     <div class="card-header bg-light">
                         <h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Qualifications</h6>
                     </div>
                     <div class="card-body p-0">
-                        <table class="table table-sm table-bordered mb-0">
-                            <thead class="table-light"><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead>
-                            <tbody>
-                                ${student.qualifications.map(q => `<tr><td><strong>${q.level}</strong></td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`).join('')}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Level</th><th>Institute</th><th>Board/University</th><th>Marks</th><th>Year</th></tr>
+                                </thead>
+                                <tbody>${qualRows}</tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `;
@@ -4188,88 +4205,154 @@ async function viewStudent(studentId) {
         
         // ✅ Build photo HTML
         let photoHtml = '';
-        if (student.student_photo && student.student_photo !== 'null') {
+        if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
             photoHtml = `
                 <div class="card mb-3">
-                    <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-camera me-2"></i>Student Photo</h6></div>
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-camera me-2"></i>Student Photo</h6>
+                    </div>
                     <div class="card-body text-center">
-                        <img src="${student.student_photo}" style="max-width: 150px; max-height: 150px; border-radius: 10px;">
+                        <img src="${student.student_photo}" style="max-width: 150px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                     </div>
                 </div>
             `;
         }
         
-        // ✅ Show modal
+        // ✅ Build payment history HTML
+        let paymentHtml = '';
+        if (feeHistory.length > 0) {
+            let paymentRows = '';
+            for (let i = 0; i < feeHistory.length; i++) {
+                const p = feeHistory[i];
+                paymentRows += `
+                    <tr>
+                        <td>${formatDate(p.payment_date)}</td>
+                        <td><strong>${p.receipt_no || 'N/A'}</strong></td>
+                        <td class="text-success fw-bold">₹${(p.amount || 0).toLocaleString()}</td>
+                        <td><span class="badge bg-secondary">${p.payment_mode || 'Cash'}</span></td>
+                        <td><span class="badge bg-success">${p.status || 'Completed'}</span></td>
+                    </tr>
+                `;
+            }
+            paymentHtml = `
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Payment History</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Date</th><th>Receipt No.</th><th>Amount</th><th>Mode</th><th>Status</th></tr>
+                                </thead>
+                                <tbody>${paymentRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ✅ Final modal HTML
         const modalHTML = `
             <div class="modal fade" id="viewModal" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>${student.name} - Student Details</h5>
+                            <h5 class="modal-title">
+                                <i class="fas fa-user-graduate me-2"></i>
+                                ${student.name} - Student Details
+                            </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6></div>
-                                    <div class="card-body"><table class="table table-sm table-borderless">
-                                        <tr><th width="40%">Student ID:</th><td><span class="badge bg-dark">${student.student_id}</span></td></tr>
-                                        <tr><th>Name:</th><td><strong>${student.name}</strong></td></tr>
-                                        <tr><th>Parent Name:</th><td>${student.parent_name || 'N/A'}</td></tr>
-                                        <tr><th>Course:</th><td><span class="badge bg-primary">${student.course}</span></td></tr>
-                                        <tr><th>Join Date:</th><td>${formatDate(student.join_date)}</td></tr>
-                                    </table></div></div>
+                                    <!-- Basic Information -->
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Basic Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><th width="40%">Student ID:</th><td><span class="badge bg-dark">${student.student_id}</span></td></tr>
+                                                <tr><th>Full Name:</th><td><strong>${student.name}</strong></td></tr>
+                                                <tr><th>Parent Name:</th><td>${student.parent_name || 'N/A'}</td></tr>
+                                                <tr><th>Course:</th><td><span class="badge bg-primary">${student.course || 'N/A'}</span></td></tr>
+                                                <tr><th>Join Date:</th><td>${formatDate(student.join_date)}</td></tr>
+                                            </table>
+                                        </div>
+                                    </div>
                                     
-                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>Additional Info</h6></div>
-                                    <div class="card-body"><table class="table table-sm table-borderless">
-                                        <tr><th width="40%">Date of Birth:</th><td>${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</td></tr>
-                                        <tr><th>Gender:</th><td>${student.gender || 'Not provided'}</td></tr>
-                                        <tr><th>Category:</th><td>${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</td></tr>
-                                        <tr><th>Father's Mobile:</th><td>${student.father_mobile || 'Not provided'}</td></tr>
-                                        <tr><th>Father's Occupation:</th><td>${student.father_occupation || 'Not provided'}</td></tr>
-                                    </table></div></div>
+                                    <!-- Additional Information -->
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-user-plus me-2 text-primary"></i>Additional Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><th width="40%">Date of Birth:</th><td>${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</td></tr>
+                                                <tr><th>Gender:</th><td>${student.gender || 'Not provided'}</td></tr>
+                                                <tr><th>Category:</th><td>${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</td></tr>
+                                                <tr><th>Father's Mobile:</th><td>${student.father_mobile || 'Not provided'}</td></tr>
+                                                <tr><th>Father's Occupation:</th><td>${student.father_occupation || 'Not provided'}</td></tr>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
+                                
                                 <div class="col-md-6">
-                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact</h6></div>
-                                    <div class="card-body"><table class="table table-sm table-borderless">
-                                        <tr><th>Phone:</th><td><i class="fas fa-phone text-success me-1"></i> ${student.phone || 'N/A'}</td></tr>
-                                        <tr><th>Email:</th><td><i class="fas fa-envelope text-primary me-1"></i> ${student.email || 'N/A'}</td></tr>
-                                        <tr><th>Address:</th><td>${student.address || 'N/A'}</td></tr>
-                                    </table></div></div>
+                                    <!-- Contact Information -->
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-address-card me-2 text-primary"></i>Contact Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><th width="40%">Phone:</th><td><i class="fas fa-phone text-success me-1"></i> ${student.phone || 'N/A'}</td></tr>
+                                                <tr><th>Email:</th><td><i class="fas fa-envelope text-primary me-1"></i> ${student.email || 'N/A'}</td></tr>
+                                                <tr><th>Address:</th><td>${student.address || 'N/A'}</td></tr>
+                                            </table>
+                                        </div>
+                                    </div>
                                     
-                                    <div class="card mb-3"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Fee Details</h6></div>
-                                    <div class="card-body"><table class="table table-sm table-borderless">
-                                        <tr><th>Total Fee:</th><td class="text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</td></tr>
-                                        <tr><th>Paid:</th><td class="text-end text-success fw-bold">₹${totalPaid.toLocaleString()}</td></tr>
-                                        <tr><th>Due:</th><td class="text-end ${dueAmount > 0 ? 'text-danger' : 'text-success'} fw-bold">₹${dueAmount.toLocaleString()}</td></tr>
-                                        <tr><th>Status:</th><td class="text-end"><span class="badge ${getFeeStatusClass(student.fee_status)}">${student.fee_status || 'Unknown'}</span></td></tr>
-                                    </table>
-                                    <div class="progress mt-2" style="height: 6px;"><div class="progress-bar bg-${dueAmount > 0 ? 'warning' : 'success'}" style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%"></div></div>
-                                    </div></div>
+                                    <!-- Fee Information -->
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2 text-primary"></i>Fee Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><th>Total Fee:</th><td class="text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</td></tr>
+                                                <tr><th>Paid Amount:</th><td class="text-end text-success fw-bold">₹${totalPaid.toLocaleString()}</td></tr>
+                                                <tr><th>Due Amount:</th><td class="text-end ${dueAmount > 0 ? 'text-danger' : 'text-success'} fw-bold">₹${dueAmount.toLocaleString()}</td></tr>
+                                                <tr><th>Status:</th><td class="text-end"><span class="badge ${getFeeStatusClass(student.fee_status)}">${student.fee_status || 'Unknown'}</span></td></tr>
+                                            </table>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-${dueAmount > 0 ? 'warning' : 'success'}" style="width: ${(totalPaid / (student.fee_amount || 1)) * 100}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     ${photoHtml}
                                 </div>
                             </div>
                             
                             ${qualificationsHtml}
-                            
-                            ${feeHistory.length > 0 ? `
-                            <div class="card"><div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-history me-2"></i>Payment History</h6></div>
-                            <div class="card-body p-0"><table class="table table-sm table-bordered mb-0">
-                                <thead class="table-light"><tr><th>Date</th><th>Receipt No.</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead>
-                                <tbody>${feeHistory.map(p => `<tr><td>${formatDate(p.payment_date)}</td><td><strong>${p.receipt_no}</strong></td><td class="text-success fw-bold">₹${(p.amount || 0).toLocaleString()}</td><td>${p.payment_mode || 'Cash'}</td><td><span class="badge bg-success">${p.status || 'Completed'}</span></td></tr>`).join('')}</tbody>
-                            </table></div></div>
-                            ` : ''}
+                            ${paymentHtml}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-warning" onclick="editStudent('${student.student_id}')"><i class="fas fa-edit me-1"></i> Edit</button>
+                            <button type="button" class="btn btn-warning" onclick="editStudent('${student.student_id}')">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
         
+        // Remove existing modal and show new one
         const existingModal = document.getElementById('viewModal');
         if (existingModal) existingModal.remove();
         
@@ -4279,8 +4362,7 @@ async function viewStudent(studentId) {
         
     } catch (error) {
         console.error('Error viewing student:', error);
-        hideLoading('viewModal');
-        showError('Failed to load student details');
+        showError('Failed to load student details: ' + error.message);
     }
 }
 
