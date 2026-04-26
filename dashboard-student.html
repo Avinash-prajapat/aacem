@@ -891,55 +891,100 @@
         
         async function loadTimetable() {
           try {
-            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
+            const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+            const profileData = await profileRes.json();
+            
+            if (!profileData.success || !profileData.student) {
+              document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
+              return;
+            }
+            
+            const student = profileData.student;
+            const sectionId = student.section_id;
+            const sectionName = student.section_name;
+            
+            console.log("Student Section ID:", sectionId);
+            
+            document.getElementById('timetableContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading timetable...</p></div>`;
+            
             let timetable = [];
+            let source = '';
             
-            if (student.section_id) {
-              const res = await fetch(`${API_BASE_URL}/timetable/section/${student.section_id}`);
-              const data = await res.json();
-              if (data.success && data.timetable) timetable = data.timetable;
-            }
-            if (!timetable.length) {
-              const res = await fetch(`${API_BASE_URL}/timetable/course/${student.course}`);
-              const data = await res.json();
-              if (data.success && data.timetable) timetable = data.timetable;
-            }
-            
-            if (timetable.length) {
-              const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-              const today = days[new Date().getDay()];
-              let html = '';
-              
-              days.forEach(day => {
-                const classes = timetable.filter(c => c.day_of_week === day && c.is_active);
-                if (classes.length) {
-                  html += `
-                    <div class="day-card${day === today ? ' today' : ''}">
-                      <div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge">${classes.length}</span></div>
-                      <div class="day-body">
-                  `;
-                  classes.forEach(c => {
-                    html += `
-                      <div class="class-card">
-                        <div class="time-badge"><i class="fas fa-clock"></i>${c.start_time} - ${c.end_time}</div>
-                        <div class="class-subject">${c.subject}</div>
-                        <div class="class-details-grid">
-                          <div class="detail-item"><i class="fas fa-chalkboard-teacher"></i>${c.teacher_name || 'N/A'}</div>
-                          <div class="detail-item"><i class="fas fa-door-open"></i>Room ${c.room_number || 'N/A'}</div>
-                        </div>
-                      </div>
-                    `;
-                  });
-                  html += `</div></div>`;
+            // ✅ FIRST PRIORITY: Section-wise timetable
+            if (sectionId) {
+              try {
+                const res = await fetch(`${API_BASE_URL}/timetable/section/${sectionId}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data.success && data.timetable && data.timetable.length > 0) {
+                    timetable = data.timetable;
+                    source = `Section: ${sectionName}`;
+                    console.log(`Found ${timetable.length} classes for section ${sectionName}`);
+                  }
                 }
-              });
-              document.getElementById('timetableContent').innerHTML = html;
-            } else {
-              document.getElementById('timetableContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No timetable available</p></div>';
+              } catch(e) { console.log('Section timetable fetch error:', e); }
             }
+            
+            if (timetable.length === 0) {
+              document.getElementById('timetableContent').innerHTML = `
+                <div class="section-required-state">
+                  <div class="section-required-icon"><i class="fas fa-calendar-times"></i></div>
+                  <h5>No Timetable Available</h5>
+                  <p>No timetable has been assigned for <strong>${sectionName || 'your section'}</strong> yet.</p>
+                  <button onclick="loadTimetable()" class="refresh-btn" style="margin-top:10px;">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                </div>
+              `;
+              return;
+            }
+            
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const today = days[new Date().getDay()];
+            let html = `
+              <div class="timetable-alert" style="background:#e8f4f8; border-left-color:var(--primary); margin-bottom:15px; padding:10px;">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                  <strong>${source}</strong>
+                  <br><small>Showing timetable for your section</small>
+                </div>
+              </div>
+            `;
+            
+            let hasClasses = false;
+            days.forEach(day => {
+              const classes = timetable.filter(c => c.day_of_week === day && c.is_active !== false);
+              if (classes.length) {
+                hasClasses = true;
+                html += `
+                  <div class="day-card${day === today ? ' today' : ''}">
+                    <div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge">${classes.length}</span></div>
+                    <div class="day-body">
+                `;
+                classes.forEach(c => {
+                  html += `
+                    <div class="class-card">
+                      <div class="time-badge"><i class="fas fa-clock"></i>${c.start_time} - ${c.end_time}</div>
+                      <div class="class-subject">${c.subject}</div>
+                      <div class="class-details-grid">
+                        <div class="detail-item"><i class="fas fa-chalkboard-teacher"></i>${c.teacher_name || 'N/A'}</div>
+                        <div class="detail-item"><i class="fas fa-door-open"></i>Room ${c.room_number || 'N/A'}</div>
+                      </div>
+                    </div>
+                  `;
+                });
+                html += `</div></div>`;
+              }
+            });
+            
+            if (!hasClasses) {
+              html = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No active classes in timetable</p></div>';
+            }
+            
+            document.getElementById('timetableContent').innerHTML = html;
           } catch(e) { 
-            console.error(e);
-            document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load timetable</div>';
+            console.error('loadTimetable error:', e);
+            document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load timetable</span></div>';
           }
         }
         
@@ -1112,107 +1157,130 @@
         
         async function loadStudyMaterials() {
           try {
-            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
-            if (!student.section_id) {
-              document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><p>No section assigned</p></div>';
+            const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+            const profileData = await profileRes.json();
+            
+            if (!profileData.success || !profileData.student) {
+              document.getElementById('pdfsContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
               return;
             }
             
-            let pdfs = [];
-            try {
-              let response = await fetch(`${API_BASE_URL}/section-pdfs/section/${student.section_id}`);
-              if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs?section_id=${student.section_id}`);
-              if (!response.ok) response = await fetch(`${API_BASE_URL}/section-pdfs/all?section_id=${student.section_id}`);
-              
-              const data = await response.json();
-              
-              if (data.success && data.pdfs) pdfs = data.pdfs;
-              else if (data.pdfs) pdfs = data.pdfs;
-              else if (Array.isArray(data)) pdfs = data;
-              else if (data.data && Array.isArray(data.data)) pdfs = data.data;
-            } catch(e) {
-              console.error('PDF fetch error:', e);
+            const student = profileData.student;
+            const sectionId = student.section_id;
+            const sectionName = student.section_name;
+            
+            console.log("Student Section ID:", sectionId);
+            
+            if (!sectionId) {
+              document.getElementById('pdfsContent').innerHTML = `
+                <div class="section-required-state">
+                  <div class="section-required-icon"><i class="fas fa-layer-group"></i></div>
+                  <p>You are not assigned to any section yet.</p>
+                  <p style="font-size:0.7rem; margin-top:5px;">Please contact your administrator.</p>
+                </div>
+              `;
+              return;
             }
             
-            if (pdfs && pdfs.length > 0) {
-              let html = '';
-              pdfs.forEach(pdf => {
-                const pdfId = pdf.pdf_id || pdf.id || pdf._id;
-                const title = pdf.pdf_title || pdf.title || pdf.name || 'Study Material';
-                const subject = pdf.subject || pdf.subject_name || pdf.course || 'General';
+            document.getElementById('pdfsContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading study materials for ${sectionName}...</p></div>`;
+            
+            // ✅ USE CORRECT ENDPOINT: /api/section-pdfs/student/<student_id>
+            const response = await fetch(`${API_BASE_URL}/section-pdfs/student/${STUDENT_ID}`);
+            const data = await response.json();
+            
+            console.log("PDF API Response:", data);
+            
+            if (data.success && data.pdfs && data.pdfs.length > 0) {
+              let html = `
+                <div class="section-banner">
+                  <i class="fas fa-layer-group"></i>
+                  <div>
+                    <strong>${sectionName} — Study Materials</strong>
+                    <br><small>${data.pdfs.length} material(s) available for your section</small>
+                  </div>
+                </div>
+                <div class="row g-3">
+              `;
+              
+              data.pdfs.forEach(pdf => {
+                const pdfId = pdf.pdf_id;
+                const title = pdf.pdf_title || 'Study Material';
+                const subject = pdf.subject || 'General';
                 const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
                 
                 html += `
-                  <div class="pdf-card">
-                    <div class="card-top">
-                      <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
-                      <div class="pdf-title">${title}</div>
-                      <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
-                      <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
-                    </div>
-                    <div class="pdf-actions">
-                      <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-eye"></i> View</button>
-                      <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-download"></i> Download</button>
+                  <div class="col-12">
+                    <div class="pdf-card">
+                      <div class="card-top">
+                        <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
+                        <div class="pdf-title">${title}</div>
+                        <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
+                        <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
+                        <div class="pdf-meta"><i class="fas fa-users"></i> Section: ${sectionName}</div>
+                      </div>
+                      <div class="pdf-actions">
+                        <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')">
+                          <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')">
+                          <i class="fas fa-download"></i> Download
+                        </button>
+                      </div>
                     </div>
                   </div>
                 `;
               });
+              html += `</div>`;
               document.getElementById('pdfsContent').innerHTML = html;
             } else {
               document.getElementById('pdfsContent').innerHTML = `
                 <div class="section-required-state">
                   <div class="section-required-icon"><i class="fas fa-file-pdf"></i></div>
-                  <p>No study materials available</p>
-                  <button onclick="loadStudyMaterials()" style="margin-top:10px; background:var(--gradient-primary); color:white; border:none; padding:6px 15px; border-radius:20px; cursor:pointer;">
+                  <h5>No Study Materials</h5>
+                  <p>No materials have been uploaded for <strong>${sectionName}</strong> section yet.</p>
+                  <button onclick="loadStudyMaterials()" class="refresh-btn" style="margin-top:10px; padding:6px 15px;">
                     <i class="fas fa-sync-alt"></i> Refresh
                   </button>
                 </div>
               `;
             }
           } catch(e) { 
-            console.error(e);
-            document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load materials</p></div>';
+            console.error('loadStudyMaterials error:', e);
+            document.getElementById('pdfsContent').innerHTML = `
+              <div class="alert-custom alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Failed to load study materials: ${e.message}</span>
+              </div>
+            `;
           }
         }
         
         // ==================== PDF VIEW & DOWNLOAD FUNCTIONS ====================
         
         async function viewStudentPdf(pdfId, pdfTitle) {
-          currentPdfId = pdfId;
-          currentPdfTitle = pdfTitle;
-          
-          const modal = document.getElementById('pdfPreviewModal');
-          const titleEl = document.getElementById('pdfPreviewTitle');
-          if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-pdf me-2"></i> ${pdfTitle}`;
-          modal.classList.add('show');
-          
-          const iframeContainer = document.getElementById('pdfIframeContainer');
-          const viewerContainer = document.getElementById('pdfViewerContainer');
-          const altView = document.getElementById('pdfAlternativeView');
-          const controls = document.getElementById('pdfControls');
-          
-          if (iframeContainer) iframeContainer.style.display = 'none';
-          if (viewerContainer) viewerContainer.style.display = 'none';
-          if (altView) altView.style.display = 'none';
-          if (controls) controls.style.display = 'none';
-          
-          const pdfUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}`;
-          const iframe = document.getElementById('pdfViewer');
-          
-          if (iframe) {
+            currentPdfId = pdfId;
+            currentPdfTitle = pdfTitle;
+            
+            const modal = document.getElementById('pdfPreviewModal');
+            const titleEl = document.getElementById('pdfPreviewTitle');
+            if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-pdf me-2"></i> ${pdfTitle}`;
+            modal.classList.add('show');
+            
+            // ✅ CORRECT ENDPOINT: /api/section-pdfs/view/<pdf_id>
+            const pdfUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}`;
+            const iframe = document.getElementById('pdfViewer');
             iframe.src = pdfUrl;
-            iframe.onload = () => {
-              if (iframeContainer) iframeContainer.style.display = 'block';
-              if (controls) controls.style.display = 'flex';
-            };
-            iframe.onerror = () => {
-              loadPdfWithPdfJs(pdfUrl);
-            };
-          } else {
-            loadPdfWithPdfJs(pdfUrl);
+            
+            const controls = document.getElementById('pdfControls');
+            if (controls) controls.style.display = 'flex';
           }
-        }
-        
+          
+          function downloadStudentPdf(pdfId, pdfTitle) {
+            // ✅ CORRECT DOWNLOAD URL
+            const downloadUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}?download=true`;
+            window.open(downloadUrl, '_blank');
+            showToast(`Download started: ${pdfTitle || 'PDF'}`, 'success');
+          }
         async function loadPdfWithPdfJs(pdfUrl) {
           try {
             const loadingTask = pdfjsLib.getDocument(pdfUrl + '?t=' + Date.now());
