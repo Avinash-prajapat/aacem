@@ -3815,17 +3815,16 @@ function logout() {
     }
 }
 
-// ==================== EDIT STUDENT - COMPLETE FIXED ====================
+// ==================== EDIT STUDENT - COURSE AUTO-SELECT FIXED ====================
 async function editStudent(studentId) {
     console.log('✏️ EDIT STUDENT CALLED FOR:', studentId);
     
-    // ✅ Step 1: Pehle fresh data fetch karo server se
+    // Force fresh data fetch from server
     try {
         const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
         const freshData = await response.json();
         
         if (freshData.success && freshData.student) {
-            // Update local array
             const index = studentsData.findIndex(s => s.student_id === studentId);
             if (index !== -1) {
                 studentsData[index] = freshData.student;
@@ -3846,7 +3845,6 @@ async function editStudent(studentId) {
 
     console.log('📦 Student course:', student.course);
     console.log('📦 Student qualifications:', student.qualifications);
-    console.log('📦 Student photo exists?', student.student_photo ? 'Yes' : 'No');
 
     const modal = document.getElementById('studentModal');
     const form = document.getElementById('studentForm');
@@ -3864,7 +3862,7 @@ async function editStudent(studentId) {
     form.querySelector('input[name="fee"]').value = student.fee_amount || '';
     form.querySelector('textarea[name="address"]').value = student.address || '';
     
-    // ========== COURSE DROPDOWN - AUTO SELECT FIX ==========
+    // ========== COURSE DROPDOWN - FIXED AUTO-SELECT ==========
     const courseSelect = form.querySelector('select[name="course"]');
     if (courseSelect) {
         // Ensure courses are loaded
@@ -3875,25 +3873,30 @@ async function editStudent(studentId) {
         // Clear and repopulate
         courseSelect.innerHTML = '<option value="">Select Course</option>';
         
+        let courseFound = false;
         for (let i = 0; i < coursesData.length; i++) {
             const course = coursesData[i];
             const option = document.createElement('option');
             option.value = course.course_code;
             option.textContent = `${course.course_name} (${course.course_code})`;
             
-            // Compare as strings
-            if (String(course.course_code) === String(student.course)) {
+            // ✅ COMPARE AS STRINGS - CRITICAL FIX
+            if (String(course.course_code).trim() === String(student.course).trim()) {
                 option.selected = true;
+                courseFound = true;
                 console.log('✅ Course auto-selected:', course.course_code);
             }
             courseSelect.appendChild(option);
         }
         
-        // Double-check selected value
-        if (courseSelect.value !== student.course) {
+        // ✅ FORCE SET VALUE - BACKUP METHOD
+        if (!courseFound && student.course) {
             courseSelect.value = student.course;
             console.log('📌 Force set course value:', courseSelect.value);
         }
+        
+        // ✅ VERIFY SELECTED VALUE
+        console.log('📌 Final selected course:', courseSelect.value);
     }
     
     // ========== NEW FIELDS ==========
@@ -3909,14 +3912,13 @@ async function editStudent(studentId) {
     if (fatherMobileInput) fatherMobileInput.value = student.father_mobile || '';
     if (fatherOccupationInput) fatherOccupationInput.value = student.father_occupation || '';
     
-    // ========== STUDENT PHOTO PREVIEW ==========
-    if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
+    // ========== STUDENT PHOTO ==========
+    if (student.student_photo && student.student_photo !== 'null') {
         const previewDiv = document.getElementById('photoPreview');
         const previewImg = document.getElementById('previewImage');
         if (previewDiv && previewImg) {
             previewImg.src = student.student_photo;
             previewDiv.style.display = 'block';
-            console.log('📸 Photo preview set');
         }
     } else {
         const previewDiv = document.getElementById('photoPreview');
@@ -3929,13 +3931,12 @@ async function editStudent(studentId) {
     
     // ========== QUALIFICATIONS ==========
     if (student.qualifications && student.qualifications.length > 0) {
-        console.log('📚 Setting', student.qualifications.length, 'qualifications');
         setQualificationsData(student.qualifications);
     } else {
         resetQualificationsContainer();
     }
 
-    // ========== UPDATE MODAL ==========
+    // ========== UPDATE MODAL TITLE ==========
     const title = modal.querySelector('.modal-title');
     const saveBtn = modal.querySelector('.btn-primary');
     
@@ -3943,6 +3944,11 @@ async function editStudent(studentId) {
     if (saveBtn) saveBtn.textContent = 'Update Student';
 
     currentEditId = studentId;
+    
+    // ✅ CLOSE ANY OPEN MODAL FIRST
+    if (modal.classList.contains('show')) {
+        bootstrap.Modal.getInstance(modal).hide();
+    }
     
     // Show modal
     const bsModal = new bootstrap.Modal(modal);
@@ -4125,15 +4131,11 @@ async function deleteStudent(studentId) {
 }
 
 
-// ==================== VIEW STUDENT - FETCH LATEST DATA ====================
+// ==================== VIEW STUDENT - EDIT BUTTON FIXED ====================
 async function viewStudent(studentId) {
     console.log('👁️ VIEW STUDENT CALLED FOR:', studentId);
     
-    // Show loading
-    const modalBody = document.getElementById('viewModalContent');
-    
     try {
-        // ✅ FETCH FRESH DATA FROM SERVER
         const response = await fetch(`https://aacem-backend.onrender.com/api/student-profile/${studentId}`);
         const result = await response.json();
         
@@ -4143,15 +4145,14 @@ async function viewStudent(studentId) {
         }
         
         const student = result.student;
-        console.log('📦 Latest student data fetched:', student);
         
-        // ✅ Update local cache
+        // Update local cache
         const index = studentsData.findIndex(s => s.student_id === studentId);
         if (index !== -1) {
             studentsData[index] = student;
         }
         
-        // ✅ Fetch fee details
+        // Get fee details
         let feeHistory = [];
         let totalPaid = student.paid_amount || 0;
         let dueAmount = student.due_amount || (student.fee_amount - totalPaid);
@@ -4164,37 +4165,23 @@ async function viewStudent(studentId) {
                 totalPaid = feeResult.fee_summary?.paid_amount || totalPaid;
                 dueAmount = feeResult.fee_summary?.due_amount || dueAmount;
             }
-        } catch(e) {
-            console.warn('Fee fetch failed:', e);
-        }
+        } catch(e) { console.warn('Fee fetch failed:', e); }
         
-        // ✅ Build qualifications HTML
+        // Build qualifications HTML
         let qualificationsHtml = '';
         if (student.qualifications && student.qualifications.length > 0) {
             let qualRows = '';
             for (let i = 0; i < student.qualifications.length; i++) {
                 const q = student.qualifications[i];
-                qualRows += `
-                    <tr>
-                        <td><strong>${q.level || '-'}</strong></td>
-                        <td>${q.institute || '-'}</td>
-                        <td>${q.board || '-'}</td>
-                        <td>${q.marks || '-'}</td>
-                        <td>${q.year || '-'}</td>
-                    </tr>
-                `;
+                qualRows += `<tr><td><strong>${q.level || '-'}</strong></td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`;
             }
             qualificationsHtml = `
                 <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Qualifications</h6>
-                    </div>
+                    <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Qualifications</h6></div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered mb-0">
-                                <thead class="table-light">
-                                    <tr><th>Level</th><th>Institute</th><th>Board/University</th><th>Marks</th><th>Year</th></tr>
-                                </thead>
+                                <thead class="table-light"><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead>
                                 <tbody>${qualRows}</tbody>
                             </table>
                         </div>
@@ -4203,76 +4190,33 @@ async function viewStudent(studentId) {
             `;
         }
         
-        // ✅ Build photo HTML
+        // Build photo HTML
         let photoHtml = '';
-        if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
+        if (student.student_photo && student.student_photo !== 'null') {
             photoHtml = `
                 <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-camera me-2"></i>Student Photo</h6>
-                    </div>
+                    <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-camera me-2"></i>Student Photo</h6></div>
                     <div class="card-body text-center">
-                        <img src="${student.student_photo}" style="max-width: 150px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <img src="${student.student_photo}" style="max-width: 150px; max-height: 150px; border-radius: 10px;">
                     </div>
                 </div>
             `;
         }
         
-        // ✅ Build payment history HTML
-        let paymentHtml = '';
-        if (feeHistory.length > 0) {
-            let paymentRows = '';
-            for (let i = 0; i < feeHistory.length; i++) {
-                const p = feeHistory[i];
-                paymentRows += `
-                    <tr>
-                        <td>${formatDate(p.payment_date)}</td>
-                        <td><strong>${p.receipt_no || 'N/A'}</strong></td>
-                        <td class="text-success fw-bold">₹${(p.amount || 0).toLocaleString()}</td>
-                        <td><span class="badge bg-secondary">${p.payment_mode || 'Cash'}</span></td>
-                        <td><span class="badge bg-success">${p.status || 'Completed'}</span></td>
-                    </tr>
-                `;
-            }
-            paymentHtml = `
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Payment History</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
-                                <thead class="table-light">
-                                    <tr><th>Date</th><th>Receipt No.</th><th>Amount</th><th>Mode</th><th>Status</th></tr>
-                                </thead>
-                                <tbody>${paymentRows}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // ✅ Final modal HTML
+        // Final modal HTML - ✅ FIXED EDIT BUTTON
         const modalHTML = `
             <div class="modal fade" id="viewModal" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
-                                <i class="fas fa-user-graduate me-2"></i>
-                                ${student.name} - Student Details
-                            </h5>
+                            <h5 class="modal-title"><i class="fas fa-user-graduate me-2"></i>${student.name} - Student Details</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <!-- Basic Information -->
                                     <div class="card mb-3">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Basic Information</h6>
-                                        </div>
+                                        <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6></div>
                                         <div class="card-body">
                                             <table class="table table-sm table-borderless mb-0">
                                                 <tr><th width="40%">Student ID:</th><td><span class="badge bg-dark">${student.student_id}</span></td></tr>
@@ -4284,11 +4228,8 @@ async function viewStudent(studentId) {
                                         </div>
                                     </div>
                                     
-                                    <!-- Additional Information -->
                                     <div class="card mb-3">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0"><i class="fas fa-user-plus me-2 text-primary"></i>Additional Information</h6>
-                                        </div>
+                                        <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>Additional Information</h6></div>
                                         <div class="card-body">
                                             <table class="table table-sm table-borderless mb-0">
                                                 <tr><th width="40%">Date of Birth:</th><td>${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</td></tr>
@@ -4302,11 +4243,8 @@ async function viewStudent(studentId) {
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <!-- Contact Information -->
                                     <div class="card mb-3">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0"><i class="fas fa-address-card me-2 text-primary"></i>Contact Information</h6>
-                                        </div>
+                                        <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact Information</h6></div>
                                         <div class="card-body">
                                             <table class="table table-sm table-borderless mb-0">
                                                 <tr><th width="40%">Phone:</th><td><i class="fas fa-phone text-success me-1"></i> ${student.phone || 'N/A'}</td></tr>
@@ -4316,11 +4254,8 @@ async function viewStudent(studentId) {
                                         </div>
                                     </div>
                                     
-                                    <!-- Fee Information -->
                                     <div class="card mb-3">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2 text-primary"></i>Fee Information</h6>
-                                        </div>
+                                        <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Fee Information</h6></div>
                                         <div class="card-body">
                                             <table class="table table-sm table-borderless mb-0">
                                                 <tr><th>Total Fee:</th><td class="text-end fw-bold">₹${(student.fee_amount || 0).toLocaleString()}</td></tr>
@@ -4339,11 +4274,10 @@ async function viewStudent(studentId) {
                             </div>
                             
                             ${qualificationsHtml}
-                            ${paymentHtml}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-warning" onclick="editStudent('${student.student_id}')">
+                            <button type="button" class="btn btn-warning" id="editFromViewBtn" data-student-id="${student.student_id}">
                                 <i class="fas fa-edit me-1"></i> Edit
                             </button>
                         </div>
@@ -4352,13 +4286,28 @@ async function viewStudent(studentId) {
             </div>
         `;
         
-        // Remove existing modal and show new one
+        // Remove existing modal
         const existingModal = document.getElementById('viewModal');
         if (existingModal) existingModal.remove();
         
+        // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // ✅ FIXED: Add event listener for edit button (not onclick attribute)
         const modal = new bootstrap.Modal(document.getElementById('viewModal'));
         modal.show();
+        
+        // ✅ Add event listener for edit button
+        const editBtn = document.getElementById('editFromViewBtn');
+        if (editBtn) {
+            editBtn.addEventListener('click', function() {
+                const studentId = this.getAttribute('data-student-id');
+                modal.hide();  // Close view modal first
+                setTimeout(() => {
+                    editStudent(studentId);  // Then open edit modal
+                }, 300);
+            });
+        }
         
     } catch (error) {
         console.error('Error viewing student:', error);
