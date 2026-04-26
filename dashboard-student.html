@@ -2362,21 +2362,27 @@
     let backButtonPressed = false;
     let backButtonTimer = null;
     let currentStudentData = null;
-
+    
     // NEW globals for attendance search/filter
     let allAttendanceRecords = [];
     let subjectStats = {};
     let currentSubjectRecords = [];
     let currentSubjectName = null;
-
-    // ==================== NEW: TOAST NOTIFICATIONS ====================
+    
+    // Get student data from sessionStorage
+    let studentData = null;
+    let STUDENT_ID = null;
+    
+    // ==================== TOAST NOTIFICATIONS ====================
     function showToast(message, type = 'info', subtitle = '') {
       const container = document.getElementById('toastContainer');
-      const icons = { success: 'fa-check', error: 'fa-times', warning: 'fa-exclamation', info: 'fa-info' };
+      if (!container) return;
+      
+      const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
       const toast = document.createElement('div');
       toast.className = `toast-msg ${type}`;
       toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${icons[type] || 'fa-info'}"></i></div>
+        <div class="toast-icon"><i class="fas ${icons[type] || 'fa-info-circle'}"></i></div>
         <div class="toast-text"><p>${message}</p>${subtitle ? `<small>${subtitle}</small>` : ''}</div>
       `;
       container.appendChild(toast);
@@ -2385,7 +2391,7 @@
         setTimeout(() => toast.remove(), 400);
       }, 3500);
     }
-
+    
     function initBackButtonHandler() {
       if (window.history && window.history.pushState) {
         window.history.pushState(null, null, window.location.href);
@@ -2400,57 +2406,80 @@
         });
       }
     }
-
+    
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const mainContent = document.getElementById('mainContent');
       const toggleBtn = document.querySelector('.toggle-btn');
+      
+      if (!sidebar || !mainContent) return;
+      
       sidebar.classList.toggle('expanded');
       mainContent.classList.toggle('sidebar-expanded');
-      toggleBtn.classList.toggle('expanded');
+      if (toggleBtn) toggleBtn.classList.toggle('expanded');
     }
-
+    
     function showSection(sectionId) {
       document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
       const sel = document.getElementById(sectionId);
       if (sel) sel.classList.add('active');
+      
       document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+      }
+      
+      // Auto close sidebar on mobile
       if (window.innerWidth <= 768) {
         const sidebar = document.getElementById('sidebar');
-        if (sidebar.classList.contains('expanded')) {
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.querySelector('.toggle-btn');
+        
+        if (sidebar && sidebar.classList.contains('expanded')) {
           sidebar.classList.remove('expanded');
-          document.getElementById('mainContent').classList.remove('sidebar-expanded');
-          document.querySelector('.toggle-btn').classList.remove('expanded');
+          if (mainContent) mainContent.classList.remove('sidebar-expanded');
+          if (toggleBtn) toggleBtn.classList.remove('expanded');
         }
       }
     }
-
+    
     function checkAuthentication() {
-      const studentData = sessionStorage.getItem('studentData');
-      if (!studentData) { document.getElementById('loginModal').classList.add('show'); return null; }
-      try { return JSON.parse(studentData); } catch (e) { document.getElementById('loginModal').classList.add('show'); return null; }
+      const storedData = sessionStorage.getItem('studentData');
+      if (!storedData) { 
+        document.getElementById('loginModal').classList.add('show'); 
+        return null; 
+      }
+      try { 
+        return JSON.parse(storedData); 
+      } catch (e) { 
+        document.getElementById('loginModal').classList.add('show'); 
+        return null; 
+      }
     }
-
-    function redirectToLogin() { window.location.href = 'student-login.html'; }
-
-    const studentData = checkAuthentication();
-    const STUDENT_ID = studentData ? studentData.student_id : null;
-
+    
+    function redirectToLogin() { 
+      window.location.href = 'student-login.html'; 
+    }
+    
+    // Initialize student data
+    studentData = checkAuthentication();
+    STUDENT_ID = studentData ? studentData.student_id : null;
+    
     function checkSessionTimeout() {
       if (!studentData) return false;
       const loginTime = sessionStorage.getItem('loginTime');
       if (!loginTime) return false;
       return (new Date().getTime() - parseInt(loginTime)) <= SESSION_TIMEOUT;
     }
-
+    
     function logoutDueToTimeout() {
       sessionStorage.removeItem('studentToken');
       sessionStorage.removeItem('studentData');
       sessionStorage.removeItem('loginTime');
       document.getElementById('loginModal').classList.add('show');
+      showToast('Session expired due to inactivity', 'warning');
     }
-
+    
     function startSessionTimer() {
       if (sessionTimer) clearTimeout(sessionTimer);
       sessionTimer = setTimeout(logoutDueToTimeout, SESSION_TIMEOUT);
@@ -2462,51 +2491,64 @@
         document.addEventListener(ev, resetTimer, false);
       });
     }
-
+    
     function hasSectionAssigned() {
       const sd = JSON.parse(sessionStorage.getItem('studentData') || '{}');
       return sd && sd.section_id ? true : false;
     }
-
+    
     function updateMenuBasedOnSection() {
       const hasSection = hasSectionAssigned();
-      ['attendance','timetable','study-materials','syllabus','results'].forEach(id => {
+      const menuItems = ['attendance','timetable','study-materials','syllabus','results'];
+      menuItems.forEach(id => {
         const mi = document.querySelector(`.menu-item[onclick="showSection('${id}')"]`);
         if (mi) mi.style.display = hasSection ? 'flex' : 'none';
       });
-      ['profile','fees','notice'].forEach(id => {
+      
+      const alwaysShow = ['profile','fees','notice'];
+      alwaysShow.forEach(id => {
         const mi = document.querySelector(`.menu-item[onclick="showSection('${id}')"]`);
         if (mi) mi.style.display = 'flex';
       });
+      
       if (!hasSection) {
         const pm = document.querySelector(`.menu-item[onclick="showSection('profile')"]`);
         if (pm) pm.click();
       }
     }
-
-    function updateSectionBadge() {}
-
-    function showLogoutConfirmation() { document.getElementById('logoutModal').classList.add('show'); }
-
+    
+    function showLogoutConfirmation() { 
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.classList.add('show');
+    }
+    
     function cancelLogout() {
-      document.getElementById('logoutModal').classList.remove('show');
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.classList.remove('show');
       backButtonPressed = false;
     }
-
+    
     function confirmLogout() {
       sessionStorage.removeItem('studentToken');
       sessionStorage.removeItem('studentData');
       sessionStorage.removeItem('loginTime');
       clearTimeout(sessionTimer);
-      document.getElementById('logoutModal').classList.remove('show');
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.classList.remove('show');
       showToast('Logged out successfully', 'success');
       setTimeout(() => { window.location.href = "index.html"; }, 1000);
     }
-
+    
     document.addEventListener('DOMContentLoaded', async function() {
+      // Re-initialize student data on DOM load
+      studentData = checkAuthentication();
+      STUDENT_ID = studentData ? studentData.student_id : null;
+      
       if (!studentData || !checkSessionTimeout()) {
-        document.getElementById('loginModal').classList.add('show'); return;
+        document.getElementById('loginModal').classList.add('show'); 
+        return;
       }
+      
       document.getElementById('loginModal').classList.remove('show');
       startSessionTimer();
       updateWelcomeMessage();
@@ -2514,14 +2556,16 @@
       await loadStudentData();
       initBackButtonHandler();
       showMainView();
+      forceMobileFullScreen();
     });
-
+    
     function updateWelcomeMessage() {
       if (studentData && studentData.name) {
-        document.getElementById('welcomeText').textContent = `Welcome, ${studentData.name}`;
+        const welcomeEl = document.getElementById('welcomeText');
+        if (welcomeEl) welcomeEl.textContent = `Welcome, ${studentData.name}`;
       }
     }
-
+    
     async function loadStudentData() {
       try {
         const hasSection = hasSectionAssigned();
@@ -2529,253 +2573,205 @@
         if (hasSection) {
           await Promise.all([loadAttendance(), loadResults(), loadStudyMaterials(), loadSyllabus(), loadTimetable()]);
         } else {
-          ['attendance','timetable','study-materials','syllabus','results'].forEach(id => {
-            const label = { attendance:'Attendance', timetable:'Timetable', 'study-materials':'Study Materials', syllabus:'Syllabus', results:'Results' }[id];
+          const sections = ['attendance','timetable','study-materials','syllabus','results'];
+          const labels = { attendance:'Attendance', timetable:'Timetable', 'study-materials':'Study Materials', syllabus:'Syllabus', results:'Results' };
+          sections.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = `<div class="dashboard-card"><div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><h5 style="color:#1e293b;margin-bottom:10px;font-weight:700;">Section Required</h5><p style="color:#64748b;margin-bottom:20px;">You need to be assigned to a section to view ${label}.</p><button onclick="showSection('profile')" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-user me-2"></i>Go to Profile</button></div></div>`;
+            if (el) {
+              el.innerHTML = `<div class="dashboard-card"><div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><h5 style="color:#1e293b;margin-bottom:10px;font-weight:700;">Section Required</h5><p style="color:#64748b;margin-bottom:20px;">You need to be assigned to a section to view ${labels[id]}.</p><button onclick="showSection('profile')" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-user me-2"></i>Go to Profile</button></div></div>`;
+            }
           });
         }
         updateMenuBasedOnSection();
-      } catch (error) { console.error('Error loading student data:', error); }
+      } catch (error) { 
+        console.error('Error loading student data:', error); 
+      }
     }
-
+    
     function getFeeStatusColor(s) {
       return s === 'Paid' ? 'success' : s === 'Partial' ? 'warning' : s === 'Pending' ? 'danger' : 'secondary';
     }
-
-    // ==================== LOAD PROFILE - PROPERLY ARRANGED ====================
-async function loadProfile() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        const result = await response.json();
+    
+    // ==================== FORCE MOBILE FULL SCREEN ====================
+    function forceMobileFullScreen() {
+      if (window.innerWidth <= 768) {
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+          mainContent.style.width = '100%';
+          mainContent.style.maxWidth = '100%';
+          mainContent.style.overflowX = 'hidden';
+        }
         
-        if (result.success && result.student) {
-            const student = result.student;
-            currentStudentData = student;
+        document.querySelectorAll('.dashboard-card, .modern-card').forEach(card => {
+          card.style.width = '100%';
+          card.style.marginLeft = '0';
+          card.style.marginRight = '0';
+        });
+      }
+    }
+    
+    window.addEventListener('resize', forceMobileFullScreen);
+    window.addEventListener('orientationchange', function() {
+      setTimeout(forceMobileFullScreen, 100);
+    });
+    
+    // ==================== LOAD PROFILE ====================
+    async function loadProfile() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+            const result = await response.json();
             
-            if (student.section_id) { 
-                window.currentSectionId = student.section_id; 
-                window.currentSectionName = student.section_name; 
-            }
-            
-            // Update sidebar
-            const sidebarName = document.getElementById('sidebarStudentName');
-            const sidebarCourse = document.getElementById('sidebarStudentCourse');
-            const sidebarId = document.getElementById('sidebarStudentId');
-            
-            if (sidebarName) sidebarName.textContent = student.name;
-            if (sidebarCourse) sidebarCourse.textContent = student.course;
-            if (sidebarId) sidebarId.textContent = `ID: ${student.student_id}`;
-
-            // ========== BUILD QUALIFICATIONS HTML ==========
-            let qualificationsHtml = '';
-            if (student.qualifications && student.qualifications.length > 0) {
-                let qualRows = '';
-                for (let i = 0; i < student.qualifications.length; i++) {
-                    const q = student.qualifications[i];
-                    qualRows += `
-                        <tr>
-                            <td><strong>${q.level || '-'}</strong></td>
-                            <td>${q.institute || '-'}</td>
-                            <td>${q.board || '-'}</td>
-                            <td>${q.marks || '-'}</td>
-                            <td>${q.year || '-'}</td>
-                        </tr>
-                    `;
-                }
-                qualificationsHtml = `
-                    <div class="profile-item full-width">
-                        <label><i class="fas fa-graduation-cap me-2"></i>Qualifications</label>
-                        <div class="table-responsive mt-2">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Level</th>
-                                        <th>Institute</th>
-                                        <th>Board/University</th>
-                                        <th>Marks</th>
-                                        <th>Year</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${qualRows}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // ========== PHOTO HTML (TOP PE) ==========
-            let photoHtml = '';
-            if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
-                photoHtml = `
-                    <div class="profile-photo-section">
-                        <div class="profile-photo">
-                            <img src="${student.student_photo}" alt="Student Photo">
-                        </div>
-                        <div class="profile-name-title">
-                            <h2>${student.name}</h2>
-                            <p><span class="badge bg-primary">${student.course}</span> 
-                               ${student.section_name ? `<span class="badge bg-success">Section ${student.section_name}</span>` : ''}</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                photoHtml = `
-                    <div class="profile-photo-section">
-                        <div class="profile-photo">
-                            <i class="fas fa-user-graduate fa-4x"></i>
-                        </div>
-                        <div class="profile-name-title">
-                            <h2>${student.name}</h2>
-                            <p><span class="badge bg-primary">${student.course}</span>
-                               ${student.section_name ? `<span class="badge bg-success">Section ${student.section_name}</span>` : ''}</p>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // ========== COMPLETE PROFILE HTML ==========
-            document.getElementById('profileContent').innerHTML = `
-                ${photoHtml}
+            if (result.success && result.student) {
+                const student = result.student;
+                currentStudentData = student;
                 
-                <div class="profile-grid">
-                    <!-- Student Information Column -->
-                    <div class="profile-column">
-                        <h5 class="profile-section-title"><i class="fas fa-user-circle me-2"></i>Student Information</h5>
-                        
-                        <div class="profile-item">
-                            <label>Student ID</label>
-                            <div class="profile-value">${student.student_id}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Date of Birth</label>
-                            <div class="profile-value">${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Gender</label>
-                            <div class="profile-value">${student.gender || 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Category</label>
-                            <div class="profile-value">${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Admission Date</label>
-                            <div class="profile-value">${student.join_date || 'Not provided'}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Parent/Guardian Column -->
-                    <div class="profile-column">
-                        <h5 class="profile-section-title"><i class="fas fa-family me-2"></i>Parent/Guardian Information</h5>
-                        
-                        <div class="profile-item">
-                            <label>Parent Name</label>
-                            <div class="profile-value">${student.parent_name || 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Father's Mobile</label>
-                            <div class="profile-value">${student.father_mobile || 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Father's Occupation</label>
-                            <div class="profile-value">${student.father_occupation || 'Not provided'}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Contact Information Column -->
-                    <div class="profile-column">
-                        <h5 class="profile-section-title"><i class="fas fa-address-card me-2"></i>Contact Information</h5>
-                        
-                        <div class="profile-item">
-                            <label>Phone Number</label>
-                            <div class="profile-value">${student.phone || 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Email Address</label>
-                            <div class="profile-value">${student.email || 'Not provided'}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Address</label>
-                            <div class="profile-value">${student.address || 'Not provided'}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Fee Information Column -->
-                    <div class="profile-column">
-                        <h5 class="profile-section-title"><i class="fas fa-money-bill-wave me-2"></i>Fee Information</h5>
-                        
-                        <div class="profile-item">
-                            <label>Total Fee</label>
-                            <div class="profile-value">₹${(student.fee_amount || 0).toLocaleString()}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Paid Amount</label>
-                            <div class="profile-value text-success">₹${(student.paid_amount || 0).toLocaleString()}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Due Amount</label>
-                            <div class="profile-value text-danger">₹${(student.due_amount || 0).toLocaleString()}</div>
-                        </div>
-                        
-                        <div class="profile-item">
-                            <label>Fee Status</label>
-                            <div class="profile-value">
-                                <span class="badge ${getFeeStatusColor(student.fee_status)}">${student.fee_status || 'Pending'}</span>
+                if (student.section_id) { 
+                    window.currentSectionId = student.section_id; 
+                    window.currentSectionName = student.section_name; 
+                }
+                
+                // Update sidebar
+                const sidebarName = document.getElementById('sidebarStudentName');
+                const sidebarCourse = document.getElementById('sidebarStudentCourse');
+                const sidebarId = document.getElementById('sidebarStudentId');
+                
+                if (sidebarName) sidebarName.textContent = student.name;
+                if (sidebarCourse) sidebarCourse.textContent = student.course;
+                if (sidebarId) sidebarId.textContent = `ID: ${student.student_id}`;
+    
+                // ========== BUILD QUALIFICATIONS HTML ==========
+                let qualificationsHtml = '';
+                if (student.qualifications && student.qualifications.length > 0) {
+                    let qualRows = '';
+                    for (let i = 0; i < student.qualifications.length; i++) {
+                        const q = student.qualifications[i];
+                        qualRows += `
+                            <tr>
+                                <td><strong>${q.level || '-'}</strong></td>
+                                <td>${q.institute || '-'}</div>
+                                <td>${q.board || '-'}</div>
+                                <td>${q.marks || '-'}</div>
+                                <td>${q.year || '-'}</div>
+                            </tr>
+                        `;
+                    }
+                    qualificationsHtml = `
+                        <div class="profile-item full-width">
+                            <label><i class="fas fa-graduation-cap me-2"></i>Qualifications</label>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr><th>Level</th><th>Institute</th><th>Board/University</th><th>Marks</th><th>Year</th></tr>
+                                    </thead>
+                                    <tbody>${qualRows}</tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    `;
+                }
                 
-                ${qualificationsHtml}
-            `;
-        } else {
-            document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Profile data not available</span></div>`;
+                // ========== PHOTO HTML ==========
+                let photoHtml = '';
+                if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
+                    photoHtml = `
+                        <div class="profile-photo-section">
+                            <div class="profile-photo">
+                                <img src="${student.student_photo}" alt="Student Photo">
+                            </div>
+                            <div class="profile-name-title">
+                                <h2>${student.name}</h2>
+                                <p><span class="badge bg-primary">${student.course}</span> 
+                                   ${student.section_name ? `<span class="badge bg-success">Section ${student.section_name}</span>` : ''}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    photoHtml = `
+                        <div class="profile-photo-section">
+                            <div class="profile-photo">
+                                <i class="fas fa-user-graduate fa-4x"></i>
+                            </div>
+                            <div class="profile-name-title">
+                                <h2>${student.name}</h2>
+                                <p><span class="badge bg-primary">${student.course}</span>
+                                   ${student.section_name ? `<span class="badge bg-success">Section ${student.section_name}</span>` : ''}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+    
+                document.getElementById('profileContent').innerHTML = `
+                    ${photoHtml}
+                    <div class="profile-grid">
+                        <div class="profile-column">
+                            <h5 class="profile-section-title"><i class="fas fa-user-circle me-2"></i>Student Information</h5>
+                            <div class="profile-item"><label>Student ID</label><div class="profile-value">${student.student_id}</div></div>
+                            <div class="profile-item"><label>Date of Birth</label><div class="profile-value">${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Gender</label><div class="profile-value">${student.gender || 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Category</label><div class="profile-value">${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Admission Date</label><div class="profile-value">${student.join_date || 'Not provided'}</div></div>
+                        </div>
+                        <div class="profile-column">
+                            <h5 class="profile-section-title"><i class="fas fa-family me-2"></i>Parent/Guardian Information</h5>
+                            <div class="profile-item"><label>Parent Name</label><div class="profile-value">${student.parent_name || 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Father's Mobile</label><div class="profile-value">${student.father_mobile || 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Father's Occupation</label><div class="profile-value">${student.father_occupation || 'Not provided'}</div></div>
+                        </div>
+                        <div class="profile-column">
+                            <h5 class="profile-section-title"><i class="fas fa-address-card me-2"></i>Contact Information</h5>
+                            <div class="profile-item"><label>Phone Number</label><div class="profile-value">${student.phone || 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Email Address</label><div class="profile-value">${student.email || 'Not provided'}</div></div>
+                            <div class="profile-item"><label>Address</label><div class="profile-value">${student.address || 'Not provided'}</div></div>
+                        </div>
+                        <div class="profile-column">
+                            <h5 class="profile-section-title"><i class="fas fa-money-bill-wave me-2"></i>Fee Information</h5>
+                            <div class="profile-item"><label>Total Fee</label><div class="profile-value">₹${(student.fee_amount || 0).toLocaleString()}</div></div>
+                            <div class="profile-item"><label>Paid Amount</label><div class="profile-value text-success">₹${(student.paid_amount || 0).toLocaleString()}</div></div>
+                            <div class="profile-item"><label>Due Amount</label><div class="profile-value text-danger">₹${(student.due_amount || 0).toLocaleString()}</div></div>
+                            <div class="profile-item"><label>Fee Status</label><div class="profile-value"><span class="badge ${getFeeStatusColor(student.fee_status)}">${student.fee_status || 'Pending'}</span></div></div>
+                        </div>
+                    </div>
+                    ${qualificationsHtml}
+                `;
+            } else {
+                document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Profile data not available</span></div>`;
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load profile data</span></div>`;
         }
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load profile data</span></div>`;
     }
-}
-
-    /* ===== ATTENDANCE ===== */
-
-    // ==================== SHOW MAIN VIEW - WITH NULL CHECK ====================
+    
+    // ==================== SHOW MAIN VIEW ====================
     function showMainView() {
         const mainView = document.getElementById('attendanceMainView');
         const subjectView = document.getElementById('attendanceSubjectView');
         
-        // ✅ NULL CHECK ADD KARO
         if (mainView) mainView.style.display = 'block';
         if (subjectView) subjectView.style.display = 'none';
         
         currentSubjectName = null;
     }
-
+    
     function showSubjectView(subject) {
-      document.getElementById('attendanceMainView').style.display = 'none';
-      document.getElementById('attendanceSubjectView').style.display = 'block';
+      const mainView = document.getElementById('attendanceMainView');
+      const subjectView = document.getElementById('attendanceSubjectView');
+      if (mainView) mainView.style.display = 'none';
+      if (subjectView) subjectView.style.display = 'block';
       displaySubjectDetails(subject);
     }
-
+    
     async function loadAttendance() {
       try {
         showMainView();
-        document.getElementById('subjectCardsContainer').innerHTML = `<div style="text-align:center;padding:40px;grid-column:1/-1;"><div class="spinner-custom" style="margin:0 auto;"></div><p style="margin-top:14px;color:#94a3b8;">Loading attendance records...</p></div>`;
-        const summaryRes = await fetch(`https://aacem-backend.onrender.com/api/student-attendance/${STUDENT_ID}`);
+        const container = document.getElementById('subjectCardsContainer');
+        if (container) {
+          container.innerHTML = `<div style="text-align:center;padding:40px;grid-column:1/-1;"><div class="spinner-custom" style="margin:0 auto;"></div><p style="margin-top:14px;color:#94a3b8;">Loading attendance records...</p></div>`;
+        }
+        const summaryRes = await fetch(`${API_BASE_URL}/student-attendance/${STUDENT_ID}`);
         const summary = await summaryRes.json();
         if (summary.success) updateStats(summary.attendance);
-        const detailsRes = await fetch(`https://aacem-backend.onrender.com/api/student-attendance-details/${STUDENT_ID}`);
+        const detailsRes = await fetch(`${API_BASE_URL}/student-attendance-details/${STUDENT_ID}`);
         const details = await detailsRes.json();
         if (details.success) {
           allAttendanceRecords = details.attendance_details || [];
@@ -2783,21 +2779,32 @@ async function loadProfile() {
           displaySubjectCards();
         }
       } catch (error) {
-        document.getElementById('subjectCardsContainer').innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);grid-column:1/-1;"><i class="fas fa-exclamation-circle fa-3x mb-3" style="display:block;"></i><p>Failed to load attendance data</p></div>`;
+        const container = document.getElementById('subjectCardsContainer');
+        if (container) {
+          container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);grid-column:1/-1;"><i class="fas fa-exclamation-circle fa-3x mb-3" style="display:block;"></i><p>Failed to load attendance data</p></div>`;
+        }
       }
     }
-
+    
     function updateStats(attendance) {
-      document.getElementById('overallPercentage').textContent = attendance.percentage + '%';
-      document.getElementById('presentDays').textContent = attendance.present_days;
-      document.getElementById('absentDays').textContent = attendance.absent_days;
-      document.getElementById('totalDays').textContent = attendance.total_days;
+      const overallEl = document.getElementById('overallPercentage');
+      const presentEl = document.getElementById('presentDays');
+      const absentEl = document.getElementById('absentDays');
+      const totalEl = document.getElementById('totalDays');
       const progressBar = document.getElementById('attendanceProgressBar');
-      progressBar.style.width = attendance.percentage + '%';
-      document.getElementById('progressLabel').textContent = attendance.percentage + '%';
-      progressBar.style.background = attendance.percentage >= 75 ? 'var(--success)' : attendance.percentage >= 60 ? 'var(--warning)' : 'var(--danger)';
+      const progressLabel = document.getElementById('progressLabel');
+      
+      if (overallEl) overallEl.textContent = attendance.percentage + '%';
+      if (presentEl) presentEl.textContent = attendance.present_days;
+      if (absentEl) absentEl.textContent = attendance.absent_days;
+      if (totalEl) totalEl.textContent = attendance.total_days;
+      if (progressBar) progressBar.style.width = attendance.percentage + '%';
+      if (progressLabel) progressLabel.textContent = attendance.percentage + '%';
+      if (progressBar) {
+        progressBar.style.background = attendance.percentage >= 75 ? 'var(--success)' : attendance.percentage >= 60 ? 'var(--warning)' : 'var(--danger)';
+      }
     }
-
+    
     function processAttendanceData() {
       subjectStats = {};
       allAttendanceRecords.forEach(record => {
@@ -2811,7 +2818,7 @@ async function loadProfile() {
         subjectStats[subject].records.push(record);
       });
     }
-
+    
     function displaySubjectCards(filterVal = '') {
       const container = document.getElementById('subjectCardsContainer');
       if (!container) return;
@@ -2835,22 +2842,11 @@ async function loadProfile() {
                 <div style="display:flex;gap:6px;align-items:center;">${lowBadge}<span class="subject-badge" style="background:${bg};color:${color};border-color:${color}30;">${stat.total} classes</span></div>
               </div>
               <div class="subject-stats">
-                <div class="subject-stat">
-                  <div class="value" style="color:var(--success);">${stat.present}</div>
-                  <div class="label">Present</div>
-                </div>
-                <div class="subject-stat">
-                  <div class="value" style="color:var(--danger);">${stat.absent}</div>
-                  <div class="label">Absent</div>
-                </div>
-                <div class="subject-stat">
-                  <div class="value" style="color:${color};">${percentage}%</div>
-                  <div class="label">Percentage</div>
-                </div>
+                <div class="subject-stat"><div class="value" style="color:var(--success);">${stat.present}</div><div class="label">Present</div></div>
+                <div class="subject-stat"><div class="value" style="color:var(--danger);">${stat.absent}</div><div class="label">Absent</div></div>
+                <div class="subject-stat"><div class="value" style="color:${color};">${percentage}%</div><div class="label">Percentage</div></div>
               </div>
-              <div class="progress" style="height:8px;margin:12px 0;">
-                <div class="progress-bar" style="width:${percentage}%;background:${color};"></div>
-              </div>
+              <div class="progress" style="height:8px;margin:12px 0;"><div class="progress-bar" style="width:${percentage}%;background:${color};"></div></div>
               <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#94a3b8;">
                 <span><i class="fas fa-chalkboard-teacher me-1"></i>${stat.teacher}</span>
                 <span style="color:${color};font-weight:700;">View Details <i class="fas fa-arrow-right"></i></span>
@@ -2860,32 +2856,45 @@ async function loadProfile() {
       }
       container.innerHTML = html;
     }
-
+    
     function displaySubjectDetails(subject) {
       const stat = subjectStats[subject];
       if (!stat) return;
       currentSubjectName = subject;
       currentSubjectRecords = stat.records;
       const percentage = Math.round((stat.present / stat.total) * 100);
-      document.getElementById('subjectDetailTitle').textContent = subject;
-      document.getElementById('subjectDetailSubtitle').innerHTML = `<i class="fas fa-book-open me-2"></i>Total Classes: ${stat.total} | Teacher: ${stat.teacher}`;
-      document.getElementById('subjectSummaryContainer').innerHTML = `
-        <div class="summary-card present"><div class="value" style="color:var(--success);">${stat.present}</div><div class="label">Present Days</div></div>
-        <div class="summary-card absent"><div class="value" style="color:var(--danger);">${stat.absent}</div><div class="label">Absent Days</div></div>
-        <div class="summary-card percentage"><div class="value" style="color:var(--primary);">${percentage}%</div><div class="label">Attendance %</div></div>`;
-      document.getElementById('teacherInfoContainer').innerHTML = `
-        <div class="teacher-icon-wrap" style="width:50px;height:50px;border-radius:16px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-chalkboard-teacher"></i></div>
-        <div><strong style="font-size:1rem;color:#1e293b;">${stat.teacher}</strong><p style="margin:2px 0 0;font-size:0.82rem;color:#94a3b8;">Subject Teacher</p></div>`;
-      // Reset filter dropdown
+      
+      const titleEl = document.getElementById('subjectDetailTitle');
+      const subtitleEl = document.getElementById('subjectDetailSubtitle');
+      const summaryContainer = document.getElementById('subjectSummaryContainer');
+      const teacherContainer = document.getElementById('teacherInfoContainer');
+      
+      if (titleEl) titleEl.textContent = subject;
+      if (subtitleEl) subtitleEl.innerHTML = `<i class="fas fa-book-open me-2"></i>Total Classes: ${stat.total} | Teacher: ${stat.teacher}`;
+      if (summaryContainer) {
+        summaryContainer.innerHTML = `
+          <div class="summary-card present"><div class="value" style="color:var(--success);">${stat.present}</div><div class="label">Present Days</div></div>
+          <div class="summary-card absent"><div class="value" style="color:var(--danger);">${stat.absent}</div><div class="label">Absent Days</div></div>
+          <div class="summary-card percentage"><div class="value" style="color:var(--primary);">${percentage}%</div><div class="label">Attendance %</div></div>`;
+      }
+      if (teacherContainer) {
+        teacherContainer.innerHTML = `
+          <div style="width:50px;height:50px;border-radius:16px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-chalkboard-teacher"></i></div>
+          <div><strong style="font-size:1rem;color:#1e293b;">${stat.teacher}</strong><p style="margin:2px 0 0;font-size:0.82rem;color:#94a3b8;">Subject Teacher</p></div>`;
+      }
       const filterEl = document.getElementById('attendanceFilter');
       if (filterEl) filterEl.value = 'all';
       displaySubjectRecords(stat.records, 'all');
     }
-
+    
     function displaySubjectRecords(records, filter = 'all') {
       const tbody = document.getElementById('subjectDetailRecords');
+      if (!tbody) return;
       const filtered = filter === 'all' ? records : records.filter(r => r.status === filter);
-      if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:#94a3b8;">No records found</td></tr>'; return; }
+      if (filtered.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:#94a3b8;">No records found</td></tr>'; 
+        return; 
+      }
       let html = '';
       filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(record => {
         const date = new Date(record.date);
@@ -2895,39 +2904,22 @@ async function loadProfile() {
           <td><strong>${formattedDate}</strong></td>
           <td style="color:#64748b;">${day}</td>
           <td><span class="grade-badge ${record.status === 'Present' ? 'grade-a' : 'grade-d'}"><i class="fas fa-${record.status === 'Present' ? 'check-circle' : 'times-circle'} me-1"></i>${record.status}</span></td>
-          <td style="color:#64748b;">${record.teacher_name || record.marked_by || 'System'}</td></tr>`;
+          <td style="color:#64748b;">${record.teacher_name || record.marked_by || 'System'}</td>
+        </tr>`;
       });
       tbody.innerHTML = html;
     }
-
-    // NEW: Filter subject cards by search
+    
     function filterSubjectCards(val) {
       displaySubjectCards(val);
     }
-
-    // NEW: Filter attendance records by status
+    
     function filterAttendanceRecords(val) {
       if (currentSubjectName && subjectStats[currentSubjectName]) {
         displaySubjectRecords(subjectStats[currentSubjectName].records, val);
       }
     }
-
-    // NEW: Highlight today in timetable
-    function highlightToday() {
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const today = days[new Date().getDay()];
-      document.querySelectorAll('.day-card').forEach(card => {
-        const h = card.querySelector('.day-header h5');
-        if (h && h.textContent.includes(today)) card.classList.add('today');
-      });
-    }
-
-    // NEW: Convert 24hr to 12hr format (alias)
-    function convertTo12HourFormat(time24) {
-      return formatTimeTo12Hour(time24);
-    }
-
-    // NEW: Pull-to-refresh on mobile
+    
     function setupPullToRefresh() {
       let startY = 0;
       document.addEventListener('touchstart', e => { startY = e.touches[0].pageY; }, { passive: true });
@@ -2940,9 +2932,12 @@ async function loadProfile() {
         }
       }, { passive: true });
     }
-
-    document.addEventListener('DOMContentLoaded', function() { showMainView(); setupPullToRefresh(); });
-
+    
+    // Call setupPullToRefresh
+    if (typeof setupPullToRefresh === 'function') {
+      setupPullToRefresh();
+    }
+    
     /* ===== STUDY MATERIALS ===== */
     async function loadStudyMaterials() {
       try {
@@ -2952,7 +2947,10 @@ async function loadProfile() {
         const student = profileResult.student;
         const sectionId = student.section_id;
         const sectionName = student.section_name;
-        document.getElementById('pdfsContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p class="text-muted">Loading study materials...</p></div>`;
+        const pdfsContent = document.getElementById('pdfsContent');
+        if (pdfsContent) {
+          pdfsContent.innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p class="text-muted">Loading study materials...</p></div>`;
+        }
         if (!sectionId) { displayNoSectionMessage(); return; }
         let pdfs = [];
         try {
@@ -2974,18 +2972,27 @@ async function loadProfile() {
         if (pdfs.length === 0) displayNoSectionMaterialsMessage(sectionName);
         else displayStudyMaterials(pdfs, student);
       } catch (error) {
-        document.getElementById('pdfsContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load study materials</span></div>`;
+        const pdfsContent = document.getElementById('pdfsContent');
+        if (pdfsContent) {
+          pdfsContent.innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load study materials</span></div>`;
+        }
       }
     }
-
+    
     function displayNoSectionMessage() {
-      document.getElementById('pdfsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><h5 style="color:#1e293b;font-weight:700;margin-bottom:10px;">No Section Assigned</h5><p style="color:#64748b;margin-bottom:24px;">You need to be assigned to a section to access study materials.</p><button onclick="loadStudyMaterials()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+      const pdfsContent = document.getElementById('pdfsContent');
+      if (pdfsContent) {
+        pdfsContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><h5 style="color:#1e293b;font-weight:700;margin-bottom:10px;">No Section Assigned</h5><p style="color:#64748b;margin-bottom:24px;">You need to be assigned to a section to access study materials.</p><button onclick="loadStudyMaterials()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+      }
     }
-
+    
     function displayNoSectionMaterialsMessage(sectionName) {
-      document.getElementById('pdfsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><h5 style="color:#1e293b;font-weight:700;margin-bottom:10px;">No Study Materials Available</h5><p style="color:#64748b;margin-bottom:24px;"><span class="section-badge" style="display:inline-block;margin-bottom:10px;">${sectionName}</span><br>No study materials have been uploaded for your section yet.</p><button onclick="loadStudyMaterials()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+      const pdfsContent = document.getElementById('pdfsContent');
+      if (pdfsContent) {
+        pdfsContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><h5 style="color:#1e293b;font-weight:700;margin-bottom:10px;">No Study Materials Available</h5><p style="color:#64748b;margin-bottom:24px;"><span class="section-badge" style="display:inline-block;margin-bottom:10px;">${sectionName}</span><br>No study materials have been uploaded for your section yet.</p><button onclick="loadStudyMaterials()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+      }
     }
-
+    
     function displayStudyMaterials(pdfs, student) {
       const sectionName = student.section_name || 'Your Section';
       let html = `<div class="section-banner"><i class="fas fa-layer-group"></i><div><strong>${sectionName} — Study Materials</strong><br><small>${pdfs.length} material${pdfs.length > 1 ? 's' : ''} available</small></div></div><div class="row g-4">`;
@@ -3014,29 +3021,39 @@ async function loadProfile() {
           </div>`;
       });
       html += '</div>';
-      document.getElementById('pdfsContent').innerHTML = html;
+      const pdfsContent = document.getElementById('pdfsContent');
+      if (pdfsContent) pdfsContent.innerHTML = html;
     }
-
-    /* PDF Viewer */
+    
+    /* PDF Viewer - Keep your existing PDF functions */
     let pdfDoc = null, currentPage = 1, totalPages = 0, pageRendering = false, pageNumPending = null, scale = 1.0;
     let canvas = document.getElementById('pdfCanvas');
     let ctx = canvas ? canvas.getContext('2d') : null;
-
+    
     async function viewStudentPdf(pdfId, pdfTitle) {
       currentPdfId = pdfId; currentPdfTitle = pdfTitle || 'Study Material';
-      document.getElementById('pdfPreviewTitle').innerHTML = `<i class="fas fa-file-pdf me-2"></i>${currentPdfTitle}`;
-      document.getElementById('pdfPreviewModal').classList.add('show');
-      document.getElementById('pdfViewerContainer').style.display = 'none';
-      document.getElementById('pdfIframeContainer').style.display = 'none';
-      document.getElementById('pdfAlternativeView').style.display = 'none';
+      const previewTitle = document.getElementById('pdfPreviewTitle');
+      if (previewTitle) previewTitle.innerHTML = `<i class="fas fa-file-pdf me-2"></i>${currentPdfTitle}`;
+      const modal = document.getElementById('pdfPreviewModal');
+      if (modal) modal.classList.add('show');
+      
+      const viewerContainer = document.getElementById('pdfViewerContainer');
+      const iframeContainer = document.getElementById('pdfIframeContainer');
+      const altView = document.getElementById('pdfAlternativeView');
+      
+      if (viewerContainer) viewerContainer.style.display = 'none';
+      if (iframeContainer) iframeContainer.style.display = 'none';
+      if (altView) altView.style.display = 'none';
+      
       let pdfUrl = pdfId.startsWith('SEC') || pdfId.includes('section') ? `${API_BASE_URL}/view-section-pdf/${pdfId}` : `${API_BASE_URL}/view-course-pdf/${pdfId}`;
       currentPdfUrl = pdfUrl;
       try {
         const loadingTask = pdfjsLib.getDocument(pdfUrl + '?t=' + new Date().getTime());
         pdfDoc = await loadingTask.promise;
         totalPages = pdfDoc.numPages;
-        document.getElementById('totalPages').textContent = totalPages;
-        document.getElementById('pdfViewerContainer').style.display = 'block';
+        const totalPagesEl = document.getElementById('totalPages');
+        if (totalPagesEl) totalPagesEl.textContent = totalPages;
+        if (viewerContainer) viewerContainer.style.display = 'block';
         canvas = document.getElementById('pdfCanvas');
         ctx = canvas.getContext('2d');
         renderPage(currentPage);
@@ -3044,12 +3061,12 @@ async function loadProfile() {
         try {
           const iframe = document.getElementById('pdfViewer');
           iframe.src = pdfUrl + '#toolbar=0&navpanes=0&scrollbar=1';
-          iframe.onload = () => { document.getElementById('pdfIframeContainer').style.display = 'block'; };
-          iframe.onerror = () => { document.getElementById('pdfAlternativeView').style.display = 'block'; };
-        } catch { document.getElementById('pdfAlternativeView').style.display = 'block'; }
+          iframe.onload = () => { if (iframeContainer) iframeContainer.style.display = 'block'; };
+          iframe.onerror = () => { if (altView) altView.style.display = 'block'; };
+        } catch { if (altView) altView.style.display = 'block'; }
       }
     }
-
+    
     function renderPage(num) {
       pageRendering = true;
       pdfDoc.getPage(num).then(page => {
@@ -3057,17 +3074,18 @@ async function loadProfile() {
         canvas.height = viewport.height; canvas.width = viewport.width;
         page.render({ canvasContext: ctx, viewport }).promise.then(() => {
           pageRendering = false;
-          document.getElementById('currentPage').textContent = num;
+          const currentPageEl = document.getElementById('currentPage');
+          if (currentPageEl) currentPageEl.textContent = num;
           if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
         });
       });
     }
-
+    
     function queueRenderPage(num) { if (pageRendering) pageNumPending = num; else renderPage(num); }
     function prevPage() { if (currentPage <= 1) return; currentPage--; queueRenderPage(currentPage); }
     function nextPage() { if (currentPage >= totalPages) return; currentPage++; queueRenderPage(currentPage); }
     function zoomPdf(value) { scale = parseFloat(value); renderPage(currentPage); }
-
+    
     async function downloadStudentPdf(pdfId, pdfTitle, event) {
       if (event) { event.currentTarget.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...'; event.currentTarget.disabled = true; }
       currentPdfId = pdfId; currentPdfTitle = pdfTitle || 'Study Material';
@@ -3078,30 +3096,39 @@ async function loadProfile() {
       showToast('Download started!', 'success', pdfTitle);
       setTimeout(() => { if (event) { event.currentTarget.innerHTML = '<i class="fas fa-download me-1"></i>Download'; event.currentTarget.disabled = false; } }, 2000);
     }
-
+    
     function downloadCurrentPdf() {
       if (currentPdfId) {
         let u = currentPdfId.startsWith('SEC') || currentPdfId.includes('section') ? `${API_BASE_URL}/view-section-pdf/${currentPdfId}?download=true` : `${API_BASE_URL}/view-course-pdf/${currentPdfId}?download=true`;
         window.open(u, '_blank');
       }
     }
-
+    
     function closePdfPreview() {
-      document.getElementById('pdfPreviewModal').classList.remove('show');
-      document.getElementById('pdfViewer').src = 'about:blank';
+      const modal = document.getElementById('pdfPreviewModal');
+      if (modal) modal.classList.remove('show');
+      const iframe = document.getElementById('pdfViewer');
+      if (iframe) iframe.src = 'about:blank';
       currentPdfId = null; currentPdfTitle = null; currentPdfUrl = null;
     }
-
+    
     /* ===== SYLLABUS ===== */
     async function loadSyllabus() {
       try {
         const profileResponse = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
         const profileResult = await profileResponse.json();
-        if (!profileResult.success || !profileResult.student) { document.getElementById('syllabusContent').innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Please complete your profile to view syllabus</span></div>`; return; }
+        if (!profileResult.success || !profileResult.student) { 
+          const syllabusContent = document.getElementById('syllabusContent');
+          if (syllabusContent) {
+            syllabusContent.innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Please complete your profile to view syllabus</span></div>`;
+          }
+          return; 
+        }
         const student = profileResult.student;
         const courseCode = student.course;
         const response = await fetch(`${API_BASE_URL}/syllabus/course/${courseCode}`);
         const result = await response.json();
+        const syllabusContent = document.getElementById('syllabusContent');
         if (result.success && result.syllabus && result.syllabus.length > 0) {
           let syllabusHTML = '';
           result.syllabus.forEach(syllabus => {
@@ -3110,21 +3137,26 @@ async function loadProfile() {
               if (syllabus.subjects && syllabus.subjects.length > 0) {
                 syllabus.subjects.forEach((subject, idx) => {
                   const topics = subject.topics ? subject.topics.split(',').map(t => `<span class="badge me-1 mb-1" style="background:#f0f2ff;color:var(--primary);border:1px solid rgba(102,126,234,0.2);font-weight:600;padding:4px 10px;border-radius:20px;">${t.trim()}</span>`).join('') : '<span style="color:#94a3b8;">TBA</span>';
-                  syllabusHTML += `<tr><td>${idx+1}</td><td><strong>${subject.subject_name}</strong></td><td style="text-align:center;">${subject.duration_hours} hrs</td><td>${topics}</td></tr>`;
+                  syllabusHTML += `<tr><td>${idx+1}</td><td><strong>${subject.subject_name}</strong></td><td style="text-align:center;">${subject.duration_hours} hrs</div><td>${topics}</div></tr>`;
                 });
               }
-              syllabusHTML += `</tbody><tfoot><tr style="background:#f8fafc;font-weight:700;"><td colspan="2" style="text-align:right;padding:14px 16px;color:#64748b;">Total Duration:</td><td style="text-align:center;padding:14px 16px;color:var(--primary);">${syllabus.total_duration} hrs</td><td style="padding:14px 16px;color:#64748b;">${syllabus.subjects?.length || 0} subjects</td></tr></tfoot></table></div></div>`;
+              syllabusHTML += `</tbody><tfoot><tr style="background:#f8fafc;font-weight:700;"><td colspan="2" style="text-align:right;padding:14px 16px;color:#64748b;">Total Duration:</td><td style="text-align:center;padding:14px 16px;color:var(--primary);">${syllabus.total_duration} hrs</div><td style="padding:14px 16px;color:#64748b;">${syllabus.subjects?.length || 0} subjects</div></tr></tfoot></table></div></div>`;
             }
           });
-          document.getElementById('syllabusContent').innerHTML = syllabusHTML || `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><h5>No active syllabus for ${courseCode}</h5></div>`;
+          if (syllabusContent) syllabusContent.innerHTML = syllabusHTML || `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><h5>No active syllabus for ${courseCode}</h5></div>`;
         } else {
-          document.getElementById('syllabusContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><h5 style="color:#1e293b;font-weight:700;">Syllabus Not Available</h5><p style="color:#64748b;">The syllabus for ${courseCode} is being prepared.</p></div>`;
+          if (syllabusContent) {
+            syllabusContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><h5 style="color:#1e293b;font-weight:700;">Syllabus Not Available</h5><p style="color:#64748b;">The syllabus for ${courseCode} is being prepared.</p></div>`;
+          }
         }
       } catch (error) {
-        document.getElementById('syllabusContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load course syllabus</span></div>`;
+        const syllabusContent = document.getElementById('syllabusContent');
+        if (syllabusContent) {
+          syllabusContent.innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load course syllabus</span></div>`;
+        }
       }
     }
-
+    
     /* ===== TIMETABLE ===== */
     async function loadTimetable() {
       try {
@@ -3133,7 +3165,10 @@ async function loadProfile() {
         if (!profileData.success || !profileData.student) throw new Error('Invalid student profile');
         const student = profileData.student;
         const course = student.course, sectionId = student.section_id, sectionName = student.section_name;
-        document.getElementById('timetableContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p class="text-muted">Loading your timetable...</p></div>`;
+        const timetableContent = document.getElementById('timetableContent');
+        if (timetableContent) {
+          timetableContent.innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p class="text-muted">Loading your timetable...</p></div>`;
+        }
         let timetableData, timetableSource = '';
         if (sectionId) {
           try {
@@ -3190,15 +3225,20 @@ async function loadProfile() {
             }
           });
           html += `<button onclick="loadTimetable()" style="background:white;border:1px solid var(--primary);color:var(--primary);padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;margin:16px auto 0;transition:all 0.3s ease;" onmouseover="this.style.background='var(--gradient-primary)';this.style.color='white';" onmouseout="this.style.background='white';this.style.color='var(--primary)';"><i class="fas fa-redo"></i>Refresh Timetable</button></div>`;
-          document.getElementById('timetableContent').innerHTML = html;
+          if (timetableContent) timetableContent.innerHTML = html;
         } else {
-          document.getElementById('timetableContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><h5 style="color:#1e293b;font-weight:700;">No Timetable Found</h5><p style="color:#64748b;">Your timetable is being prepared. Check back later!</p><button onclick="loadTimetable()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;margin-top:16px;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+          if (timetableContent) {
+            timetableContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><h5 style="color:#1e293b;font-weight:700;">No Timetable Found</h5><p style="color:#64748b;">Your timetable is being prepared. Check back later!</p><button onclick="loadTimetable()" style="background:var(--gradient-primary);color:white;border:none;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;margin-top:16px;"><i class="fas fa-redo me-2"></i>Refresh</button></div>`;
+          }
         }
       } catch (error) {
-        document.getElementById('timetableContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load timetable. Please try again.</span></div>`;
+        const timetableContent = document.getElementById('timetableContent');
+        if (timetableContent) {
+          timetableContent.innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load timetable. Please try again.</span></div>`;
+        }
       }
     }
-
+    
     function formatTimeTo12Hour(time24) {
       if (!time24) return 'N/A';
       if (time24.includes('AM') || time24.includes('PM')) return time24;
@@ -3210,12 +3250,13 @@ async function loadProfile() {
         return `${h12}:${minutes.toString().padStart(2,'0')} ${period}`;
       } catch { return time24; }
     }
-
+    
     /* ===== RESULTS ===== */
     async function loadResults() {
       try {
         const response = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
         const result = await response.json();
+        const resultsContent = document.getElementById('resultsContent');
         if (result.success && result.results && result.results.length > 0) {
           const groupedResults = {};
           let totalMarks = 0, totalMaxMarks = 0;
@@ -3243,7 +3284,7 @@ async function loadProfile() {
               tableHTML += `<div class="tab-pane fade${i===0?' show active':''}" id="content-${i}"><div class="table-wrap"><div style="overflow-x:auto;"><table class="modern-table" style="margin:8px;width:calc(100% - 16px);"><thead><tr><th>Subject</th><th>Exam</th><th style="text-align:center;">Marks</th><th>%</th><th style="text-align:center;">Grade</th></tr></thead><tbody>`;
               groupedResults[type].forEach(item => {
                 const pct = ((item.marks_obtained/item.total_marks)*100).toFixed(1);
-                tableHTML += `<tr><td><strong>${item.subject}</strong></td><td style="color:#94a3b8;">${item.exam_type}</td><td style="text-align:center;font-weight:700;">${item.marks_obtained}/${item.total_marks}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress" style="width:70px;height:6px;"><div class="progress-bar" style="width:${pct}%;background:${parseFloat(pct)>=75?'var(--success)':parseFloat(pct)>=50?'var(--warning)':'var(--danger)'}"></div></div>${pct}%</div></td><td style="text-align:center;"><span class="grade-badge ${item.grade==='A'||item.grade==='A+'||item.grade==='B'?'grade-a':'grade-d'}">${item.grade}</span></td></tr>`;
+                tableHTML += `<tr><td><strong>${item.subject}</strong></td><td style="color:#94a3b8;">${item.exam_type}</td><td style="text-align:center;font-weight:700;">${item.marks_obtained}/${item.total_marks}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress" style="width:70px;height:6px;"><div class="progress-bar" style="width:${pct}%;background:${parseFloat(pct)>=75?'var(--success)':parseFloat(pct)>=50?'var(--warning)':'var(--danger)'}"></div></div>${pct}%</div></div><td style="text-align:center;"><span class="grade-badge ${item.grade==='A'||item.grade==='A+'||item.grade==='B'?'grade-a':'grade-d'}">${item.grade}</span></td></tr>`;
               });
               tableHTML += `</tbody></table></div></div></div>`;
             });
@@ -3252,38 +3293,43 @@ async function loadProfile() {
             tableHTML += `<div class="table-wrap"><div style="overflow-x:auto;"><table class="modern-table" style="margin:8px;width:calc(100% - 16px);"><thead><tr><th>Subject</th><th>Exam Type</th><th style="text-align:center;">Marks</th><th>%</th><th style="text-align:center;">Grade</th><th>Date</th></tr></thead><tbody>`;
             result.results.forEach(item => {
               const pct = ((item.marks_obtained/item.total_marks)*100).toFixed(1);
-              tableHTML += `<tr><td><strong>${item.subject}</strong></td><td style="color:#94a3b8;">${item.exam_type}</td><td style="text-align:center;font-weight:700;">${item.marks_obtained}/${item.total_marks}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress" style="width:70px;height:6px;"><div class="progress-bar" style="width:${pct}%;background:${parseFloat(pct)>=75?'var(--success)':parseFloat(pct)>=50?'var(--warning)':'var(--danger)'}"></div></div>${pct}%</div></td><td style="text-align:center;"><span class="grade-badge ${item.grade==='A'||item.grade==='A+'||item.grade==='B'?'grade-a':'grade-d'}">${item.grade}</span></td><td style="color:#94a3b8;">${new Date(item.exam_date).toLocaleDateString('en-IN')}</td></tr>`;
+              tableHTML += `<tr><td><strong>${item.subject}</strong></td><td style="color:#94a3b8;">${item.exam_type}</td><td style="text-align:center;font-weight:700;">${item.marks_obtained}/${item.total_marks}</div><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress" style="width:70px;height:6px;"><div class="progress-bar" style="width:${pct}%;background:${parseFloat(pct)>=75?'var(--success)':parseFloat(pct)>=50?'var(--warning)':'var(--danger)'}"></div></div>${pct}%</div></td><td style="text-align:center;"><span class="grade-badge ${item.grade==='A'||item.grade==='A+'||item.grade==='B'?'grade-a':'grade-d'}">${item.grade}</span></td><td style="color:#94a3b8;">${new Date(item.exam_date).toLocaleDateString('en-IN')}</td></tr>`;
             });
             tableHTML += `</tbody></table></div></div>`;
           }
-          document.getElementById('resultsContent').innerHTML = tableHTML;
+          if (resultsContent) resultsContent.innerHTML = tableHTML;
         } else {
-          document.getElementById('resultsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-chart-bar"></i></div><h5 style="color:#1e293b;font-weight:700;">No Results Available</h5><p style="color:#64748b;">Your results will appear here once published.</p></div>`;
+          if (resultsContent) {
+            resultsContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-chart-bar"></i></div><h5 style="color:#1e293b;font-weight:700;">No Results Available</h5><p style="color:#64748b;">Your results will appear here once published.</p></div>`;
+          }
         }
       } catch (error) {
-        document.getElementById('resultsContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load results. Please try again.</span></div>`;
+        const resultsContent = document.getElementById('resultsContent');
+        if (resultsContent) {
+          resultsContent.innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load results. Please try again.</span></div>`;
+        }
       }
     }
-
+    
     function calculateGrade(pct) {
       if (pct >= 90) return 'A+'; if (pct >= 80) return 'A'; if (pct >= 70) return 'B+';
       if (pct >= 60) return 'B'; if (pct >= 50) return 'C+'; if (pct >= 40) return 'C'; return 'F';
     }
-
+    
     function getGradeColor(grade) {
       if (['A+','A'].includes(grade)) return 'success';
       if (['B+','B'].includes(grade)) return 'info';
       if (['C+','C'].includes(grade)) return 'warning';
       return 'danger';
     }
-
+    
     /* ===== NOTICES ===== */
     async function loadNotices() {
       try {
         const response = await fetch(`${API_BASE_URL}/student-notices`);
         const result = await response.json();
+        const noticesContent = document.getElementById('noticesContent');
         if (result.success && result.notices && result.notices.length > 0) {
-          // Update notice badge with count of high-priority notices
           const highCount = result.notices.filter(n => n.priority === 'high').length;
           const badge = document.getElementById('noticeBadge');
           if (badge) {
@@ -3303,28 +3349,38 @@ async function loadProfile() {
               <div class="notice-msg">${notice.message}</div>
             </div>`;
           });
-          document.getElementById('noticesContent').innerHTML = html;
+          if (noticesContent) noticesContent.innerHTML = html;
         } else {
-          document.getElementById('noticesContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-bullhorn"></i></div><h5 style="color:#1e293b;font-weight:700;">No Notices</h5><p style="color:#64748b;">No notices at the moment.</p></div>`;
+          if (noticesContent) {
+            noticesContent.innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-bullhorn"></i></div><h5 style="color:#1e293b;font-weight:700;">No Notices</h5><p style="color:#64748b;">No notices at the moment.</p></div>`;
+          }
         }
       } catch (error) {
-        document.getElementById('noticesContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load notices</span></div>`;
+        const noticesContent = document.getElementById('noticesContent');
+        if (noticesContent) {
+          noticesContent.innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load notices</span></div>`;
+        }
       }
     }
-
+    
     /* ===== FEES ===== */
     async function loadFees() {
-      document.getElementById('feeLoading').style.display = 'block';
-      document.getElementById('feeContent').style.display = 'none';
-      document.getElementById('feeError').style.display = 'none';
+      const feeLoading = document.getElementById('feeLoading');
+      const feeContent = document.getElementById('feeContent');
+      const feeError = document.getElementById('feeError');
+      
+      if (feeLoading) feeLoading.style.display = 'block';
+      if (feeContent) feeContent.style.display = 'none';
+      if (feeError) feeError.style.display = 'none';
+      
       try {
-        const response = await fetch(`https://aacem-backend.onrender.com/api/student-fee-details/${STUDENT_ID}`);
+        const response = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
         const data = await response.json();
         if (data.success) displayFeeData(data);
         else showFeeError();
       } catch (error) { showFeeError(); }
     }
-
+    
     function displayFeeData(data) {
       const summary = data.fee_summary;
       const history = data.fee_history || [];
@@ -3332,73 +3388,54 @@ async function loadProfile() {
       const paid = parseFloat(summary.paid_amount) || 0;
       const due = parseFloat(summary.due_amount) || 0;
       const progress = total > 0 ? Math.round((paid/total)*100) : 0;
-      document.getElementById('totalFee').textContent = `₹${total.toLocaleString('en-IN')}`;
-      document.getElementById('paidAmount').textContent = `₹${paid.toLocaleString('en-IN')}`;
-      document.getElementById('dueAmount').textContent = `₹${due.toLocaleString('en-IN')}`;
-      document.getElementById('progressPercentage').textContent = `${progress}%`;
+      
+      const totalFee = document.getElementById('totalFee');
+      const paidAmount = document.getElementById('paidAmount');
+      const dueAmount = document.getElementById('dueAmount');
+      const progressPercentage = document.getElementById('progressPercentage');
       const progressBar = document.getElementById('progressBar');
-      progressBar.style.width = `${progress}%`;
-      progressBar.style.background = progress >= 100 ? 'var(--success)' : progress >= 50 ? 'var(--warning)' : 'var(--danger)';
+      
+      if (totalFee) totalFee.textContent = `₹${total.toLocaleString('en-IN')}`;
+      if (paidAmount) paidAmount.textContent = `₹${paid.toLocaleString('en-IN')}`;
+      if (dueAmount) dueAmount.textContent = `₹${due.toLocaleString('en-IN')}`;
+      if (progressPercentage) progressPercentage.textContent = `${progress}%`;
+      if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+        progressBar.style.background = progress >= 100 ? 'var(--success)' : progress >= 50 ? 'var(--warning)' : 'var(--danger)';
+      }
+      
       const historyBody = document.getElementById('paymentHistoryBody');
-      if (history.length > 0) {
+      if (history.length > 0 && historyBody) {
         let historyHTML = '';
         history.sort((a,b) => new Date(b.payment_date) - new Date(a.payment_date)).forEach(payment => {
           const date = new Date(payment.payment_date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
           const amount = parseFloat(payment.amount) || 0;
-          historyHTML += `<tr><td>${date}</td><td><strong>${payment.receipt_no || 'N/A'}</strong></td><td><strong>₹${amount.toLocaleString('en-IN')}</strong></td><td>${payment.payment_mode || 'Cash'}</td><td><span class="status-badge">${payment.status || 'Completed'}</span></td></tr>`;
+          historyHTML += `<tr>
+            <td>${date}</div>
+            <td><strong>${payment.receipt_no || 'N/A'}</strong></div>
+            <td><strong>₹${amount.toLocaleString('en-IN')}</strong></div>
+            <td>${payment.payment_mode || 'Cash'}</div>
+            <td><span class="status-badge">${payment.status || 'Completed'}</span></div>
+          </tr>`;
         });
         historyBody.innerHTML = historyHTML;
       }
-      document.getElementById('feeLoading').style.display = 'none';
-      document.getElementById('feeContent').style.display = 'block';
+      
+      const feeLoading = document.getElementById('feeLoading');
+      const feeContent = document.getElementById('feeContent');
+      if (feeLoading) feeLoading.style.display = 'none';
+      if (feeContent) feeContent.style.display = 'block';
     }
-
+    
     function showFeeError() {
-      document.getElementById('feeLoading').style.display = 'none';
-      document.getElementById('feeContent').style.display = 'none';
-      document.getElementById('feeError').style.display = 'block';
+      const feeLoading = document.getElementById('feeLoading');
+      const feeContent = document.getElementById('feeContent');
+      const feeError = document.getElementById('feeError');
+      
+      if (feeLoading) feeLoading.style.display = 'none';
+      if (feeContent) feeContent.style.display = 'none';
+      if (feeError) feeError.style.display = 'block';
     }
-
-    // Add this function at the end of your JavaScript (before closing </script>)
-    function forceMobileFullScreen() {
-        if (window.innerWidth <= 768) {
-            const mainContent = document.getElementById('mainContent');
-            if (mainContent) {
-                mainContent.style.width = '100%';
-                mainContent.style.maxWidth = '100%';
-                mainContent.style.overflowX = 'hidden';
-                mainContent.style.padding = '12px';
-            }
-            
-            // Fix all cards
-            document.querySelectorAll('.dashboard-card, .modern-card').forEach(card => {
-                card.style.width = '100%';
-                card.style.marginLeft = '0';
-                card.style.marginRight = '0';
-                card.style.boxSizing = 'border-box';
-            });
-            
-            // Fix all grids
-            document.querySelectorAll('.stats-grid, .subject-grid, .fee-stats, .profile-grid').forEach(grid => {
-                grid.style.width = '100%';
-            });
-        }
-    }
-    
-    // Call this after DOM load and after window resize
-    window.addEventListener('DOMContentLoaded', function() {
-        forceMobileFullScreen();
-        showMainView(); 
-        setupPullToRefresh();
-    });
-    
-    window.addEventListener('resize', function() {
-        forceMobileFullScreen();
-    });
-    
-    window.addEventListener('orientationchange', function() {
-        setTimeout(forceMobileFullScreen, 100);
-    });
   </script>
 </body>
 </html>
