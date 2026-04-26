@@ -535,6 +535,36 @@
     .text-success { color: #059669 !important; }
     .text-danger { color: #dc2626 !important; }
     .bg-success, .bg-danger, .bg-info, .bg-primary { color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.6rem; }
+
+    /* Sidebar Institute Logo */
+    .sidebar-institute {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+    }
+    
+    .sidebar-institute img {
+      width: 65px;
+      height: 65px;
+      border-radius: 12px;
+      background: white;
+      padding: 8px;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
+    
+    .sidebar-institute .inst-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    
+    .sidebar-institute .inst-tag {
+      font-size: 0.6rem;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -601,7 +631,14 @@
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-profile-card">
-      <div class="profile-avatar"><i class="fas fa-user-graduate"></i></div>
+      <div class="sidebar-institute">
+        <img src="logo.png" alt="AACEM">
+        <div class="inst-name">AACEM Institute</div>
+        <div class="inst-tag">Education for Excellence</div>
+      </div>
+      <div class="profile-avatar">
+        <i class="fas fa-user-graduate"></i>
+      </div>
       <h5 id="sidebarStudentName">Student Name</h5>
       <p id="sidebarStudentCourse">Course</p>
       <div class="student-id-chip" id="sidebarStudentId">ID: ----</div>
