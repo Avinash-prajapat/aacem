@@ -2142,71 +2142,184 @@
       return s === 'Paid' ? 'success' : s === 'Partial' ? 'warning' : s === 'Pending' ? 'danger' : 'secondary';
     }
 
+    // ==================== LOAD PROFILE - WITH NEW FIELDS ====================
     async function loadProfile() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-        const result = await response.json();
-        if (result.success && result.student) {
-          const student = result.student;
-          currentStudentData = student;
-          if (student.section_id) { window.currentSectionId = student.section_id; window.currentSectionName = student.section_name; }
-          
-          // Update sidebar
-          const sidebarName = document.getElementById('sidebarStudentName');
-          const sidebarCourse = document.getElementById('sidebarStudentCourse');
-          const sidebarId = document.getElementById('sidebarStudentId');
-          if (sidebarName) sidebarName.textContent = student.name;
-          if (sidebarCourse) sidebarCourse.textContent = student.course;
-          if (sidebarId) sidebarId.textContent = `ID: ${student.student_id}`;
-
-          document.getElementById('profileContent').innerHTML = `
-            <div class="profile-grid" style="margin-bottom:20px;">
-              <div class="profile-item">
-                <label>Full Name</label>
-                <h6>${student.name}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Student ID</label>
-                <h6>${student.student_id}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Course</label>
-                <h6>${student.course}</h6>
-              </div>
-              <div class="profile-item" style="border-left-color:${student.section_name ? 'var(--success)' : 'var(--warning)'};">
-                <label>Section</label>
-                <h6>${student.section_name ? `<span class="section-badge">${student.section_name}</span>` : `<span class="section-badge warning">Not Assigned Yet</span>`}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Parent Name</label>
-                <h6>${student.parent_name || 'N/A'}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Admission Date</label>
-                <h6>${student.join_date}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Phone</label>
-                <h6>${student.phone}</h6>
-              </div>
-              <div class="profile-item">
-                <label>Email</label>
-                <h6>${student.email || 'N/A'}</h6>
-              </div>
-            </div>
-            <div class="profile-item" style="border-left-color:var(--${getFeeStatusColor(student.fee_status)});margin-bottom:16px;">
-              <label>Fee Status</label>
-              <h6><span class="badge bg-${getFeeStatusColor(student.fee_status)} px-3 py-2">${student.fee_status}</span></h6>
-            </div>
-            ${student.address ? `<div class="profile-item" style="border-left-color:#94a3b8;margin-bottom:16px;"><label><i class="fas fa-map-marker-alt me-2"></i>Address</label><h6>${student.address}</h6></div>` : ''}
-            ${student.emergency_contact ? `<div class="profile-item" style="border-left-color:#94a3b8;"><label><i class="fas fa-phone-alt me-2"></i>Emergency Contact</label><h6>${student.emergency_contact}</h6></div>` : ''}
-          `;
-        } else {
-          document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Profile data not available</span></div>`;
+        try {
+            const response = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+            const result = await response.json();
+            
+            if (result.success && result.student) {
+                const student = result.student;
+                currentStudentData = student;
+                
+                if (student.section_id) { 
+                    window.currentSectionId = student.section_id; 
+                    window.currentSectionName = student.section_name; 
+                }
+                
+                // Update sidebar
+                const sidebarName = document.getElementById('sidebarStudentName');
+                const sidebarCourse = document.getElementById('sidebarStudentCourse');
+                const sidebarId = document.getElementById('sidebarStudentId');
+                
+                if (sidebarName) sidebarName.textContent = student.name;
+                if (sidebarCourse) sidebarCourse.textContent = student.course;
+                if (sidebarId) sidebarId.textContent = `ID: ${student.student_id}`;
+    
+                // ========== BUILD QUALIFICATIONS HTML ==========
+                let qualificationsHtml = '';
+                if (student.qualifications && student.qualifications.length > 0) {
+                    let qualRows = '';
+                    for (let i = 0; i < student.qualifications.length; i++) {
+                        const q = student.qualifications[i];
+                        qualRows += `
+                            <tr>
+                                <td><strong>${q.level || '-'}</strong></td>
+                                <td>${q.institute || '-'}</td>
+                                <td>${q.board || '-'}</td>
+                                <td>${q.marks || '-'}</td>
+                                <td>${q.year || '-'}</td>
+                            </tr>
+                        `;
+                    }
+                    qualificationsHtml = `
+                        <div class="profile-item" style="grid-column: span 2;">
+                            <label><i class="fas fa-graduation-cap me-2"></i>Qualifications</label>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Level</th>
+                                            <th>Institute</th>
+                                            <th>Board/University</th>
+                                            <th>Marks</th>
+                                            <th>Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${qualRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // ========== BUILD PHOTO HTML ==========
+                let photoHtml = '';
+                if (student.student_photo && student.student_photo !== 'null' && student.student_photo !== '') {
+                    photoHtml = `
+                        <div class="profile-item" style="grid-column: span 2; text-align: center;">
+                            <label><i class="fas fa-camera me-2"></i>Student Photo</label>
+                            <div class="mt-2">
+                                <img src="${student.student_photo}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            </div>
+                        </div>
+                    `;
+                }
+    
+                // ========== COMPLETE PROFILE HTML WITH NEW FIELDS ==========
+                document.getElementById('profileContent').innerHTML = `
+                    <div class="profile-grid" style="margin-bottom:20px;">
+                        <!-- Basic Information -->
+                        <div class="profile-item">
+                            <label>Full Name</label>
+                            <h6>${student.name}</h6>
+                        </div>
+                        <div class="profile-item">
+                            <label>Student ID</label>
+                            <h6>${student.student_id}</h6>
+                        </div>
+                        
+                        <!-- NEW: Date of Birth -->
+                        <div class="profile-item">
+                            <label><i class="fas fa-calendar-alt me-1"></i> Date of Birth</label>
+                            <h6>${student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'Not provided'}</h6>
+                        </div>
+                        
+                        <!-- NEW: Gender -->
+                        <div class="profile-item">
+                            <label><i class="fas fa-venus-mars me-1"></i> Gender</label>
+                            <h6>${student.gender || 'Not provided'}</h6>
+                        </div>
+                        
+                        <!-- NEW: Category -->
+                        <div class="profile-item">
+                            <label><i class="fas fa-id-card me-1"></i> Category</label>
+                            <h6>${student.category ? `<span class="badge bg-info">${student.category}</span>` : 'Not provided'}</h6>
+                        </div>
+                        
+                        <!-- Course -->
+                        <div class="profile-item">
+                            <label>Course</label>
+                            <h6>${student.course}</h6>
+                        </div>
+                        
+                        <!-- Section -->
+                        <div class="profile-item" style="border-left-color:${student.section_name ? 'var(--success)' : 'var(--warning)'};">
+                            <label>Section</label>
+                            <h6>${student.section_name ? `<span class="section-badge">${student.section_name}</span>` : `<span class="section-badge warning">Not Assigned Yet</span>`}</h6>
+                        </div>
+                        
+                        <!-- Parent Name -->
+                        <div class="profile-item">
+                            <label>Parent Name</label>
+                            <h6>${student.parent_name || 'N/A'}</h6>
+                        </div>
+                        
+                        <!-- NEW: Father's Mobile -->
+                        <div class="profile-item">
+                            <label><i class="fas fa-phone-alt me-1"></i> Father's Mobile</label>
+                            <h6>${student.father_mobile || 'Not provided'}</h6>
+                        </div>
+                        
+                        <!-- NEW: Father's Occupation -->
+                        <div class="profile-item">
+                            <label><i class="fas fa-briefcase me-1"></i> Father's Occupation</label>
+                            <h6>${student.father_occupation || 'Not provided'}</h6>
+                        </div>
+                        
+                        <!-- Admission Date -->
+                        <div class="profile-item">
+                            <label>Admission Date</label>
+                            <h6>${student.join_date}</h6>
+                        </div>
+                        
+                        <!-- Phone -->
+                        <div class="profile-item">
+                            <label>Phone</label>
+                            <h6>${student.phone}</h6>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="profile-item">
+                            <label>Email</label>
+                            <h6>${student.email || 'N/A'}</h6>
+                        </div>
+                        
+                        ${photoHtml}
+                        ${qualificationsHtml}
+                    </div>
+                    
+                    <!-- Fee Status -->
+                    <div class="profile-item" style="border-left-color:var(--${getFeeStatusColor(student.fee_status)});margin-bottom:16px;">
+                        <label>Fee Status</label>
+                        <h6><span class="badge bg-${getFeeStatusColor(student.fee_status)} px-3 py-2">${student.fee_status}</span></h6>
+                    </div>
+                    
+                    <!-- Address -->
+                    ${student.address ? `
+                    <div class="profile-item" style="border-left-color:#94a3b8;margin-bottom:16px;">
+                        <label><i class="fas fa-map-marker-alt me-2"></i>Address</label>
+                        <h6>${student.address}</h6>
+                    </div>
+                    ` : ''}
+                `;
+            } else {
+                document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Profile data not available</span></div>`;
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load profile data</span></div>`;
         }
-      } catch (error) {
-        document.getElementById('profileContent').innerHTML = `<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load profile data</span></div>`;
-      }
     }
 
     /* ===== ATTENDANCE ===== */
