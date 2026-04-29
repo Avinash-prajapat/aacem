@@ -51,7 +51,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 15px;
+      padding: 0 20px;
       gap: 12px;
     }
 
@@ -76,48 +76,55 @@
     .header-brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 1rem;
+      gap: 10px;
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--dark);
       flex: 1;
     }
 
     .header-brand-icon {
-      width: 35px;
-      height: 35px;
+      width: 38px;
+      height: 38px;
       border-radius: 10px;
       background: var(--gradient-primary);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
 
-    .header-user { display: flex; align-items: center; gap: 10px; }
+    .header-user { display: flex; align-items: center; gap: 12px; }
 
     .welcome-text {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 500;
       color: #64748b;
       background: #f1f5f9;
-      padding: 5px 12px;
-      border-radius: 20px;
+      padding: 6px 14px;
+      border-radius: 25px;
     }
 
     .logout-btn-header {
       background: white;
       border: 1px solid #fee2e2;
       color: var(--danger);
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 25px;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn-header:hover {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
     }
 
     /* ========== SIDEBAR ========== */
@@ -139,11 +146,10 @@
 
     .sidebar.expanded { transform: translateX(0); }
 
-    /* Remove margin shift when sidebar opens */
     .main-content {
       margin-left: 0 !important;
       margin-top: var(--header-height);
-      padding: 12px;
+      padding: 20px;
       min-height: calc(100vh - var(--header-height));
       transition: none !important;
     }
@@ -161,51 +167,99 @@
 
     .sidebar-overlay.show { display: block; }
 
-    /* Sidebar Profile Card */
+    /* ========== SIDEBAR PROFILE - FIXED CENTERED ========== */
     .sidebar-profile-card {
       background: var(--gradient-primary);
-      padding: 20px 15px;
+      padding: 25px 15px;
       text-align: center;
       color: white;
     }
 
-    .profile-avatar {
+    .sidebar-institute {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-institute img {
       width: 70px;
       height: 70px;
-      border-radius: 12px;
+      border-radius: 50%;
+      background: white;
+      padding: 8px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-institute .inst-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 5px 0 3px;
+    }
+
+    .sidebar-institute .inst-tag {
+      font-size: 0.65rem;
+      opacity: 0.85;
+      font-weight: 400;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
       background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 10px;
-      font-size: 1.6rem;
+      margin: 0 auto 12px;
+      font-size: 2rem;
+      border: 2px solid rgba(255,255,255,0.5);
     }
 
-    .sidebar-profile-card h5 { font-size: 0.9rem; font-weight: 700; margin: 0 0 3px; }
-    .sidebar-profile-card p { font-size: 0.7rem; opacity: 0.85; margin: 0; }
-    .student-id-chip { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 3px 10px; font-size: 0.65rem; display: inline-block; margin-top: 6px; }
+    .sidebar-profile-card h5 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 5px 0 3px;
+    }
+
+    .sidebar-profile-card p {
+      font-size: 0.75rem;
+      opacity: 0.9;
+      margin: 0 0 8px;
+    }
+
+    .student-id-chip {
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.7rem;
+      display: inline-block;
+      font-weight: 500;
+    }
 
     /* Sidebar Menu */
-    .sidebar-menu { padding: 12px 10px; flex: 1; }
+    .sidebar-menu { padding: 15px 12px; flex: 1; }
     .menu-item {
       display: flex;
       align-items: center;
-      padding: 10px 12px;
-      margin: 2px 0;
+      padding: 12px 12px;
+      margin: 4px 0;
       color: #64748b;
-      border-radius: 10px;
+      border-radius: 12px;
       transition: all 0.3s ease;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 0.8rem;
+      font-weight: 600;
+      font-size: 0.85rem;
     }
     .menu-item:hover { background: #f0f2ff; color: var(--primary); }
     .menu-item.active { background: var(--gradient-primary); color: white; }
-    .menu-item i { width: 24px; margin-right: 10px; font-size: 0.85rem; text-align: center; }
+    .menu-item i { width: 28px; margin-right: 12px; font-size: 1rem; text-align: center; }
 
-    /* Sidebar Footer - Scroll Only Till Here */
+    /* Sidebar Footer */
     .sidebar-footer {
-      padding: 12px;
+      padding: 15px;
       background: #f8fafc;
       border-top: 1px solid #e2e8f0;
       margin-top: auto;
@@ -214,16 +268,16 @@
     .footer-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      margin-bottom: 5px;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 6px;
     }
 
     .footer-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
+      width: 35px;
+      height: 35px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -233,25 +287,25 @@
     .footer-icon.blue { background: #e0f2fe; color: #0284c7; }
     .footer-icon.logout { background: #fee2e2; color: #dc2626; }
 
-    .footer-text strong { font-size: 0.75rem; color: #1e293b; display: block; line-height: 1.2; }
-    .footer-text small { font-size: 0.6rem; color: #94a3b8; }
+    .footer-text strong { font-size: 0.8rem; color: #1e293b; display: block; line-height: 1.2; }
+    .footer-text small { font-size: 0.65rem; color: #94a3b8; }
 
     .sidebar-logout { cursor: pointer; }
     .sidebar-logout:hover { background: #fecaca; }
 
-    .dev-version { text-align: center; font-size: 0.55rem; color: #cbd5e1; margin-top: 6px; }
+    .dev-version { text-align: center; font-size: 0.6rem; color: #cbd5e1; margin-top: 8px; }
 
     /* ========== CONTENT SECTIONS ========== */
     .content-section { display: none; animation: fadeIn 0.3s ease; }
     .content-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ========== CARDS - UNIFORM SPACING ========== */
+    /* ========== CARDS - RESPONSIVE ========== */
     .dashboard-card, .modern-card {
       background: white;
-      border-radius: 14px;
-      padding: 15px;
-      margin-bottom: 12px;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       width: 100%;
     }
@@ -260,60 +314,63 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
       border-bottom: 2px solid #f1f5f9;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
 
     .card-header-custom h4, .modern-card .card-header h4 {
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .card-header-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       background: var(--gradient-primary);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
 
-    /* Stats Grid */
+    /* Stats Grid - Responsive */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
     .stat-card {
       background: white;
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 14px;
+      padding: 15px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       border: 1px solid #eef2ff;
+      transition: transform 0.2s ease;
     }
 
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
     .stat-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 1.2rem;
     }
 
     .stat-icon.primary { background: #e0e7ff; color: var(--primary); }
@@ -321,178 +378,315 @@
     .stat-icon.danger { background: #fee2e2; color: #dc2626; }
     .stat-icon.warning { background: #fef3c7; color: #d97706; }
 
-    .stat-info h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 2px; }
-    .stat-info p { font-size: 0.6rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .stat-info h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+    .stat-info p { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Progress */
     .progress-card, .fee-progress-wrap {
       background: #f8fafc;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
     }
-    .progress-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 0.75rem; }
-    .progress { height: 5px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+    .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; font-size: 0.85rem; }
+    .progress { height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 10px; transition: width 0.5s ease; background: var(--gradient-primary); }
 
-    /* Subject Grid */
+    /* Subject Grid - Responsive */
     .subject-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
     }
     .subject-card {
       background: white;
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 14px;
+      padding: 15px;
       cursor: pointer;
       border: 1px solid #e2e8f0;
-      width: 100%;
+      transition: all 0.3s ease;
     }
-    .subject-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
-    .subject-name { font-size: 0.85rem; font-weight: 700; }
-    .subject-badge { background: #f0f2ff; padding: 2px 8px; border-radius: 15px; font-size: 0.6rem; color: var(--primary); }
-    .subject-stats { display: flex; justify-content: space-between; margin: 8px 0; gap: 5px; }
+    .subject-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); border-color: var(--primary); }
+    .subject-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 5px; }
+    .subject-name { font-size: 0.95rem; font-weight: 700; color: var(--dark); }
+    .subject-badge { background: #f0f2ff; padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; color: var(--primary); font-weight: 600; }
+    .subject-stats { display: flex; justify-content: space-between; margin: 12px 0; gap: 10px; }
     .subject-stat { text-align: center; flex: 1; }
-    .subject-stat .value { font-size: 1rem; font-weight: 800; }
-    .subject-stat .label { font-size: 0.55rem; color: #64748b; }
+    .subject-stat .value { font-size: 1.2rem; font-weight: 800; }
+    .subject-stat .label { font-size: 0.6rem; color: #64748b; margin-top: 3px; }
 
-    /* Subject Detail View */
-    .attendance-subject-view { display: none; }
-    .subject-view-header {
+    /* Tables - Horizontal Scroll on Mobile */
+    .table-wrap {
+      background: white;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      border: 1px solid #eef2ff;
+    }
+    .table-wrap-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid #f1f5f9;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      padding: 12px 15px;
-      background: var(--gradient-primary);
-      border-radius: 12px;
-      color: white;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #fafbfc;
     }
-    .subject-view-title h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
-    .subject-view-title p { font-size: 0.65rem; opacity: 0.9; }
-    .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.7rem; }
-    .subject-summary-cards { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
-    .summary-card { background: white; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #e2e8f0; }
-    .summary-card .value { font-size: 1.1rem; font-weight: 800; }
-    .summary-card .label { font-size: 0.6rem; color: #64748b; }
-    .teacher-info-card { background: #f8fafc; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
+    .modern-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 500px;
+    }
+    .modern-table th, .modern-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.8rem;
+    }
+    .modern-table th {
+      background: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-    /* Tables */
-    .table-wrap { background: white; border-radius: 10px; overflow-x: auto; margin-bottom: 12px; }
-    .table-wrap-header { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.7rem; font-weight: 600; }
-    .modern-table { width: 100%; border-collapse: collapse; min-width: 480px; }
-    .modern-table th, .modern-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 0.7rem; }
-    .modern-table th { background: #f8fafc; font-size: 0.65rem; font-weight: 700; color: #64748b; }
-    .grade-badge { padding: 2px 8px; border-radius: 15px; font-size: 0.65rem; font-weight: 700; display: inline-block; }
-    .grade-a { background: #d1fae5; color: #065f46; }
-    .grade-d { background: #fee2e2; color: #991b1b; }
-
-    /* Fee Cards - Stacked */
-    .fee-stats { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-    .fee-card { background: white; border-radius: 12px; padding: 12px; text-align: center; border-left: 3px solid; width: 100%; }
+    /* Fee Cards */
+    .fee-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .fee-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      border-left: 4px solid;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
     .fee-card.total { border-left-color: var(--primary); }
     .fee-card.paid { border-left-color: var(--success); }
     .fee-card.due { border-left-color: var(--danger); }
-    .fee-card .amount { font-size: 1.2rem; font-weight: 800; }
-    .fee-card .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; }
+    .fee-card .amount { font-size: 1.4rem; font-weight: 800; }
+    .fee-card .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-top: 5px; }
 
-    .payment-history { overflow-x: auto; }
-    .history-table { width: 100%; border-collapse: collapse; min-width: 420px; }
-    .history-table th, .history-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 0.7rem; }
-    .history-table th { background: #f8fafc; font-size: 0.65rem; }
-    .status-badge { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 15px; font-size: 0.6rem; }
+    .payment-history {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 500px;
+    }
+    .history-table th, .history-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.75rem;
+    }
+    .history-table th { background: #f8fafc; font-size: 0.7rem; font-weight: 700; }
 
     /* Timetable */
-    .day-card { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+    .day-card {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      border: 1px solid #e2e8f0;
+    }
     .day-card.today { border: 2px solid var(--primary); }
-    .day-header { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; color: white; background: #667eea; }
-    .day-header h5 { margin: 0; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
-    .day-body { padding: 8px; background: #fafbfc; }
-    .class-card { background: white; border-radius: 8px; padding: 8px; margin-bottom: 6px; border-left: 3px solid var(--primary); }
-    .time-badge { background: #667eea20; color: var(--primary); padding: 2px 8px; border-radius: 15px; font-size: 0.6rem; display: inline-block; margin-bottom: 5px; }
-    .class-subject { font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
-    .class-details-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-    .detail-item { background: #f8fafc; padding: 2px 8px; border-radius: 15px; font-size: 0.6rem; display: inline-flex; align-items: center; gap: 3px; }
+    .day-header {
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      background: #667eea;
+    }
+    .day-header h5 { margin: 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+    .day-body { padding: 12px; background: #fafbfc; }
+    .class-card {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--primary);
+    }
+    .time-badge {
+      background: #667eea20;
+      color: var(--primary);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .class-subject { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+    .class-details-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .detail-item {
+      background: #f8fafc;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
 
-    /* PDF Cards */
-    .pdf-card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 12px; width: 100%; }
-    .pdf-card .card-top { padding: 12px; }
-    .pdf-icon-wrap { width: 40px; height: 40px; border-radius: 10px; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #dc2626; margin-bottom: 8px; }
-    .pdf-title { font-weight: 700; font-size: 0.8rem; margin-bottom: 3px; }
-    .pdf-meta { font-size: 0.6rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
-    .pdf-actions { padding: 8px 12px; display: flex; gap: 8px; border-top: 1px solid #f1f5f9; }
-    .pdf-btn { flex: 1; padding: 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; border: none; cursor: pointer; }
-    .pdf-btn.view { background: #e0e7ff; color: var(--primary); }
-    .pdf-btn.download { background: var(--gradient-primary); color: white; }
-
-    /* Profile */
-    .profile-photo-section {
+    /* PDF Cards - Responsive Grid */
+    .row-cols-responsive {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .pdf-card {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+    }
+    .pdf-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .pdf-card .card-top { padding: 16px; }
+    .pdf-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: #fee2e2;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--gradient-primary);
-      border-radius: 12px;
-      margin-bottom: 12px;
-      color: white;
-      flex-wrap: wrap;
       justify-content: center;
-      text-align: center;
+      font-size: 1.3rem;
+      color: #dc2626;
+      margin-bottom: 12px;
     }
-    .profile-photo { width: 60px; height: 60px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .profile-photo i { font-size: 1.5rem; }
-    .profile-photo img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-name-title h2 { font-size: 0.9rem; margin-bottom: 2px; }
-    .profile-name-title .badge { font-size: 0.55rem; padding: 2px 6px; background: rgba(255,255,255,0.2); border-radius: 10px; }
-    .profile-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
-    .profile-column { background: white; border-radius: 10px; padding: 10px; border: 1px solid #e2e8f0; }
-    .profile-section-title { font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; }
-    .profile-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #f1f5f9; }
+    .pdf-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; color: var(--dark); }
+    .pdf-meta { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .pdf-actions {
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #f1f5f9;
+      background: #fafbfc;
+    }
+    .pdf-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .pdf-btn.view { background: #e0e7ff; color: var(--primary); }
+    .pdf-btn.view:hover { background: var(--primary); color: white; }
+    .pdf-btn.download { background: var(--gradient-primary); color: white; }
+    .pdf-btn.download:hover { opacity: 0.9; transform: scale(0.98); }
+
+    /* Profile Grid */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .profile-column {
+      background: white;
+      border-radius: 14px;
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+    }
+    .profile-section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+      color: var(--dark);
+    }
+    .profile-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
     .profile-item:last-child { border-bottom: none; }
-    .profile-item label { font-size: 0.55rem; color: #94a3b8; text-transform: uppercase; }
-    .profile-value { font-size: 0.7rem; font-weight: 600; color: #1e293b; }
-    .profile-item.full-width { display: block; }
-    .profile-item.full-width .profile-value { margin-top: 5px; text-align: left; }
+    .profile-item label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+    .profile-value { font-size: 0.8rem; font-weight: 600; color: #1e293b; }
 
-    /* Notice */
-    .notice-item { background: white; border-radius: 10px; padding: 10px; margin-bottom: 8px; border-left: 3px solid; }
-    .notice-item.high { border-left-color: var(--danger); }
-    .notice-item.medium { border-left-color: var(--warning); }
+    /* Notice Board */
+    .notice-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border-left: 4px solid;
+      transition: all 0.3s ease;
+    }
+    .notice-item.high { border-left-color: var(--danger); background: #fef2f2; }
+    .notice-item.medium { border-left-color: var(--warning); background: #fffbeb; }
     .notice-item.low { border-left-color: #94a3b8; }
-    .notice-title { font-weight: 700; font-size: 0.75rem; margin-bottom: 3px; }
-    .notice-msg { font-size: 0.65rem; color: #64748b; }
-    .notice-meta { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.55rem; }
+    .notice-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .notice-msg { font-size: 0.75rem; color: #64748b; }
+    .notice-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.65rem; }
 
-    /* Office Info */
-    .office-info { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; margin-top: 12px; flex-wrap: wrap; justify-content: center; text-align: center; }
-    .office-icon { width: 35px; height: 35px; border-radius: 8px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; }
-
-    /* Loading */
-    .loading-container { text-align: center; padding: 30px 20px; }
-    .spinner-custom { width: 30px; height: 30px; border: 3px solid #e2e8f0; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+    /* Loading & Empty States */
+    .loading-container { text-align: center; padding: 40px 20px; }
+    .spinner-custom {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 15px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .section-required-state { text-align: center; padding: 30px 20px; }
-    .section-required-icon { width: 50px; height: 50px; border-radius: 12px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.2rem; color: #94a3b8; }
+    .section-required-state { text-align: center; padding: 40px 20px; }
+    .section-required-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-size: 1.5rem;
+      color: #94a3b8;
+    }
 
-    /* Search */
-    .search-bar-wrap { position: relative; margin-bottom: 10px; }
-    .search-bar-wrap input { width: 100%; padding: 8px 10px 8px 32px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.75rem; outline: none; }
-    .search-bar-wrap input:focus { border-color: var(--primary); }
-    .search-bar-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.75rem; }
-    .filter-select { padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.65rem; background: white; }
+    /* Search & Filters */
+    .search-bar-wrap { position: relative; margin-bottom: 20px; }
+    .search-bar-wrap input {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .search-bar-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+    .search-bar-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem; }
+    .filter-select {
+      padding: 6px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      background: white;
+    }
 
-    /* Toast */
-    .toast-container { position: fixed; top: 75px; right: 10px; z-index: 9998; display: flex; flex-direction: column; gap: 6px; }
-    .toast-msg { background: white; border-radius: 8px; padding: 6px 12px; min-width: 200px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 3px solid var(--primary); animation: slideIn 0.3s ease; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-    .online-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-    /* Modal */
+    /* Modals */
     .logout-modal, .login-modal, .pdf-preview-modal {
       display: none;
       position: fixed;
@@ -504,67 +698,116 @@
       align-items: center;
     }
     .logout-modal.show, .login-modal.show, .pdf-preview-modal.show { display: flex; }
-    .logout-box, .login-box { background: white; padding: 20px; border-radius: 16px; text-align: center; max-width: 300px; width: 85%; }
-    .pdf-preview-content { background: white; width: 95%; height: 90%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-    .pdf-preview-header { background: var(--gradient-primary); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+    .logout-box, .login-box {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 350px;
+      width: 90%;
+    }
+    .pdf-preview-content {
+      background: white;
+      width: 95%;
+      height: 90%;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pdf-preview-header {
+      background: var(--gradient-primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     .pdf-preview-body { flex: 1; overflow: auto; background: #525659; }
     #pdfIframeContainer { width: 100%; height: 100%; }
     #pdfViewer { width: 100%; height: 100%; border: none; }
-    #pdfControls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 30px; display: flex; gap: 10px; z-index: 10001; display: none; }
-    #pdfControls button { background: none; border: none; color: white; cursor: pointer; width: 25px; height: 25px; border-radius: 50%; }
 
-    /* Mobile Responsive */
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast-msg {
+      background: white;
+      border-radius: 12px;
+      padding: 10px 16px;
+      min-width: 250px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-left: 3px solid var(--primary);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* ========== RESPONSIVE BREAKPOINTS ========== */
     @media (max-width: 768px) {
-      .top-header { padding: 0 12px; height: 60px; }
-      .main-content { margin-top: 60px; padding: 8px; }
+      .top-header { padding: 0 15px; height: 60px; }
+      .main-content { margin-top: 60px; padding: 15px; }
       .sidebar { top: 60px; width: 260px; }
       .welcome-text { display: none; }
-      .logout-btn-header { display: none; }
-      .stats-grid { gap: 8px; }
-      .stat-card { padding: 8px; }
-      .stat-icon { width: 35px; height: 35px; font-size: 0.9rem; }
-      .stat-info h3 { font-size: 0.95rem; }
+      .logout-btn-header span { display: none; }
+      .logout-btn-header i { margin: 0; }
+      .logout-btn-header { padding: 8px 12px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 12px; }
+      .stat-icon { width: 45px; height: 45px; font-size: 1rem; }
+      .stat-info h3 { font-size: 1.1rem; }
+      .subject-grid { grid-template-columns: 1fr; }
+      .fee-stats { grid-template-columns: 1fr; gap: 10px; }
+      .profile-grid { grid-template-columns: 1fr; gap: 15px; }
+      .row-cols-responsive { grid-template-columns: 1fr; gap: 15px; }
+      .dashboard-card, .modern-card { padding: 15px; }
+      .card-header-custom h4 { font-size: 0.95rem; }
+      .card-header-icon { width: 32px; height: 32px; font-size: 0.8rem; }
     }
 
     @media (max-width: 480px) {
-      .dashboard-card, .modern-card { padding: 10px; }
-      .card-header-custom h4 { font-size: 0.85rem; }
-      .card-header-icon { width: 28px; height: 28px; font-size: 0.7rem; }
+      .main-content { padding: 10px; }
+      .stats-grid { gap: 8px; }
+      .stat-card { padding: 10px; gap: 8px; }
+      .stat-icon { width: 40px; height: 40px; font-size: 0.9rem; }
+      .stat-info h3 { font-size: 0.95rem; }
+      .modern-table th, .modern-table td { padding: 8px 10px; font-size: 0.7rem; }
+      .toast-container { right: 10px; left: 10px; }
+      .toast-msg { min-width: auto; width: calc(100% - 20px); }
     }
 
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .subject-grid { grid-template-columns: repeat(2, 1fr); }
+      .row-cols-responsive { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Utility Classes */
     .text-success { color: #059669 !important; }
     .text-danger { color: #dc2626 !important; }
-    .bg-success, .bg-danger, .bg-info, .bg-primary { color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.6rem; }
-
-    /* Sidebar Institute Logo */
-    .sidebar-institute {
-      text-align: center;
-      margin-bottom: 20px;
-      padding: 10px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 16px;
-    }
-    
-    .sidebar-institute img {
-      width: 65px;
-      height: 65px;
-      border-radius: 12px;
-      background: white;
-      padding: 8px;
-      object-fit: contain;
-      margin-bottom: 8px;
-    }
-    
-    .sidebar-institute .inst-name {
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    
-    .sidebar-institute .inst-tag {
-      font-size: 0.6rem;
-      opacity: 0.7;
-    }
+    .bg-success, .bg-danger, .bg-info, .bg-primary { color: white; padding: 3px 8px; border-radius: 15px; font-size: 0.7rem; }
+    .grade-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-block; }
+    .grade-a { background: #d1fae5; color: #065f46; }
+    .grade-d { background: #fee2e2; color: #991b1b; }
+    .status-badge { background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; }
+    .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.65rem; }
   </style>
 </head>
 <body>
@@ -574,12 +817,12 @@
   <!-- Logout Modal -->
   <div id="logoutModal" class="logout-modal">
     <div class="logout-box">
-      <i class="fas fa-sign-out-alt fa-2x" style="color:#ef476f; margin-bottom:10px;"></i>
-      <h4 style="margin-bottom:5px;">Confirm Logout</h4>
-      <p style="font-size:0.8rem;">Are you sure you want to logout?</p>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-        <button onclick="confirmLogout()" style="background:#ef476f; color:white; border:none; padding:6px 20px; border-radius:25px;">Yes</button>
-        <button onclick="cancelLogout()" style="background:#f1f5f9; border:none; padding:6px 20px; border-radius:25px;">Cancel</button>
+      <i class="fas fa-sign-out-alt fa-2x" style="color:#ef476f; margin-bottom:15px;"></i>
+      <h4 style="margin-bottom:8px;">Confirm Logout</h4>
+      <p style="font-size:0.85rem; color:#64748b;">Are you sure you want to logout?</p>
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+        <button onclick="confirmLogout()" style="background:#ef476f; color:white; border:none; padding:8px 25px; border-radius:30px; cursor:pointer; font-weight:600;">Yes</button>
+        <button onclick="cancelLogout()" style="background:#f1f5f9; border:none; padding:8px 25px; border-radius:30px; cursor:pointer; font-weight:600;">Cancel</button>
       </div>
     </div>
   </div>
@@ -587,10 +830,10 @@
   <!-- Login Modal -->
   <div id="loginModal" class="login-modal">
     <div class="login-box">
-      <i class="fas fa-lock fa-2x" style="color:#dc2626; margin-bottom:10px;"></i>
-      <h3>Authentication Required</h3>
-      <p style="font-size:0.8rem;">Please login to continue</p>
-      <button onclick="redirectToLogin()" style="background:var(--gradient-primary); color:white; border:none; padding:6px 20px; border-radius:25px;">Go to Login</button>
+      <i class="fas fa-lock fa-2x" style="color:#dc2626; margin-bottom:15px;"></i>
+      <h3 style="margin-bottom:8px;">Authentication Required</h3>
+      <p style="font-size:0.85rem; color:#64748b;">Please login to continue</p>
+      <button onclick="redirectToLogin()" style="background:var(--gradient-primary); color:white; border:none; padding:10px 30px; border-radius:30px; margin-top:15px; cursor:pointer; font-weight:600;">Go to Login</button>
     </div>
   </div>
 
@@ -598,19 +841,14 @@
   <div id="pdfPreviewModal" class="pdf-preview-modal">
     <div class="pdf-preview-content">
       <div class="pdf-preview-header">
-        <h5 id="pdfPreviewTitle" style="margin:0; font-size:0.9rem;">PDF Preview</h5>
-        <button onclick="closePdfPreview()" style="background:none; border:none; color:white;"><i class="fas fa-times"></i></button>
+        <h5 id="pdfPreviewTitle" style="margin:0; font-size:0.95rem;"><i class="fas fa-file-pdf me-2"></i>PDF Preview</h5>
+        <button onclick="closePdfPreview()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
       </div>
       <div class="pdf-preview-body">
         <div id="pdfIframeContainer" style="width:100%; height:100%;">
           <iframe id="pdfViewer" style="width:100%; height:100%; border:none;"></iframe>
         </div>
       </div>
-    </div>
-    <div id="pdfControls">
-      <button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
-      <span style="color:white; font-size:0.7rem;"><span id="currentPage">1</span> / <span id="totalPages">0</span></span>
-      <button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 
@@ -619,12 +857,12 @@
     <button class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
     <div class="header-brand">
       <div class="header-brand-icon"><i class="fas fa-graduation-cap"></i></div>
-      <span>AACEM</span>
+      <span>AACEM Institute</span>
     </div>
     <div class="header-user">
       <span class="online-dot"></span>
       <span class="welcome-text" id="welcomeText">Welcome</span>
-      <button class="logout-btn-header" onclick="showLogoutConfirmation()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <button class="logout-btn-header" onclick="showLogoutConfirmation()"><i class="fas fa-sign-out-alt"></i><span> Logout</span></button>
     </div>
   </header>
 
@@ -632,7 +870,7 @@
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-profile-card">
       <div class="sidebar-institute">
-        <img src="logo.png" alt="AACEM">
+        <img src="logo.png" alt="AACEM" onerror="this.src='https://via.placeholder.com/70?text=AACEM'">
         <div class="inst-name">AACEM Institute</div>
         <div class="inst-tag">Education for Excellence</div>
       </div>
@@ -665,783 +903,590 @@
 
   <!-- Main Content -->
   <main class="main-content" id="mainContent">
-    <section id="profile" class="content-section active"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-user"></i></div>My Profile</h4></div><div id="profileContent" class="loading-container"><div class="spinner-custom"></div><p>Loading profile...</p></div></div></section>
-    <section id="attendance" class="content-section"><div class="modern-card"><div class="card-header"><h4><div class="card-header-icon"><i class="fas fa-calendar-check"></i></div>Attendance Overview</h4></div><div id="attendanceMainView"><div class="stats-grid"><div class="stat-card"><div class="stat-icon primary"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><h3 id="overallPercentage">0%</h3><p>Overall</p></div></div><div class="stat-card"><div class="stat-icon success"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3 id="presentDays">0</h3><p>Present</p></div></div><div class="stat-card"><div class="stat-icon danger"><i class="fas fa-times-circle"></i></div><div class="stat-info"><h3 id="absentDays">0</h3><p>Absent</p></div></div><div class="stat-card"><div class="stat-icon warning"><i class="fas fa-calendar-alt"></i></div><div class="stat-info"><h3 id="totalDays">0</h3><p>Total</p></div></div></div><div class="progress-card"><div class="progress-header"><span>Attendance Progress</span><span id="progressLabel">0%</span></div><div class="progress"><div class="progress-bar" id="attendanceProgressBar" style="width:0%"></div></div></div><div class="search-bar-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Search subject..." id="subjectSearchInput" oninput="filterSubjectCards(this.value)"></div><div class="subject-grid" id="subjectCardsContainer"></div></div><div id="attendanceSubjectView" class="attendance-subject-view"><div class="subject-view-header"><div class="subject-view-title"><h2 id="subjectDetailTitle">Subject Name</h2><p id="subjectDetailSubtitle">Attendance Details</p></div><button class="back-btn" onclick="showMainView()"><i class="fas fa-arrow-left"></i>All Subjects</button></div><div class="subject-summary-cards" id="subjectSummaryContainer"></div><div class="teacher-info-card" id="teacherInfoContainer"></div><div class="table-wrap"><div class="table-wrap-header"><div class="table-wrap-title"><i class="fas fa-list"></i> Records</div><select class="filter-select" id="attendanceFilter" onchange="filterAttendanceRecords(this.value)"><option value="all">All</option><option value="Present">Present</option><option value="Absent">Absent</option></select></div><table class="modern-table"><thead><tr><th>Date</th><th>Day</th><th>Status</th><th>Marked By</th></tr></thead><tbody id="subjectDetailRecords"></tbody></table></div></div></div></section>
-    <section id="timetable" class="content-section"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-calendar-alt"></i></div>Timetable</h4><button onclick="loadTimetable()" style="background:var(--gradient-primary); color:white; border:none; padding:4px 12px; border-radius:20px; font-size:0.65rem;"><i class="fas fa-sync-alt"></i> Refresh</button></div><div id="timetableContent" class="loading-container"><div class="spinner-custom"></div><p>Loading timetable...</p></div></div></section>
-    <section id="study-materials" class="content-section"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-file-pdf"></i></div>Study Materials</h4></div><div id="pdfsContent" class="loading-container"><div class="spinner-custom"></div><p>Loading materials...</p></div></div></section>
-    <section id="syllabus" class="content-section"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-book-open"></i></div>Syllabus</h4></div><div id="syllabusContent" class="loading-container"><div class="spinner-custom"></div><p>Loading syllabus...</p></div></div></section>
-    <section id="results" class="content-section"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-chart-bar"></i></div>Results</h4></div><div id="resultsContent" class="loading-container"><div class="spinner-custom"></div><p>Loading results...</p></div></div></section>
-    <section id="fees" class="content-section"><div class="modern-card"><div class="card-header"><h4><div class="card-header-icon"><i class="fas fa-rupee-sign"></i></div>Fees</h4></div><div id="feeLoading" style="padding:30px; text-align:center;"><div class="spinner-custom"></div><p>Loading fees...</p></div><div id="feeContent" style="display:none;"><div class="fee-stats"><div class="fee-card total"><div class="amount" id="totalFee">₹0</div><div class="label">Total Fee</div></div><div class="fee-card paid"><div class="amount" id="paidAmount">₹0</div><div class="label">Paid</div></div><div class="fee-card due"><div class="amount" id="dueAmount">₹0</div><div class="label">Due</div></div></div><div class="fee-progress-wrap"><div class="progress-header"><span>Payment Progress</span><span id="progressPercentage">0%</span></div><div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div></div><div class="payment-history"><div class="table-wrap-header"><i class="fas fa-history"></i> Payment History</div><table class="history-table"><thead><tr><th>Date</th><th>Receipt</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead><tbody id="paymentHistoryBody"></td><td colspan="5" style="text-align:center;">No payments</td></tr></tbody></table></div><div class="office-info"><div class="office-icon"><i class="fas fa-building"></i></div><div><strong>Office</strong><p style="font-size:0.65rem;">Mon-Fri: 9AM-6PM | Sat: 9AM-2PM</p></div></div></div><div id="feeError" style="display:none; text-align:center; padding:30px;"><button onclick="loadFees()" style="background:var(--gradient-primary); color:white; border:none; padding:6px 20px; border-radius:25px;">Retry</button></div></div></section>
-    <section id="notice" class="content-section"><div class="dashboard-card"><div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-bullhorn"></i></div>Notice Board</h4></div><div id="noticesContent" class="loading-container"><div class="spinner-custom"></div><p>Loading notices...</p></div></div></section>
+    <section id="profile" class="content-section active">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-user"></i></div>My Profile</h4></div>
+        <div id="profileContent" class="loading-container"><div class="spinner-custom"></div><p>Loading profile...</p></div>
+      </div>
+    </section>
+    
+    <section id="attendance" class="content-section">
+      <div class="modern-card">
+        <div class="card-header"><h4><div class="card-header-icon"><i class="fas fa-calendar-check"></i></div>Attendance Overview</h4></div>
+        <div id="attendanceMainView">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon primary"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><h3 id="overallPercentage">0%</h3><p>Overall</p></div></div>
+            <div class="stat-card"><div class="stat-icon success"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3 id="presentDays">0</h3><p>Present</p></div></div>
+            <div class="stat-card"><div class="stat-icon danger"><i class="fas fa-times-circle"></i></div><div class="stat-info"><h3 id="absentDays">0</h3><p>Absent</p></div></div>
+            <div class="stat-card"><div class="stat-icon warning"><i class="fas fa-calendar-alt"></i></div><div class="stat-info"><h3 id="totalDays">0</h3><p>Total</p></div></div>
+          </div>
+          <div class="progress-card"><div class="progress-header"><span>Attendance Progress</span><span id="progressLabel">0%</span></div><div class="progress"><div class="progress-bar" id="attendanceProgressBar" style="width:0%"></div></div></div>
+          <div class="search-bar-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Search subject..." id="subjectSearchInput" oninput="filterSubjectCards(this.value)"></div>
+          <div class="subject-grid" id="subjectCardsContainer"></div>
+        </div>
+        <div id="attendanceSubjectView" class="attendance-subject-view" style="display:none;">
+          <div class="subject-view-header"><div class="subject-view-title"><h2 id="subjectDetailTitle">Subject Name</h2><p id="subjectDetailSubtitle">Attendance Details</p></div><button class="back-btn" onclick="showMainView()"><i class="fas fa-arrow-left"></i>All Subjects</button></div>
+          <div class="subject-summary-cards" id="subjectSummaryContainer"></div>
+          <div class="teacher-info-card" id="teacherInfoContainer"></div>
+          <div class="table-wrap"><div class="table-wrap-header"><div class="table-wrap-title"><i class="fas fa-list"></i> Records</div><select class="filter-select" id="attendanceFilter" onchange="filterAttendanceRecords(this.value)"><option value="all">All</option><option value="Present">Present</option><option value="Absent">Absent</option></select></div><table class="modern-table"><thead><tr><th>Date</th><th>Day</th><th>Status</th><th>Marked By</th></tr></thead><tbody id="subjectDetailRecords"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+    
+    <section id="timetable" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-calendar-alt"></i></div>Timetable</h4><button onclick="loadTimetable()" style="background:var(--gradient-primary); color:white; border:none; padding:6px 16px; border-radius:25px; font-size:0.7rem; cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+        <div id="timetableContent" class="loading-container"><div class="spinner-custom"></div><p>Loading timetable...</p></div>
+      </div>
+    </section>
+    
+    <section id="study-materials" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-file-pdf"></i></div>Study Materials</h4></div>
+        <div id="pdfsContent" class="loading-container"><div class="spinner-custom"></div><p>Loading materials...</p></div>
+      </div>
+    </section>
+    
+    <section id="syllabus" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-book-open"></i></div>Syllabus</h4></div>
+        <div id="syllabusContent" class="loading-container"><div class="spinner-custom"></div><p>Loading syllabus...</p></div>
+      </div>
+    </section>
+    
+    <section id="results" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-chart-bar"></i></div>Results</h4></div>
+        <div id="resultsContent" class="loading-container"><div class="spinner-custom"></div><p>Loading results...</p></div>
+      </div>
+    </section>
+    
+    <section id="fees" class="content-section">
+      <div class="modern-card">
+        <div class="card-header"><h4><div class="card-header-icon"><i class="fas fa-rupee-sign"></i></div>Fees</h4></div>
+        <div id="feeLoading" class="loading-container"><div class="spinner-custom"></div><p>Loading fees...</p></div>
+        <div id="feeContent" style="display:none;">
+          <div class="fee-stats">
+            <div class="fee-card total"><div class="amount" id="totalFee">₹0</div><div class="label">Total Fee</div></div>
+            <div class="fee-card paid"><div class="amount" id="paidAmount">₹0</div><div class="label">Paid</div></div>
+            <div class="fee-card due"><div class="amount" id="dueAmount">₹0</div><div class="label">Due</div></div>
+          </div>
+          <div class="fee-progress-wrap"><div class="progress-header"><span>Payment Progress</span><span id="progressPercentage">0%</span></div><div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div></div>
+          <div class="payment-history"><div class="table-wrap-header"><i class="fas fa-history"></i> Payment History</div><table class="history-table"><thead><tr><th>Date</th><th>Receipt</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead><tbody id="paymentHistoryBody"><tr><td colspan="5" style="text-align:center;">No payments</td></tr></tbody></table></div>
+          <div class="office-info" style="display:flex; align-items:center; gap:12px; padding:15px; background:#f8fafc; border-radius:12px; margin-top:15px; flex-wrap:wrap;"><div class="office-icon" style="width:40px; height:40px; border-radius:10px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; color:white;"><i class="fas fa-building"></i></div><div><strong>Office Hours</strong><p style="font-size:0.7rem; margin:0;">Mon-Fri: 9AM-6PM | Sat: 9AM-2PM</p></div></div>
+        </div>
+        <div id="feeError" style="display:none; text-align:center; padding:40px;"><button onclick="loadFees()" style="background:var(--gradient-primary); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer;">Retry</button></div>
+      </div>
+    </section>
+    
+    <section id="notice" class="content-section">
+      <div class="dashboard-card">
+        <div class="card-header-custom"><h4><div class="card-header-icon"><i class="fas fa-bullhorn"></i></div>Notice Board</h4></div>
+        <div id="noticesContent" class="loading-container"><div class="spinner-custom"></div><p>Loading notices...</p></div>
+      </div>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-        const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
-        let studentData = null, STUDENT_ID = null;
-        
-        // PDF variables
-        let pdfDoc = null;
-        let currentPageNum = 1;
-        let totalPagesNum = 0;
-        let currentScale = 1.2;
-        let currentPdfId = null;
-        let currentPdfTitle = null;
-        
-        // Attendance variables
-        let allAttendanceRecords = [];
-        let subjectStats = {};
-        let currentSubjectName = null;
-        
-        // ==================== UTILITY FUNCTIONS ====================
-        
-        function showToast(message, type = 'info') {
-          const container = document.getElementById('toastContainer');
-          if (!container) return;
-          const toast = document.createElement('div');
-          toast.className = `toast-msg ${type}`;
-          toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span style="font-size:0.75rem;">${message}</span>`;
-          container.appendChild(toast);
-          setTimeout(() => toast.remove(), 3000);
-        }
-        
-        function checkAuthentication() {
-          const data = sessionStorage.getItem('studentData');
-          if (!data) { 
-            document.getElementById('loginModal').classList.add('show'); 
-            return null; 
-          }
-          try { 
-            return JSON.parse(data); 
-          } catch(e) { 
-            document.getElementById('loginModal').classList.add('show'); 
-            return null; 
-          }
-        }
-        
-        studentData = checkAuthentication();
-        STUDENT_ID = studentData ? studentData.student_id : null;
-        
-        function redirectToLogin() { 
-          window.location.href = 'student-login.html'; 
-        }
-        
-        // ==================== SIDEBAR FUNCTIONS ====================
-        
-        function toggleSidebar() {
-          const sidebar = document.getElementById('sidebar');
-          const overlay = document.getElementById('sidebarOverlay');
-          if (sidebar.classList.contains('expanded')) {
-            sidebar.classList.remove('expanded');
-            overlay.classList.remove('show');
-          } else {
-            sidebar.classList.add('expanded');
-            overlay.classList.add('show');
-          }
-        }
-        
-        function showSection(sectionId) {
-          document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-          document.getElementById(sectionId).classList.add('active');
-          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-          if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
+    let studentData = null, STUDENT_ID = null;
+    let pdfDoc = null, currentPageNum = 1, totalPagesNum = 0, currentScale = 1.2;
+    let currentPdfId = null, currentPdfTitle = null;
+    let allAttendanceRecords = [];
+    let subjectStats = {};
+    let currentSubjectName = null;
+    
+    // ==================== UTILITY FUNCTIONS ====================
+    
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast-msg ${type}`;
+      toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span style="font-size:0.8rem;">${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function checkAuthentication() {
+      const data = sessionStorage.getItem('studentData');
+      if (!data) { 
+        document.getElementById('loginModal').classList.add('show'); 
+        return null; 
+      }
+      try { 
+        return JSON.parse(data); 
+      } catch(e) { 
+        document.getElementById('loginModal').classList.add('show'); 
+        return null; 
+      }
+    }
+    
+    studentData = checkAuthentication();
+    STUDENT_ID = studentData ? studentData.student_id : null;
+    
+    function redirectToLogin() { 
+      window.location.href = 'student-login.html'; 
+    }
+    
+    // ==================== SIDEBAR FUNCTIONS ====================
+    
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar.classList.contains('expanded')) {
+        sidebar.classList.remove('expanded');
+        overlay.classList.remove('show');
+      } else {
+        sidebar.classList.add('expanded');
+        overlay.classList.add('show');
+      }
+    }
+    
+    function showSection(sectionId) {
+      document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+      if (event && event.currentTarget) event.currentTarget.classList.add('active');
+      if (window.innerWidth <= 768) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('expanded')) toggleSidebar();
+      }
+    }
+    
+    function showLogoutConfirmation() { 
+      document.getElementById('logoutModal').classList.add('show'); 
+    }
+    
+    function cancelLogout() { 
+      document.getElementById('logoutModal').classList.remove('show'); 
+    }
+    
+    function confirmLogout() { 
+      sessionStorage.clear(); 
+      document.getElementById('logoutModal').classList.remove('show'); 
+      showToast('Logged out successfully', 'success'); 
+      setTimeout(() => window.location.href = "index.html", 1000); 
+    }
+    
+    // ==================== PROFILE FUNCTIONS ====================
+    
+    async function loadProfile() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        const data = await res.json();
+        if (data.success && data.student) {
+          const s = data.student;
+          document.getElementById('sidebarStudentName').innerHTML = s.name;
+          document.getElementById('sidebarStudentCourse').innerHTML = s.course;
+          document.getElementById('sidebarStudentId').innerHTML = `ID: ${s.student_id}`;
+          document.getElementById('welcomeText').innerHTML = `Hi, ${s.name.split(' ')[0]}`;
           
-          // Auto close sidebar
-          const sidebar = document.getElementById('sidebar');
-          if (sidebar && sidebar.classList.contains('expanded')) toggleSidebar();
-        }
-        
-        function showLogoutConfirmation() { 
-          document.getElementById('logoutModal').classList.add('show'); 
-        }
-        
-        function cancelLogout() { 
-          document.getElementById('logoutModal').classList.remove('show'); 
-        }
-        
-        function confirmLogout() { 
-          sessionStorage.clear(); 
-          document.getElementById('logoutModal').classList.remove('show'); 
-          showToast('Logged out successfully', 'success'); 
-          setTimeout(() => window.location.href = "index.html", 1000); 
-        }
-        
-        // ==================== PROFILE FUNCTIONS ====================
-        
-        async function loadProfile() {
-          try {
-            const res = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-            const data = await res.json();
-            if (data.success && data.student) {
-              const s = data.student;
-              document.getElementById('sidebarStudentName').innerHTML = s.name;
-              document.getElementById('sidebarStudentCourse').innerHTML = s.course;
-              document.getElementById('sidebarStudentId').innerHTML = `ID: ${s.student_id}`;
-              document.getElementById('welcomeText').innerHTML = `Hi, ${s.name.split(' ')[0]}`;
-              
-              let qualHtml = '';
-              if (s.qualifications && s.qualifications.length) {
-                qualHtml = `<div class="profile-item full-width"><label>Qualifications</label><div class="profile-value"><table style="width:100%; font-size:0.65rem;"><thead><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead><tbody>`;
-                s.qualifications.forEach(q => { 
-                  qualHtml += `<tr><td>${q.level || '-'}</td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`; 
-                });
-                qualHtml += `</tbody></table></div></div>`;
-              }
-              
-              document.getElementById('profileContent').innerHTML = `
-                <div class="profile-photo-section">
-                  <div class="profile-photo">${s.student_photo && s.student_photo !== 'null' ? `<img src="${s.student_photo}">` : `<i class="fas fa-user-graduate"></i>`}</div>
-                  <div class="profile-name-title">
-                    <h2>${s.name}</h2>
-                    <p><span class="badge">${s.course}</span> ${s.section_name ? `<span class="badge">Sec ${s.section_name}</span>` : ''}</p>
-                  </div>
-                </div>
-                <div class="profile-grid">
-                  <div class="profile-column">
-                    <div class="profile-section-title">Student Info</div>
-                    <div class="profile-item"><label>ID</label><div class="profile-value">${s.student_id}</div></div>
-                    <div class="profile-item"><label>DOB</label><div class="profile-value">${s.dob ? new Date(s.dob).toLocaleDateString() : '-'}</div></div>
-                    <div class="profile-item"><label>Gender</label><div class="profile-value">${s.gender || '-'}</div></div>
-                    <div class="profile-item"><label>Category</label><div class="profile-value">${s.category || '-'}</div></div>
-                  </div>
-                  <div class="profile-column">
-                    <div class="profile-section-title">Parent Info</div>
-                    <div class="profile-item"><label>Parent Name</label><div class="profile-value">${s.parent_name || '-'}</div></div>
-                    <div class="profile-item"><label>Father's Mobile</label><div class="profile-value">${s.father_mobile || '-'}</div></div>
-                    <div class="profile-item"><label>Occupation</label><div class="profile-value">${s.father_occupation || '-'}</div></div>
-                  </div>
-                  <div class="profile-column">
-                    <div class="profile-section-title">Contact</div>
-                    <div class="profile-item"><label>Phone</label><div class="profile-value">${s.phone || '-'}</div></div>
-                    <div class="profile-item"><label>Email</label><div class="profile-value">${s.email || '-'}</div></div>
-                    <div class="profile-item"><label>Address</label><div class="profile-value">${s.address || '-'}</div></div>
-                  </div>
-                  <div class="profile-column">
-                    <div class="profile-section-title">Fee Info</div>
-                    <div class="profile-item"><label>Total</label><div class="profile-value">₹${(s.fee_amount || 0).toLocaleString()}</div></div>
-                    <div class="profile-item"><label>Paid</label><div class="profile-value text-success">₹${(s.paid_amount || 0).toLocaleString()}</div></div>
-                    <div class="profile-item"><label>Due</label><div class="profile-value text-danger">₹${(s.due_amount || 0).toLocaleString()}</div></div>
-                    <div class="profile-item"><label>Status</label><div class="profile-value"><span class="badge ${s.fee_status === 'Paid' ? 'bg-success' : 'bg-danger'}">${s.fee_status || 'Pending'}</span></div></div>
-                  </div>
-                </div>
-                ${qualHtml}
-              `;
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('profileContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
-          }
-        }
-        
-        // ==================== ATTENDANCE FUNCTIONS ====================
-        
-        function showMainView() {
-          const main = document.getElementById('attendanceMainView');
-          const sub = document.getElementById('attendanceSubjectView');
-          if (main) main.style.display = 'block';
-          if (sub) sub.style.display = 'none';
-          currentSubjectName = null;
-        }
-        
-        function filterSubjectCards(val) {
-          document.querySelectorAll('.subject-card').forEach(card => {
-            const name = card.querySelector('.subject-name')?.textContent.toLowerCase() || '';
-            card.style.display = name.includes(val.toLowerCase()) ? 'block' : 'none';
-          });
-        }
-        
-        function filterAttendanceRecords(val) {
-          document.querySelectorAll('#subjectDetailRecords tr').forEach(row => {
-            if (val === 'all') row.style.display = '';
-            else { 
-              const status = row.querySelector('.grade-badge')?.textContent || ''; 
-              row.style.display = status === val ? '' : 'none'; 
-            }
-          });
-        }
-        
-        async function loadAttendance() {
-          try {
-            document.getElementById('subjectCardsContainer').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading attendance...</p></div>`;
-            
-            const details = await (await fetch(`${API_BASE_URL}/student-attendance-details/${STUDENT_ID}`)).json();
-            if (details.success) {
-              let stats = {}, totalPresent = 0, totalAbsent = 0;
-              details.attendance_details.forEach(r => {
-                const sub = r.subject || 'General';
-                if (!stats[sub]) stats[sub] = { present: 0, absent: 0, total: 0 };
-                if (r.status === 'Present') { stats[sub].present++; totalPresent++; }
-                else { stats[sub].absent++; totalAbsent++; }
-                stats[sub].total++;
-              });
-              
-              const totalDays = totalPresent + totalAbsent;
-              const percentage = totalDays ? Math.round((totalPresent / totalDays) * 100) : 0;
-              
-              document.getElementById('overallPercentage').innerHTML = percentage + '%';
-              document.getElementById('presentDays').innerHTML = totalPresent;
-              document.getElementById('absentDays').innerHTML = totalAbsent;
-              document.getElementById('totalDays').innerHTML = totalDays;
-              document.getElementById('attendanceProgressBar').style.width = percentage + '%';
-              document.getElementById('progressLabel').innerHTML = percentage + '%';
-              
-              let html = '';
-              Object.entries(stats).forEach(([subject, s]) => {
-                const pct = s.total ? Math.round((s.present / s.total) * 100) : 0;
-                html += `
-                  <div class="subject-card" onclick="alert('${subject}\\nPresent: ${s.present}\\nAbsent: ${s.absent}\\n${pct}%')">
-                    <div class="subject-header">
-                      <span class="subject-name">${subject}</span>
-                      <span class="subject-badge">${s.total} classes</span>
-                    </div>
-                    <div class="subject-stats">
-                      <div class="subject-stat"><div class="value" style="color:#06d6a0;">${s.present}</div><div class="label">Present</div></div>
-                      <div class="subject-stat"><div class="value" style="color:#ef476f;">${s.absent}</div><div class="label">Absent</div></div>
-                      <div class="subject-stat"><div class="value" style="color:#667eea;">${pct}%</div><div class="label">%</div></div>
-                    </div>
-                    <div class="progress"><div class="progress-bar" style="width:${pct}%; background:#667eea;"></div></div>
-                  </div>
-                `;
-              });
-              document.getElementById('subjectCardsContainer').innerHTML = html;
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('subjectCardsContainer').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load attendance</p></div>';
-          }
-        }
-        
-        // ==================== TIMETABLE FUNCTIONS ====================
-        
-        function formatTimeTo12Hour(time24) {
-          if (!time24) return 'N/A';
-          if (time24.includes('AM') || time24.includes('PM')) return time24;
-          try {
-            const [hours, minutes] = time24.split(':').map(Number);
-            if (isNaN(hours) || isNaN(minutes)) return time24;
-            const period = hours >= 12 ? 'PM' : 'AM';
-            let h12 = hours % 12;
-            h12 = h12 === 0 ? 12 : h12;
-            return `${h12}:${minutes.toString().padStart(2, '0')} ${period}`;
-          } catch { return time24; }
-        }
-        
-        async function loadTimetable() {
-          try {
-            const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-            const profileData = await profileRes.json();
-            
-            if (!profileData.success || !profileData.student) {
-              document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
-              return;
-            }
-            
-            const student = profileData.student;
-            const sectionId = student.section_id;
-            const sectionName = student.section_name;
-            
-            console.log("Student Section ID:", sectionId);
-            
-            document.getElementById('timetableContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading timetable...</p></div>`;
-            
-            let timetable = [];
-            let source = '';
-            
-            // ✅ FIRST PRIORITY: Section-wise timetable
-            if (sectionId) {
-              try {
-                const res = await fetch(`${API_BASE_URL}/timetable/section/${sectionId}`);
-                if (res.ok) {
-                  const data = await res.json();
-                  if (data.success && data.timetable && data.timetable.length > 0) {
-                    timetable = data.timetable;
-                    source = `Section: ${sectionName}`;
-                    console.log(`Found ${timetable.length} classes for section ${sectionName}`);
-                  }
-                }
-              } catch(e) { console.log('Section timetable fetch error:', e); }
-            }
-            
-            if (timetable.length === 0) {
-              document.getElementById('timetableContent').innerHTML = `
-                <div class="section-required-state">
-                  <div class="section-required-icon"><i class="fas fa-calendar-times"></i></div>
-                  <h5>No Timetable Available</h5>
-                  <p>No timetable has been assigned for <strong>${sectionName || 'your section'}</strong> yet.</p>
-                  <button onclick="loadTimetable()" class="refresh-btn" style="margin-top:10px;">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                  </button>
-                </div>
-              `;
-              return;
-            }
-            
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const today = days[new Date().getDay()];
-            let html = `
-              <div class="timetable-alert" style="background:#e8f4f8; border-left-color:var(--primary); margin-bottom:15px; padding:10px;">
-                <i class="fas fa-info-circle"></i>
-                <div>
-                  <strong>${source}</strong>
-                  <br><small>Showing timetable for your section</small>
-                </div>
-              </div>
-            `;
-            
-            let hasClasses = false;
-            days.forEach(day => {
-              const classes = timetable.filter(c => c.day_of_week === day && c.is_active !== false);
-              if (classes.length) {
-                hasClasses = true;
-                html += `
-                  <div class="day-card${day === today ? ' today' : ''}">
-                    <div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge">${classes.length}</span></div>
-                    <div class="day-body">
-                `;
-                classes.forEach(c => {
-                  html += `
-                    <div class="class-card">
-                      <div class="time-badge"><i class="fas fa-clock"></i>${c.start_time} - ${c.end_time}</div>
-                      <div class="class-subject">${c.subject}</div>
-                      <div class="class-details-grid">
-                        <div class="detail-item"><i class="fas fa-chalkboard-teacher"></i>${c.teacher_name || 'N/A'}</div>
-                        <div class="detail-item"><i class="fas fa-door-open"></i>Room ${c.room_number || 'N/A'}</div>
-                      </div>
-                    </div>
-                  `;
-                });
-                html += `</div></div>`;
-              }
+          let qualHtml = '';
+          if (s.qualifications && s.qualifications.length) {
+            qualHtml = `<div class="profile-item full-width"><label>Qualifications</label><div class="profile-value"><div style="overflow-x:auto;"><table style="width:100%; font-size:0.7rem;"><thead><tr><th>Level</th><th>Institute</th><th>Board</th><th>Marks</th><th>Year</th></tr></thead><tbody>`;
+            s.qualifications.forEach(q => { 
+              qualHtml += `<tr><td>${q.level || '-'}</td><td>${q.institute || '-'}</td><td>${q.board || '-'}</td><td>${q.marks || '-'}</td><td>${q.year || '-'}</td></tr>`; 
             });
-            
-            if (!hasClasses) {
-              html = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No active classes in timetable</p></div>';
-            }
-            
-            document.getElementById('timetableContent').innerHTML = html;
-          } catch(e) { 
-            console.error('loadTimetable error:', e);
-            document.getElementById('timetableContent').innerHTML = '<div class="alert-custom alert-danger"><i class="fas fa-exclamation-circle"></i><span>Failed to load timetable</span></div>';
+            qualHtml += `</tbody></table></div></div></div>`;
           }
+          
+          document.getElementById('profileContent').innerHTML = `
+            <div class="profile-photo-section" style="display:flex; align-items:center; gap:15px; padding:20px; background:var(--gradient-primary); border-radius:16px; margin-bottom:20px; color:white; flex-wrap:wrap; justify-content:center; text-align:center;">
+              <div class="profile-photo" style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; overflow:hidden;">${s.student_photo && s.student_photo !== 'null' ? `<img src="${s.student_photo}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas fa-user-graduate" style="font-size:2rem;"></i>`}</div>
+              <div class="profile-name-title"><h2 style="margin:0 0 5px; font-size:1.2rem;">${s.name}</h2><p style="margin:0;"><span class="badge" style="background:rgba(255,255,255,0.2);">${s.course}</span> ${s.section_name ? `<span class="badge" style="background:rgba(255,255,255,0.2);">Sec ${s.section_name}</span>` : ''}</p></div>
+            </div>
+            <div class="profile-grid">
+              <div class="profile-column"><div class="profile-section-title">Student Info</div>
+                <div class="profile-item"><label>ID</label><div class="profile-value">${s.student_id}</div></div>
+                <div class="profile-item"><label>DOB</label><div class="profile-value">${s.dob ? new Date(s.dob).toLocaleDateString() : '-'}</div></div>
+                <div class="profile-item"><label>Gender</label><div class="profile-value">${s.gender || '-'}</div></div>
+                <div class="profile-item"><label>Category</label><div class="profile-value">${s.category || '-'}</div></div>
+              </div>
+              <div class="profile-column"><div class="profile-section-title">Parent Info</div>
+                <div class="profile-item"><label>Parent Name</label><div class="profile-value">${s.parent_name || '-'}</div></div>
+                <div class="profile-item"><label>Father's Mobile</label><div class="profile-value">${s.father_mobile || '-'}</div></div>
+                <div class="profile-item"><label>Occupation</label><div class="profile-value">${s.father_occupation || '-'}</div></div>
+              </div>
+              <div class="profile-column"><div class="profile-section-title">Contact</div>
+                <div class="profile-item"><label>Phone</label><div class="profile-value">${s.phone || '-'}</div></div>
+                <div class="profile-item"><label>Email</label><div class="profile-value">${s.email || '-'}</div></div>
+                <div class="profile-item"><label>Address</label><div class="profile-value">${s.address || '-'}</div></div>
+              </div>
+              <div class="profile-column"><div class="profile-section-title">Fee Info</div>
+                <div class="profile-item"><label>Total</label><div class="profile-value">₹${(s.fee_amount || 0).toLocaleString()}</div></div>
+                <div class="profile-item"><label>Paid</label><div class="profile-value text-success">₹${(s.paid_amount || 0).toLocaleString()}</div></div>
+                <div class="profile-item"><label>Due</label><div class="profile-value text-danger">₹${(s.due_amount || 0).toLocaleString()}</div></div>
+                <div class="profile-item"><label>Status</label><div class="profile-value"><span class="badge ${s.fee_status === 'Paid' ? 'bg-success' : 'bg-danger'}">${s.fee_status || 'Pending'}</span></div></div>
+              </div>
+            </div>
+            ${qualHtml}
+          `;
         }
-        
-        // ==================== FEES FUNCTIONS ====================
-        
-        async function loadFees() {
-          try {
-            const res = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
-            const data = await res.json();
-            if (data.success) {
-              const total = data.fee_summary.fee_amount || 0;
-              const paid = data.fee_summary.paid_amount || 0;
-              const due = data.fee_summary.due_amount || 0;
-              const progress = total ? Math.round((paid / total) * 100) : 0;
-              
-              document.getElementById('totalFee').innerHTML = `₹${total.toLocaleString()}`;
-              document.getElementById('paidAmount').innerHTML = `₹${paid.toLocaleString()}`;
-              document.getElementById('dueAmount').innerHTML = `₹${due.toLocaleString()}`;
-              document.getElementById('progressPercentage').innerHTML = `${progress}%`;
-              document.getElementById('progressBar').style.width = `${progress}%`;
-              
-              if (data.fee_history && data.fee_history.length) {
-                let histHtml = '';
-                data.fee_history.forEach(p => {
-                  histHtml += `
-                    <tr>
-                      <td>${new Date(p.payment_date).toLocaleDateString()}</td>
-                      <td>${p.receipt_no || '-'}</td>
-                      <td>₹${(p.amount || 0).toLocaleString()}</td>
-                      <td>${p.payment_mode || 'Cash'}</td>
-                      <td><span class="status-badge">${p.status || 'Completed'}</span></td>
-                    </tr>
-                  `;
-                });
-                document.getElementById('paymentHistoryBody').innerHTML = histHtml;
-              }
-              document.getElementById('feeLoading').style.display = 'none';
-              document.getElementById('feeContent').style.display = 'block';
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('feeLoading').style.display = 'none';
-            document.getElementById('feeError').style.display = 'block';
-          }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('profileContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load profile</p></div>';
+      }
+    }
+    
+    // ==================== ATTENDANCE FUNCTIONS ====================
+    
+    function showMainView() {
+      const main = document.getElementById('attendanceMainView');
+      const sub = document.getElementById('attendanceSubjectView');
+      if (main) main.style.display = 'block';
+      if (sub) sub.style.display = 'none';
+      currentSubjectName = null;
+    }
+    
+    function filterSubjectCards(val) {
+      document.querySelectorAll('.subject-card').forEach(card => {
+        const name = card.querySelector('.subject-name')?.textContent.toLowerCase() || '';
+        card.style.display = name.includes(val.toLowerCase()) ? 'block' : 'none';
+      });
+    }
+    
+    function filterAttendanceRecords(val) {
+      document.querySelectorAll('#subjectDetailRecords tr').forEach(row => {
+        if (val === 'all') row.style.display = '';
+        else { 
+          const status = row.querySelector('.grade-badge')?.textContent || ''; 
+          row.style.display = status === val ? '' : 'none'; 
         }
+      });
+    }
+    
+    async function loadAttendance() {
+      try {
+        document.getElementById('subjectCardsContainer').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading attendance...</p></div>`;
         
-        // ==================== NOTICES FUNCTIONS ====================
-        
-        async function loadNotices() {
-          try {
-            const res = await fetch(`${API_BASE_URL}/student-notices`);
-            const data = await res.json();
-            if (data.success && data.notices.length) {
-              let html = '';
-              data.notices.forEach(n => {
-                html += `
-                  <div class="notice-item ${n.priority || 'low'}">
-                    <div class="notice-title">${n.title}</div>
-                    <div class="notice-msg">${n.message}</div>
-                    <div class="notice-meta">
-                      <small>${new Date(n.created_at).toLocaleDateString()}</small>
-                      <span class="badge">${n.priority || 'low'}</span>
-                    </div>
-                  </div>
-                `;
-              });
-              document.getElementById('noticesContent').innerHTML = html;
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('noticesContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-bullhorn"></i></div><p>No notices</p></div>';
-          }
-        }
-        
-        // ==================== SYLLABUS FUNCTIONS ====================
-        
-        async function loadSyllabus() {
-          try {
-            const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
-            const res = await fetch(`${API_BASE_URL}/syllabus/course/${student.course}`);
-            const data = await res.json();
-            
-            if (data.success && data.syllabus.length) {
-              let html = '';
-              data.syllabus.forEach(s => {
-                if (s.is_active) {
-                  html += `
-                    <div class="table-wrap">
-                      <div class="table-wrap-header">
-                        <i class="fas fa-book-open"></i> ${s.syllabus_title}
-                        <span class="section-badge">${s.total_duration} hrs</span>
-                      </div>
-                      <table class="modern-table">
-                        <thead><tr><th>Subject</th><th>Duration</th><th>Topics</th></tr></thead>
-                        <tbody>
-                  `;
-                  if (s.subjects) {
-                    s.subjects.forEach(sub => {
-                      html += `
-                        <tr>
-                          <td><strong>${sub.subject_name}</strong></td>
-                          <td>${sub.duration_hours} hrs</td>
-                          <td>${sub.topics ? sub.topics.split(',').slice(0, 2).join(', ') : '-'}</td>
-                        </tr>
-                      `;
-                    });
-                  }
-                  html += `</tbody></table></div>`;
-                }
-              });
-              document.getElementById('syllabusContent').innerHTML = html;
-            } else {
-              document.getElementById('syllabusContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><p>Syllabus not available</p></div>';
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('syllabusContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load syllabus</div>';
-          }
-        }
-        
-        // ==================== RESULTS FUNCTIONS ====================
-        
-        function calculateGrade(pct) {
-          if (pct >= 90) return 'A+';
-          if (pct >= 80) return 'A';
-          if (pct >= 70) return 'B+';
-          if (pct >= 60) return 'B';
-          if (pct >= 50) return 'C+';
-          if (pct >= 40) return 'C';
-          return 'F';
-        }
-        
-        async function loadResults() {
-          try {
-            const res = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
-            const data = await res.json();
-            
-            if (data.success && data.results.length) {
-              let html = `
-                <div class="table-wrap">
-                  <table class="modern-table">
-                    <thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>%</th><th>Grade</th><th>Date</th></tr></thead>
-                    <tbody>
-              `;
-              data.results.forEach(r => {
-                const pct = Math.round((r.marks_obtained / r.total_marks) * 100);
-                html += `
-                  <tr>
-                    <td><strong>${r.subject}</strong></td>
-                    <td>${r.exam_type}</td>
-                    <td>${r.marks_obtained}/${r.total_marks}</td>
-                    <td>${pct}%</td>
-                    <td><span class="grade-badge ${pct >= 60 ? 'grade-a' : 'grade-d'}">${r.grade}</span></td>
-                    <td>${new Date(r.exam_date).toLocaleDateString()}</td>
-                  </tr>
-                `;
-              });
-              html += `</tbody></table></div>`;
-              document.getElementById('resultsContent').innerHTML = html;
-            } else {
-              document.getElementById('resultsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-chart-bar"></i></div><p>No results available</p></div>';
-            }
-          } catch(e) { 
-            console.error(e);
-            document.getElementById('resultsContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load results</div>';
-          }
-        }
-        
-        // ==================== STUDY MATERIALS PDF FUNCTIONS ====================
-        
-        async function loadStudyMaterials() {
-          try {
-            const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
-            const profileData = await profileRes.json();
-            
-            if (!profileData.success || !profileData.student) {
-              document.getElementById('pdfsContent').innerHTML = '<div class="alert-custom alert-danger">Failed to load profile</div>';
-              return;
-            }
-            
-            const student = profileData.student;
-            const sectionId = student.section_id;
-            const sectionName = student.section_name;
-            
-            console.log("Student Section ID:", sectionId);
-            
-            if (!sectionId) {
-              document.getElementById('pdfsContent').innerHTML = `
-                <div class="section-required-state">
-                  <div class="section-required-icon"><i class="fas fa-layer-group"></i></div>
-                  <p>You are not assigned to any section yet.</p>
-                  <p style="font-size:0.7rem; margin-top:5px;">Please contact your administrator.</p>
-                </div>
-              `;
-              return;
-            }
-            
-            document.getElementById('pdfsContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading study materials for ${sectionName}...</p></div>`;
-            
-            // ✅ USE CORRECT ENDPOINT: /api/section-pdfs/student/<student_id>
-            const response = await fetch(`${API_BASE_URL}/section-pdfs/student/${STUDENT_ID}`);
-            const data = await response.json();
-            
-            console.log("PDF API Response:", data);
-            
-            if (data.success && data.pdfs && data.pdfs.length > 0) {
-              let html = `
-                <div class="section-banner">
-                  <i class="fas fa-layer-group"></i>
-                  <div>
-                    <strong>${sectionName} — Study Materials</strong>
-                    <br><small>${data.pdfs.length} material(s) available for your section</small>
-                  </div>
-                </div>
-                <div class="row g-3">
-              `;
-              
-              data.pdfs.forEach(pdf => {
-                const pdfId = pdf.pdf_id;
-                const title = pdf.pdf_title || 'Study Material';
-                const subject = pdf.subject || 'General';
-                const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
-                
-                html += `
-                  <div class="col-12">
-                    <div class="pdf-card">
-                      <div class="card-top">
-                        <div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div>
-                        <div class="pdf-title">${title}</div>
-                        <div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div>
-                        <div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div>
-                        <div class="pdf-meta"><i class="fas fa-users"></i> Section: ${sectionName}</div>
-                      </div>
-                      <div class="pdf-actions">
-                        <button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')">
-                          <i class="fas fa-eye"></i> View
-                        </button>
-                        <button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')">
-                          <i class="fas fa-download"></i> Download
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              });
-              html += `</div>`;
-              document.getElementById('pdfsContent').innerHTML = html;
-            } else {
-              document.getElementById('pdfsContent').innerHTML = `
-                <div class="section-required-state">
-                  <div class="section-required-icon"><i class="fas fa-file-pdf"></i></div>
-                  <h5>No Study Materials</h5>
-                  <p>No materials have been uploaded for <strong>${sectionName}</strong> section yet.</p>
-                  <button onclick="loadStudyMaterials()" class="refresh-btn" style="margin-top:10px; padding:6px 15px;">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                  </button>
-                </div>
-              `;
-            }
-          } catch(e) { 
-            console.error('loadStudyMaterials error:', e);
-            document.getElementById('pdfsContent').innerHTML = `
-              <div class="alert-custom alert-danger">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>Failed to load study materials: ${e.message}</span>
+        const details = await (await fetch(`${API_BASE_URL}/student-attendance-details/${STUDENT_ID}`)).json();
+        if (details.success) {
+          let stats = {}, totalPresent = 0, totalAbsent = 0;
+          details.attendance_details.forEach(r => {
+            const sub = r.subject || 'General';
+            if (!stats[sub]) stats[sub] = { present: 0, absent: 0, total: 0 };
+            if (r.status === 'Present') { stats[sub].present++; totalPresent++; }
+            else { stats[sub].absent++; totalAbsent++; }
+            stats[sub].total++;
+          });
+          
+          const totalDays = totalPresent + totalAbsent;
+          const percentage = totalDays ? Math.round((totalPresent / totalDays) * 100) : 0;
+          
+          document.getElementById('overallPercentage').innerHTML = percentage + '%';
+          document.getElementById('presentDays').innerHTML = totalPresent;
+          document.getElementById('absentDays').innerHTML = totalAbsent;
+          document.getElementById('totalDays').innerHTML = totalDays;
+          document.getElementById('attendanceProgressBar').style.width = percentage + '%';
+          document.getElementById('progressLabel').innerHTML = percentage + '%';
+          
+          let html = '';
+          Object.entries(stats).forEach(([subject, s]) => {
+            const pct = s.total ? Math.round((s.present / s.total) * 100) : 0;
+            html += `
+              <div class="subject-card" onclick="alert('${subject}\\nPresent: ${s.present}\\nAbsent: ${s.absent}\\nPercentage: ${pct}%')">
+                <div class="subject-header"><span class="subject-name">${subject}</span><span class="subject-badge">${s.total} classes</span></div>
+                <div class="subject-stats"><div class="subject-stat"><div class="value" style="color:#06d6a0;">${s.present}</div><div class="label">Present</div></div><div class="subject-stat"><div class="value" style="color:#ef476f;">${s.absent}</div><div class="label">Absent</div></div><div class="subject-stat"><div class="value" style="color:#667eea;">${pct}%</div><div class="label">%</div></div></div>
+                <div class="progress"><div class="progress-bar" style="width:${pct}%; background:#667eea;"></div></div>
               </div>
             `;
-          }
+          });
+          document.getElementById('subjectCardsContainer').innerHTML = html;
+        } else {
+          document.getElementById('subjectCardsContainer').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No attendance records found</p></div>';
+        }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('subjectCardsContainer').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load attendance</p></div>';
+      }
+    }
+    
+    // ==================== TIMETABLE FUNCTIONS ====================
+    
+    async function loadTimetable() {
+      try {
+        const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        const profileData = await profileRes.json();
+        
+        if (!profileData.success || !profileData.student) {
+          document.getElementById('timetableContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load profile</p></div>';
+          return;
         }
         
-        // ==================== PDF VIEW & DOWNLOAD FUNCTIONS ====================
+        const student = profileData.student;
+        const sectionId = student.section_id;
+        const sectionName = student.section_name;
         
-        async function viewStudentPdf(pdfId, pdfTitle) {
-            currentPdfId = pdfId;
-            currentPdfTitle = pdfTitle;
-            
-            const modal = document.getElementById('pdfPreviewModal');
-            const titleEl = document.getElementById('pdfPreviewTitle');
-            if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-pdf me-2"></i> ${pdfTitle}`;
-            modal.classList.add('show');
-            
-            // ✅ CORRECT ENDPOINT: /api/section-pdfs/view/<pdf_id>
-            const pdfUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}`;
-            const iframe = document.getElementById('pdfViewer');
-            iframe.src = pdfUrl;
-            
-            const controls = document.getElementById('pdfControls');
-            if (controls) controls.style.display = 'flex';
-          }
-          
-          function downloadStudentPdf(pdfId, pdfTitle) {
-            // ✅ CORRECT DOWNLOAD URL
-            const downloadUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}?download=true`;
-            window.open(downloadUrl, '_blank');
-            showToast(`Download started: ${pdfTitle || 'PDF'}`, 'success');
-          }
-        async function loadPdfWithPdfJs(pdfUrl) {
+        document.getElementById('timetableContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading timetable...</p></div>`;
+        
+        let timetable = [];
+        
+        if (sectionId) {
           try {
-            const loadingTask = pdfjsLib.getDocument(pdfUrl + '?t=' + Date.now());
-            pdfDoc = await loadingTask.promise;
-            totalPagesNum = pdfDoc.numPages;
-            
-            const totalPagesSpan = document.getElementById('totalPages');
-            const viewerContainer = document.getElementById('pdfViewerContainer');
-            const iframeContainer = document.getElementById('pdfIframeContainer');
-            const controls = document.getElementById('pdfControls');
-            
-            if (totalPagesSpan) totalPagesSpan.textContent = totalPagesNum;
-            if (viewerContainer) viewerContainer.style.display = 'block';
-            if (iframeContainer) iframeContainer.style.display = 'none';
-            if (controls) controls.style.display = 'flex';
-            
-            currentPageNum = 1;
-            renderPdfPage(currentPageNum);
-          } catch (error) {
-            console.error('PDF.js error:', error);
-            const altView = document.getElementById('pdfAlternativeView');
-            if (altView) altView.style.display = 'block';
+            const res = await fetch(`${API_BASE_URL}/timetable/section/${sectionId}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && data.timetable && data.timetable.length > 0) {
+                timetable = data.timetable;
+              }
+            }
+          } catch(e) { console.log('Section timetable fetch error:', e); }
+        }
+        
+        if (timetable.length === 0) {
+          document.getElementById('timetableContent').innerHTML = `
+            <div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><h5>No Timetable Available</h5><p>No timetable has been assigned for <strong>${sectionName || 'your section'}</strong> yet.</p><button onclick="loadTimetable()" style="margin-top:10px; padding:8px 20px; background:var(--gradient-primary); color:white; border:none; border-radius:25px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+          `;
+          return;
+        }
+        
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const today = days[new Date().getDay() - 1];
+        let html = `<div style="background:#e8f4f8; padding:12px; border-radius:12px; margin-bottom:20px;"><i class="fas fa-info-circle"></i> <strong>${sectionName || 'Your Section'}</strong> — Timetable</div>`;
+        
+        let hasClasses = false;
+        days.forEach(day => {
+          const classes = timetable.filter(c => c.day_of_week === day && c.is_active !== false);
+          if (classes.length) {
+            hasClasses = true;
+            html += `<div class="day-card${day === today ? ' today' : ''}"><div class="day-header"><h5><i class="fas fa-calendar-day"></i>${day}</h5><span class="badge" style="background:rgba(255,255,255,0.2);">${classes.length}</span></div><div class="day-body">`;
+            classes.forEach(c => {
+              html += `<div class="class-card"><div class="time-badge"><i class="fas fa-clock"></i> ${c.start_time} - ${c.end_time}</div><div class="class-subject">${c.subject}</div><div class="class-details-grid"><div class="detail-item"><i class="fas fa-chalkboard-teacher"></i> ${c.teacher_name || 'N/A'}</div><div class="detail-item"><i class="fas fa-door-open"></i> Room ${c.room_number || 'N/A'}</div></div></div>`;
+            });
+            html += `</div></div>`;
           }
-        }
-        
-        async function renderPdfPage(pageNum) {
-          if (!pdfDoc) return;
-          try {
-            const page = await pdfDoc.getPage(pageNum);
-            const canvas = document.getElementById('pdfCanvas');
-            if (!canvas) return;
-            
-            const context = canvas.getContext('2d');
-            const viewport = page.getViewport({ scale: currentScale });
-            
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            await page.render({ canvasContext: context, viewport }).promise;
-            
-            const currentPageSpan = document.getElementById('currentPage');
-            if (currentPageSpan) currentPageSpan.textContent = pageNum;
-          } catch (error) {
-            console.error('Render page error:', error);
-          }
-        }
-        
-        function prevPage() {
-          if (currentPageNum <= 1) return;
-          currentPageNum--;
-          if (pdfDoc) renderPdfPage(currentPageNum);
-        }
-        
-        function nextPage() {
-          if (currentPageNum >= totalPagesNum) return;
-          currentPageNum++;
-          if (pdfDoc) renderPdfPage(currentPageNum);
-        }
-        
-        function zoomPdf(value) {
-          currentScale = parseFloat(value);
-          if (pdfDoc) renderPdfPage(currentPageNum);
-        }
-        
-        function downloadStudentPdf(pdfId, pdfTitle) {
-          if (!pdfId) {
-            showToast('PDF ID not available', 'error');
-            return;
-          }
-          const downloadUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}?download=true`;
-          window.open(downloadUrl, '_blank');
-          showToast(`Download started: ${pdfTitle || 'PDF'}`, 'success');
-        }
-        
-        function downloadCurrentPdf() {
-          if (currentPdfId) {
-            downloadStudentPdf(currentPdfId, currentPdfTitle);
-          } else {
-            showToast('No PDF selected', 'error');
-          }
-        }
-        
-        function closePdfPreview() {
-          const modal = document.getElementById('pdfPreviewModal');
-          modal.classList.remove('show');
-          
-          const iframe = document.getElementById('pdfViewer');
-          if (iframe) iframe.src = 'about:blank';
-          
-          const controls = document.getElementById('pdfControls');
-          if (controls) controls.style.display = 'none';
-          
-          pdfDoc = null;
-          currentPageNum = 1;
-          totalPagesNum = 0;
-          currentPdfId = null;
-          currentPdfTitle = null;
-        }
-        
-        // ==================== MAIN LOAD FUNCTION ====================
-        
-        async function loadStudentData() {
-          await Promise.all([
-            loadProfile(), 
-            loadFees(), 
-            loadNotices(), 
-            loadAttendance(), 
-            loadTimetable(), 
-            loadSyllabus(), 
-            loadResults(), 
-            loadStudyMaterials()
-          ]);
-        }
-        
-        // ==================== DOM CONTENT LOADED ====================
-        
-        document.addEventListener('DOMContentLoaded', () => {
-          if (!studentData) { 
-            document.getElementById('loginModal').classList.add('show'); 
-            return; 
-          }
-          loadStudentData();
-          showMainView();
         });
+        
+        if (!hasClasses) {
+          html = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-calendar-times"></i></div><p>No active classes in timetable</p></div>';
+        }
+        
+        document.getElementById('timetableContent').innerHTML = html;
+      } catch(e) { 
+        console.error('loadTimetable error:', e);
+        document.getElementById('timetableContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load timetable</p></div>';
+      }
+    }
+    
+    // ==================== FEES FUNCTIONS ====================
+    
+    async function loadFees() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/student-fee-details/${STUDENT_ID}`);
+        const data = await res.json();
+        if (data.success) {
+          const total = data.fee_summary.fee_amount || 0;
+          const paid = data.fee_summary.paid_amount || 0;
+          const due = data.fee_summary.due_amount || 0;
+          const progress = total ? Math.round((paid / total) * 100) : 0;
+          
+          document.getElementById('totalFee').innerHTML = `₹${total.toLocaleString()}`;
+          document.getElementById('paidAmount').innerHTML = `₹${paid.toLocaleString()}`;
+          document.getElementById('dueAmount').innerHTML = `₹${due.toLocaleString()}`;
+          document.getElementById('progressPercentage').innerHTML = `${progress}%`;
+          document.getElementById('progressBar').style.width = `${progress}%`;
+          
+          if (data.fee_history && data.fee_history.length) {
+            let histHtml = '';
+            data.fee_history.forEach(p => {
+              histHtml += `<tr><td>${new Date(p.payment_date).toLocaleDateString()}</td><td>${p.receipt_no || '-'}</td><td>₹${(p.amount || 0).toLocaleString()}</td><td>${p.payment_mode || 'Cash'}</td><td><span class="status-badge">${p.status || 'Completed'}</span></td></tr>`;
+            });
+            document.getElementById('paymentHistoryBody').innerHTML = histHtml;
+          }
+          document.getElementById('feeLoading').style.display = 'none';
+          document.getElementById('feeContent').style.display = 'block';
+        }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('feeLoading').style.display = 'none';
+        document.getElementById('feeError').style.display = 'block';
+      }
+    }
+    
+    // ==================== NOTICES FUNCTIONS ====================
+    
+    async function loadNotices() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/student-notices`);
+        const data = await res.json();
+        if (data.success && data.notices.length) {
+          let html = '';
+          data.notices.forEach(n => {
+            html += `<div class="notice-item ${n.priority || 'low'}"><div class="notice-title"><i class="fas fa-bullhorn"></i> ${n.title}</div><div class="notice-msg">${n.message}</div><div class="notice-meta"><small>${new Date(n.created_at).toLocaleDateString()}</small><span class="badge">${n.priority || 'low'}</span></div></div>`;
+          });
+          document.getElementById('noticesContent').innerHTML = html;
+        } else {
+          document.getElementById('noticesContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-bullhorn"></i></div><p>No notices available</p></div>';
+        }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('noticesContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load notices</p></div>';
+      }
+    }
+    
+    // ==================== SYLLABUS FUNCTIONS ====================
+    
+    async function loadSyllabus() {
+      try {
+        const student = (await (await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`)).json()).student;
+        const res = await fetch(`${API_BASE_URL}/syllabus/course/${student.course}`);
+        const data = await res.json();
+        
+        if (data.success && data.syllabus.length) {
+          let html = '';
+          data.syllabus.forEach(s => {
+            if (s.is_active) {
+              html += `<div class="table-wrap"><div class="table-wrap-header"><i class="fas fa-book-open"></i> ${s.syllabus_title}<span class="badge">${s.total_duration} hrs</span></div><table class="modern-table"><thead><tr><th>Subject</th><th>Duration</th><th>Topics</th></tr></thead><tbody>`;
+              if (s.subjects) {
+                s.subjects.forEach(sub => {
+                  html += `<tr><td><strong>${sub.subject_name}</strong></td><td>${sub.duration_hours} hrs</td><td>${sub.topics ? sub.topics.split(',').slice(0, 2).join(', ') : '-'}</td></tr>`;
+                });
+              }
+              html += `</tbody></table></div>`;
+            }
+          });
+          document.getElementById('syllabusContent').innerHTML = html;
+        } else {
+          document.getElementById('syllabusContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-book-open"></i></div><p>Syllabus not available</p></div>';
+        }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('syllabusContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load syllabus</p></div>';
+      }
+    }
+    
+    // ==================== RESULTS FUNCTIONS ====================
+    
+    async function loadResults() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/student-results/${STUDENT_ID}`);
+        const data = await res.json();
+        
+        if (data.success && data.results.length) {
+          let html = `<div class="table-wrap"><table class="modern-table"><thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>%</th><th>Grade</th><th>Date</th></tr></thead><tbody>`;
+          data.results.forEach(r => {
+            const pct = Math.round((r.marks_obtained / r.total_marks) * 100);
+            html += `<tr><td><strong>${r.subject}</strong></td><td>${r.exam_type}</td><td>${r.marks_obtained}/${r.total_marks}</td><td>${pct}%</td><td><span class="grade-badge ${pct >= 60 ? 'grade-a' : 'grade-d'}">${r.grade}</span></td><td>${new Date(r.exam_date).toLocaleDateString()}</td></tr>`;
+          });
+          html += `</tbody></table></div>`;
+          document.getElementById('resultsContent').innerHTML = html;
+        } else {
+          document.getElementById('resultsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-chart-bar"></i></div><p>No results available</p></div>';
+        }
+      } catch(e) { 
+        console.error(e);
+        document.getElementById('resultsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load results</p></div>';
+      }
+    }
+    
+    // ==================== STUDY MATERIALS PDF FUNCTIONS ====================
+    
+    async function loadStudyMaterials() {
+      try {
+        const profileRes = await fetch(`${API_BASE_URL}/student-profile/${STUDENT_ID}`);
+        const profileData = await profileRes.json();
+        
+        if (!profileData.success || !profileData.student) {
+          document.getElementById('pdfsContent').innerHTML = '<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load profile</p></div>';
+          return;
+        }
+        
+        const student = profileData.student;
+        const sectionId = student.section_id;
+        const sectionName = student.section_name;
+        
+        if (!sectionId) {
+          document.getElementById('pdfsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-layer-group"></i></div><p>You are not assigned to any section yet.</p><p style="font-size:0.7rem; margin-top:5px;">Please contact your administrator.</p></div>`;
+          return;
+        }
+        
+        document.getElementById('pdfsContent').innerHTML = `<div class="loading-container"><div class="spinner-custom"></div><p>Loading study materials for ${sectionName}...</p></div>`;
+        
+        const response = await fetch(`${API_BASE_URL}/section-pdfs/student/${STUDENT_ID}`);
+        const data = await response.json();
+        
+        if (data.success && data.pdfs && data.pdfs.length > 0) {
+          let html = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#e8f4f8; border-radius:12px; margin-bottom:20px;"><i class="fas fa-layer-group"></i><div><strong>${sectionName} — Study Materials</strong><br><small>${data.pdfs.length} material(s) available</small></div></div><div class="row-cols-responsive">`;
+          
+          data.pdfs.forEach(pdf => {
+            const pdfId = pdf.pdf_id;
+            const title = pdf.pdf_title || 'Study Material';
+            const subject = pdf.subject || 'General';
+            const uploadDate = pdf.created_at ? new Date(pdf.created_at).toLocaleDateString() : new Date().toLocaleDateString();
+            
+            html += `<div class="pdf-card"><div class="card-top"><div class="pdf-icon-wrap"><i class="fas fa-file-pdf"></i></div><div class="pdf-title">${title}</div><div class="pdf-meta"><i class="fas fa-book"></i> ${subject}</div><div class="pdf-meta"><i class="fas fa-calendar"></i> ${uploadDate}</div><div class="pdf-meta"><i class="fas fa-users"></i> ${sectionName}</div></div><div class="pdf-actions"><button class="pdf-btn view" onclick="viewStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-eye"></i> View</button><button class="pdf-btn download" onclick="downloadStudentPdf('${pdfId}','${title.replace(/'/g, "\\'")}')"><i class="fas fa-download"></i> Download</button></div></div>`;
+          });
+          html += `</div>`;
+          document.getElementById('pdfsContent').innerHTML = html;
+        } else {
+          document.getElementById('pdfsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-file-pdf"></i></div><h5>No Study Materials</h5><p>No materials have been uploaded for <strong>${sectionName}</strong> section yet.</p><button onclick="loadStudyMaterials()" style="margin-top:10px; padding:8px 20px; background:var(--gradient-primary); color:white; border:none; border-radius:25px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button></div>`;
+        }
+      } catch(e) { 
+        console.error('loadStudyMaterials error:', e);
+        document.getElementById('pdfsContent').innerHTML = `<div class="section-required-state"><div class="section-required-icon"><i class="fas fa-exclamation-circle"></i></div><p>Failed to load study materials: ${e.message}</p></div>`;
+      }
+    }
+    
+    // ==================== PDF VIEW & DOWNLOAD FUNCTIONS ====================
+    
+    async function viewStudentPdf(pdfId, pdfTitle) {
+      currentPdfId = pdfId;
+      currentPdfTitle = pdfTitle;
+      
+      const modal = document.getElementById('pdfPreviewModal');
+      const titleEl = document.getElementById('pdfPreviewTitle');
+      if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-pdf me-2"></i> ${pdfTitle}`;
+      modal.classList.add('show');
+      
+      const pdfUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}`;
+      const iframe = document.getElementById('pdfViewer');
+      iframe.src = pdfUrl;
+    }
+    
+    function downloadStudentPdf(pdfId, pdfTitle) {
+      const downloadUrl = `${API_BASE_URL}/section-pdfs/view/${pdfId}?download=true`;
+      window.open(downloadUrl, '_blank');
+      showToast(`Download started: ${pdfTitle || 'PDF'}`, 'success');
+    }
+    
+    function closePdfPreview() {
+      const modal = document.getElementById('pdfPreviewModal');
+      modal.classList.remove('show');
+      
+      const iframe = document.getElementById('pdfViewer');
+      if (iframe) iframe.src = 'about:blank';
+      
+      currentPdfId = null;
+      currentPdfTitle = null;
+    }
+    
+    // ==================== MAIN LOAD FUNCTION ====================
+    
+    async function loadStudentData() {
+      await Promise.all([
+        loadProfile(), 
+        loadFees(), 
+        loadNotices(), 
+        loadAttendance(), 
+        loadTimetable(), 
+        loadSyllabus(), 
+        loadResults(), 
+        loadStudyMaterials()
+      ]);
+    }
+    
+    // ==================== DOM CONTENT LOADED ====================
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!studentData) { 
+        document.getElementById('loginModal').classList.add('show'); 
+        return; 
+      }
+      loadStudentData();
+      showMainView();
+    });
   </script>
 </body>
 </html>
