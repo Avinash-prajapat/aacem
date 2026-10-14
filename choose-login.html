@@ -4,120 +4,596 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Select Login Role - AACEM Coaching Institute</title>
+  <meta name="description" content="Choose your login type - Student, Teacher, or Admin portal for AACEM Institute.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="choose-login.css"> <!-- External CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="logo.png" type="image/png">
+
+  <style>
+    /* ==================== DESIGN TOKENS (Same as index) ==================== */
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a5b4fc;
+      --violet: #8b5cf6;
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+
+      --ink: #0f172a;
+      --ink-soft: #1e293b;
+      --muted: #64748b;
+      --muted-light: #94a3b8;
+      --line: rgba(15, 23, 42, 0.08);
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+
+      --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      --grad-accent: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      --grad-warm: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+      --grad-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --grad-rose: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+
+      --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.12);
+      --shadow-glow: 0 20px 60px -20px rgba(99, 102, 241, 0.5);
+
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--surface-soft);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    /* ==================== AURORA BACKGROUND ==================== */
+    .aurora-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    .aurora-bg::before, .aurora-bg::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: auroraFloat 20s ease-in-out infinite;
+    }
+    .aurora-bg::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #a5b4fc 0%, transparent 70%);
+      top: -200px; left: -150px;
+    }
+    .aurora-bg::after {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, #67e8f9 0%, transparent 70%);
+      bottom: -250px; right: -200px;
+      animation-delay: -10s;
+    }
+    .aurora-blob {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      background: radial-gradient(circle, #c4b5fd 0%, transparent 70%);
+      top: 40%; left: 30%;
+      animation: auroraFloat 25s ease-in-out infinite reverse;
+    }
+    @keyframes auroraFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(80px, -60px) scale(1.1); }
+      66% { transform: translate(-60px, 80px) scale(0.95); }
+    }
+
+    /* ==================== TOP BAR ==================== */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
+      transition: all 0.4s var(--ease);
+    }
+
+    .top-bar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.35s var(--ease);
+    }
+
+    .back-btn:hover {
+      background: var(--grad-primary);
+      color: white;
+      border-color: transparent;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px -8px rgba(99, 102, 241, 0.6);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--grad-primary);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1rem;
+      box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.6);
+    }
+
+    /* ==================== MAIN ==================== */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 0 80px;
+      position: relative;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 56px;
+      animation: fadeInUp 0.8s var(--ease) backwards;
+    }
+
+    .page-header .eyebrow {
+      display: inline-block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+      padding: 8px 20px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+
+    .page-header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+
+    .page-header h1 .gradient-text {
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto;
+      font-size: 1.02rem;
+    }
+
+    /* ==================== ROLE CARDS ==================== */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 26px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .role-card {
+      position: relative;
+      display: block;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-lg);
+      padding: 40px 28px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.5s var(--ease);
+      overflow: hidden;
+      animation: fadeInUp 0.8s var(--ease) backwards;
+      cursor: pointer;
+    }
+
+    .role-card:nth-child(1) { animation-delay: 0.1s; }
+    .role-card:nth-child(2) { animation-delay: 0.2s; }
+    .role-card:nth-child(3) { animation-delay: 0.3s; }
+
+    /* Top accent bar */
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: var(--grad-primary);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.5s var(--ease);
+    }
+
+    .role-card:hover::before { transform: scaleX(1); }
+
+    /* Shine sweep on hover */
+    .role-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+      transition: left 0.7s var(--ease);
+      pointer-events: none;
+    }
+
+    .role-card:hover::after { left: 100%; }
+
+    .role-card:hover {
+      transform: translateY(-12px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+      border-color: transparent;
+      color: var(--ink);
+    }
+
+    /* Icon circle */
+    .role-icon {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 24px;
+      border-radius: 26px;
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+      color: white;
+      background: var(--grad-primary);
+      box-shadow: 0 20px 40px -14px rgba(99, 102, 241, 0.7);
+      transition: all 0.55s var(--ease-spring);
+      position: relative;
+      z-index: 1;
+    }
+
+    .role-card:hover .role-icon {
+      transform: scale(1.12) rotate(-8deg);
+      box-shadow: 0 28px 55px -14px rgba(99, 102, 241, 0.85);
+    }
+
+    /* Role-specific colors */
+    .role-card[data-role="student"] .role-icon { background: var(--grad-primary); box-shadow: 0 20px 40px -14px rgba(99, 102, 241, 0.7); }
+    .role-card[data-role="teacher"] .role-icon { background: var(--grad-accent); box-shadow: 0 20px 40px -14px rgba(6, 182, 212, 0.7); }
+    .role-card[data-role="admin"] .role-icon { background: var(--grad-warm); box-shadow: 0 20px 40px -14px rgba(245, 158, 11, 0.7); }
+
+    .role-card[data-role="student"]::before { background: var(--grad-primary); }
+    .role-card[data-role="teacher"]::before { background: var(--grad-accent); }
+    .role-card[data-role="admin"]::before { background: var(--grad-warm); }
+
+    .role-card[data-role="student"]:hover { box-shadow: 0 30px 70px -20px rgba(99, 102, 241, 0.45); }
+    .role-card[data-role="teacher"]:hover { box-shadow: 0 30px 70px -20px rgba(6, 182, 212, 0.45); }
+    .role-card[data-role="admin"]:hover { box-shadow: 0 30px 70px -20px rgba(245, 158, 11, 0.45); }
+
+    .role-card h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--ink);
+      position: relative;
+      z-index: 1;
+    }
+
+    .role-card p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+      line-height: 1.6;
+    }
+
+    .role-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--primary);
+      position: relative;
+      z-index: 1;
+      transition: all 0.35s var(--ease);
+    }
+
+    .role-cta i {
+      transition: transform 0.35s var(--ease);
+    }
+
+    .role-card:hover .role-cta {
+      color: var(--primary-dark);
+    }
+
+    .role-card:hover .role-cta i {
+      transform: translateX(6px);
+    }
+
+    /* ==================== FOOTER ==================== */
+    .footer {
+      background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+      color: #cbd5e0;
+      padding: 70px 0 28px;
+      position: relative;
+      margin-top: auto;
+    }
+
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--grad-primary);
+    }
+
+    .footer h4, .footer h5 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .footer p { font-size: 0.92rem; line-height: 1.7; }
+
+    .footer a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: all 0.3s var(--ease);
+      font-size: 0.92rem;
+      display: inline-block;
+    }
+
+    .footer a:hover {
+      color: var(--primary-light);
+      transform: translateX(4px);
+    }
+
+    .footer ul li { margin-bottom: 10px; }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 50px;
+      padding-top: 24px;
+      font-size: 0.88rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    /* ==================== ANIMATIONS ==================== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 991.98px) {
+      main { padding: 50px 0 60px; }
+      .page-header { margin-bottom: 44px; }
+    }
+
+    @media (max-width: 767.98px) {
+      .top-bar { padding: 10px 0; }
+      .brand { font-size: 1rem; }
+      .brand-mark { width: 36px; height: 36px; font-size: 0.9rem; }
+      .back-btn { padding: 8px 14px; font-size: 0.82rem; }
+      .back-btn span { display: none; }
+
+      main { padding: 40px 0 50px; }
+      .page-header { margin-bottom: 36px; }
+      .role-grid { gap: 18px; }
+      .role-card { padding: 32px 22px; }
+      .role-icon { width: 78px; height: 78px; font-size: 1.8rem; border-radius: 22px; }
+      .footer { padding: 50px 0 22px; }
+      .footer-bottom { margin-top: 36px; }
+    }
+
+    @media (max-width: 575.98px) {
+      .role-grid { grid-template-columns: 1fr; }
+      .role-card { padding: 28px 20px; }
+      .role-icon { width: 70px; height: 70px; font-size: 1.6rem; }
+      .role-card h3 { font-size: 1.2rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <!-- Aurora Background -->
+  <div class="aurora-bg"><div class="aurora-blob"></div></div>
+
+  <!-- ==================== TOP BAR ==================== -->
+  <header class="top-bar">
     <div class="container">
-      <a class="navbar-brand" href="index.html">
-        <i class="fas fa-graduation-cap me-2"></i>AACEM Institute
+      <a href="index.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back to Home</span>
+      </a>
+      <a href="index.html" class="brand">
+        <span class="brand-mark"><i class="fas fa-graduation-cap"></i></span>
+        <span>AACEM<span style="color: var(--primary);">.</span></span>
       </a>
     </div>
-  </nav>
+  </header>
 
-  <!-- Role Selection Section -->
-  <section class="py-5">
+  <!-- ==================== MAIN ==================== -->
+  <main>
     <div class="container">
-      <h2 class="text-center mb-4">Choose Your Login Type</h2>
-      <div class="row g-4 text-center">
-        
-        <!-- Student -->
-        <div class="col-md-3 col-sm-6">
-          <a href="student-login.html" class="text-decoration-none text-dark">
-            <div class="card role-card p-4 shadow-sm">
-              <i class="fas fa-user-graduate fa-3x mb-3"></i>
-              <h5>Student</h5>
-            </div>
-          </a>
-        </div>
+      <div class="page-header">
+        <span class="eyebrow">Login Portal</span>
+        <h1>Choose Your <span class="gradient-text">Login Type</span></h1>
+        <p>Select your role to access the appropriate portal. Each role has its own dedicated dashboard and features.</p>
+      </div>
 
-       <!-- Teacher -->
-        <div class="col-md-3 col-sm-6">
-          <a href="teacher-login.html" class="text-decoration-none text-dark">
-            <div class="card role-card p-4 shadow-sm">
-              <i class="fas fa-chalkboard-teacher fa-3x mb-3"></i>
-              <h5>Teacher</h5>
-            </div>
-          </a>
-        </div>
+      <div class="role-grid">
+        <!-- Student -->
+        <a href="student-login.html" class="role-card" data-role="student">
+          <div class="role-icon"><i class="fas fa-user-graduate"></i></div>
+          <h3>Student</h3>
+          <p>Access your courses, attendance, results, and fee details.</p>
+          <span class="role-cta">Login as Student <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <!-- Teacher -->
+        <a href="teacher-login.html" class="role-card" data-role="teacher">
+          <div class="role-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+          <h3>Teacher</h3>
+          <p>Manage classes, students, attendance, and course materials.</p>
+          <span class="role-cta">Login as Teacher <i class="fas fa-arrow-right"></i></span>
+        </a>
 
         <!-- Admin -->
-        <div class="col-md-3 col-sm-6">
-          <a href="admin-login.html" class="text-decoration-none text-dark">
-            <div class="card role-card p-4 shadow-sm">
-              <i class="fas fa-user-shield fa-3x mb-3"></i>
-              <h5>Admin</h5>
-            </div>
-          </a>
-        </div>
+        <a href="admin-login.html" class="role-card" data-role="admin">
+          <div class="role-icon"><i class="fas fa-user-shield"></i></div>
+          <h3>Admin</h3>
+          <p>Full control over students, teachers, courses, and fees.</p>
+          <span class="role-cta">Login as Admin <i class="fas fa-arrow-right"></i></span>
+        </a>
 
         <!-- 
-        #Parent
-        <div class="col-md-3 col-sm-6">
-          <a href="parent-login.html" class="text-decoration-none text-dark">
-            <div class="card role-card p-4 shadow-sm">
-              <i class="fas fa-users fa-3x mb-3"></i>
-              <h5>Parent</h5>
-            </div>
-          </a>
-        </div>-->
-
+        #Parent (commented as original)
+        <a href="parent-login.html" class="role-card" data-role="parent">
+          <div class="role-icon"><i class="fas fa-users"></i></div>
+          <h3>Parent</h3>
+          <p>Track your child's progress, attendance, and fee status.</p>
+          <span class="role-cta">Login as Parent <i class="fas fa-arrow-right"></i></span>
+        </a>
+        -->
       </div>
     </div>
-  </section>
+  </main>
 
- <!-- Footer --->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h4>AACEM Institute</h4>
-                    <p>Providing quality education in computer courses and academic classes since 2010.</p>
-                </div>
-                <div class="col-md-2 mb-4">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="index.html" class="text-white">Home</a></li>
-                        <li><a href="courses.html" class="text-white">Courses</a></li>
-                        <li><a href="index.html#features" class="text-white">Features</a></li>
-                        <li><a href="index.html#contact" class="text-white">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <h5>Courses</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">Computer Courses</a></li>
-                        <li><a href="#" class="text-white">BSEB Classes</a></li>
-                        <li><a href="#" class="text-white">CBSE Classes</a></li>
-                        <li><a href="#" class="text-white">Crash Courses</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <h5>Subscribe</h5>
-                    <p>Subscribe to our newsletter for updates.</p>
-                    <div class="input-group">
-                        <input type="email" class="form-control" placeholder="Your Email">
-                        <button class="btn btn-primary">Subscribe</button>
-                    </div>
-                </div>
-            </div>
-            <hr class="mt-4 mb-4">
-            <div class="text-center">
-                <p>© 2023 AACEM Coaching Institute. All Rights Reserved.</p>
-            </div>
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <h4>
+            <span class="brand-mark d-inline-grid" style="width: 32px; height: 32px; font-size: 0.85rem; vertical-align: middle; margin-right: 8px;">
+              <i class="fas fa-graduation-cap"></i>
+            </span>
+            AACEM Institute
+          </h4>
+          <p>Providing quality education in computer courses and academic classes since 2019.</p>
         </div>
-    </footer>
+        <div class="col-lg-2 col-md-6">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#courses-preview">Courses</a></li>
+            <li><a href="index.html#features">Features</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h5>Courses</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html#courses-preview">Computer Courses</a></li>
+            <li><a href="index.html#courses-preview">BSEB Classes</a></li>
+            <li><a href="index.html#courses-preview">CBSE Classes</a></li>
+            <li><a href="index.html#courses-preview">Crash Courses</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h5>Subscribe</h5>
+          <p>Subscribe to our newsletter for updates.</p>
+          <form class="d-flex gap-2" onsubmit="event.preventDefault(); this.reset(); this.querySelector('.sub-msg').style.display='block'; setTimeout(()=>this.querySelector('.sub-msg').style.display='none', 2500);">
+            <input type="email" class="form-control" placeholder="Your Email" required
+              style="border-radius: 12px; padding: 12px 16px; border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: white; font-size: 0.9rem;">
+            <button class="btn btn-primary" type="submit"
+              style="border-radius: 12px; padding: 12px 22px; background: var(--grad-primary); border: none; font-weight: 600; white-space: nowrap;">
+              Subscribe
+            </button>
+          </form>
+          <p class="sub-msg" style="display:none; color: var(--primary-light); margin-top: 10px; font-size: 0.85rem;">
+            <i class="fas fa-check-circle me-1"></i>Subscribed successfully!
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="mb-0">© 2019 AACEM Coaching Institute. All Rights Reserved. | Designed & Developed by Avinash Kumar</p>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-
-
-
