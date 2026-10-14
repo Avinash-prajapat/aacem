@@ -6,1426 +6,1888 @@
     <title>Aastha Computer Education Mission & Intermediate Coaching</title>
     <meta name="keywords" content="aacem, aastha computer education mission, aastha computer, computer institute in patepur, computer coaching center, intermediate coaching center, computer institute in bihar">
     <meta name="description" content="AASTHA Computer Education Mission (AACEM) is a computer and intermediate coaching center providing quality education.">
-    
-    <!-- Preload Critical Resources -->
-    <link rel="preload" as="image" href="aacemimage.webp" fetchpriority="high" type="webp">
-    <link rel="preload" as="image" href="aacemimage.png" fetchpriority="high" type="ipng">
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    
-    <!-- DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    
-    <!-- Bootstrap CSS (Critical) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Favicon - More Comprehensive -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
-    <link rel="shortcut icon" type="image/png" href="logo.png">
-    
-    <!-- Google Fonts with display swap -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- WebP Detection Script -->
-    <script>
-        (function() {
-            // Check WebP support
-            var WebP = new Image();
-            WebP.onload = WebP.onerror = function() {
-                if (WebP.height == 2) {
-                    document.documentElement.classList.add('webp');
-                } else {
-                    document.documentElement.classList.add('no-webp');
-                }
-            };
-            WebP.src = 'data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==';
-        })();
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="logo.png">
 
     <style>
-        /* Critical CSS - Above the fold */
+        /* ==================== DESIGN TOKENS ==================== */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #8b5cf6;
-            --accent: #06b6d4;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-2: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            --gradient-3: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            --primary-light: #a5b4fc;
+            --violet: #8b5cf6;
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+
+            --ink: #0f172a;
+            --ink-soft: #1e293b;
+            --muted: #64748b;
+            --muted-light: #94a3b8;
+            --line: rgba(15, 23, 42, 0.08);
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --grad-accent: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            --grad-warm: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+            --grad-hero: linear-gradient(135deg, #312e81 0%, #6366f1 45%, #8b5cf6 100%);
+
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.12);
+            --shadow-glow: 0 20px 60px -20px rgba(99, 102, 241, 0.5);
+
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 40px;
+
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+
         body {
-            font-family: 'Inter', 'Poppins', sans-serif;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            color: var(--ink);
+            background: var(--surface-soft);
+            line-height: 1.6;
             overflow-x: hidden;
-            color: var(--dark);
-            font-display: swap;
+            padding-top: 76px;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        /* Navbar Critical */
-        .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+
+        h1, h2, h3, h4, h5 {
+            font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
         }
-        
-        /* Hero Section with WebP fallback */
-        .hero-section {
-            color: white;
-            padding: 160px 0 100px;
-            text-align: center;
-            margin-top: -76px;
-            min-height: 80vh;
-            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), #3a0ca3;
+
+        /* ==================== ANIMATED AURORA BACKGROUND ==================== */
+        .aurora-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            overflow: hidden;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
         }
-        
-        .webp .hero-section {
-            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), url('aacemimage.webp') center/cover;
+        .aurora-bg::before, .aurora-bg::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: auroraFloat 20s ease-in-out infinite;
         }
-        
-        .no-webp .hero-section {
-            background: linear-gradient(rgba(58, 12, 163, 0.5), rgba(67, 97, 238, 0.5)), url('aacemimage.png') center/cover;
+        .aurora-bg::before {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, #a5b4fc 0%, transparent 70%);
+            top: -200px; left: -150px;
         }
-        
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .aurora-bg::after {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, #67e8f9 0%, transparent 70%);
+            bottom: -250px; right: -200px;
+            animation-delay: -10s;
         }
-        
-        .hero-section h1 {
-            font-weight: 800;
-            font-size: clamp(1.8rem, 5vw, 3.5rem);
-            animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
+        .aurora-blob {
+            position: absolute;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            background: radial-gradient(circle, #c4b5fd 0%, transparent 70%);
+            top: 40%; left: 30%;
+            animation: auroraFloat 25s ease-in-out infinite reverse;
         }
-        
-        .hero-section .lead {
-            animation: fadeInUp 1s ease 0.2s backwards;
-            font-size: clamp(1.1rem, 3vw, 1.4rem);
-            font-weight: 300;
+        @keyframes auroraFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(80px, -60px) scale(1.1); }
+            66% { transform: translate(-60px, 80px) scale(0.95); }
         }
-        
-        /* Non-critical CSS will be loaded after */
-        .feature-icon { font-size: 3.5rem; }
-        .section-title { text-align: center; margin-bottom: 60px; }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-section { padding: 120px 0 80px; }
-        }
-    </style>
-    
-    <!-- Defer non-critical CSS -->
-    <link rel="preload" href="/css/non-critical.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/css/non-critical.css"></noscript>
-    
-    <!-- Or keep all CSS here if you prefer - it's already well organized -->
-    <style>
-        /* Rest of your existing CSS here */
-        .animated-bg {
+
+        /* ==================== TOP BAR (HAMBURGER LEFT) ==================== */
+        .top-bar {
             position: fixed;
             top: 0;
             left: 0;
+            right: 0;
+            height: 76px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1050;
+            transition: all 0.4s var(--ease);
+        }
+
+        .top-bar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-sm);
+            height: 68px;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        /* Hamburger Button */
+        .menu-toggle {
+            width: 46px;
+            height: 46px;
+            border: 1px solid var(--line);
+            background: white;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.35s var(--ease);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .menu-toggle:hover {
+            background: var(--grad-primary);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -8px rgba(99, 102, 241, 0.6);
+        }
+
+        .menu-toggle .lines {
+            width: 22px;
+            height: 16px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-toggle .lines span {
+            display: block;
+            height: 2.5px;
             width: 100%;
-            height: 100%;
-            z-index: -1;
+            background: var(--ink);
+            border-radius: 2px;
+            transition: all 0.4s var(--ease);
+            transform-origin: center;
+        }
+
+        .menu-toggle .lines span:nth-child(2) { width: 70%; }
+
+        .menu-toggle:hover .lines span { background: white; }
+        .menu-toggle:hover .lines span:nth-child(2) { width: 100%; }
+
+        /* Brand in top bar */
+        .top-bar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--ink);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+
+        .top-bar .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--grad-primary);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Right actions */
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-bar-right .btn-login {
+            background: var(--grad-primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.35s var(--ease);
+            box-shadow: 0 8px 22px -8px rgba(99, 102, 241, 0.7);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .top-bar-right .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px -8px rgba(99, 102, 241, 0.85);
+            color: white;
+        }
+
+        /* ==================== SIDE DRAWER ==================== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s var(--ease);
+            z-index: 1090;
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            height: 100dvh;
+            width: 340px;
+            max-width: 88vw;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 8px 0 60px rgba(15, 23, 42, 0.18);
+            z-index: 1100;
+            transform: translateX(-105%);
+            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
-        
-        .animated-bg::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: moveBackground 20s linear infinite;
+
+        .drawer.open {
+            transform: translateX(0);
         }
-        
-        @keyframes moveBackground {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-        
-        .navbar.scrolled {
-            background: rgba(255, 255, 255, 0.98) !important;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: var(--gradient-2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .nav-link {
-            color: var(--dark) !important;
-            font-weight: 500;
-            position: relative;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background: var(--gradient-2);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-            border-radius: 2px;
-        }
-        
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            width: 80%;
-        }
-        
-        .nav-link:hover {
-            transform: translateY(-2px);
-        }
-        
-        .hero-section::before {
+
+        /* Drawer decorative top gradient */
+        .drawer::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            animation: bgAnimation 20s linear infinite;
+            height: 220px;
+            background: var(--grad-primary);
+            opacity: 0.08;
+            pointer-events: none;
+            mask-image: linear-gradient(180deg, black, transparent);
+            -webkit-mask-image: linear-gradient(180deg, black, transparent);
         }
-        
-        @keyframes bgAnimation {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(60px, 60px); }
+
+        .drawer-header {
+            padding: 24px 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--line);
+            position: relative;
+            z-index: 1;
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+        .drawer-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--ink);
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+
+        .drawer-brand .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 13px;
+            background: var(--grad-primary);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 24px -8px rgba(99, 102, 241, 0.7);
         }
-        
-        .feature-icon {
-            font-size: 3.5rem;
-            background: var(--gradient-2);
+
+        .drawer-brand .brand-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.1;
+        }
+
+        .drawer-brand .brand-text small {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .drawer-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid var(--line);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.3s var(--ease);
+            color: var(--ink);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .drawer-close:hover {
+            background: var(--grad-primary);
+            color: white;
+            border-color: transparent;
+            transform: rotate(90deg);
+        }
+
+        /* Drawer navigation */
+        .drawer-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .drawer-nav::-webkit-scrollbar { width: 4px; }
+        .drawer-nav::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 4px;
+        }
+
+        .drawer-nav-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted-light);
+            padding: 8px 14px;
+            margin-bottom: 4px;
+        }
+
+        .drawer-nav ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .drawer-nav li {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+        }
+
+        .drawer.open .drawer-nav li {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Stagger animation on open */
+        .drawer.open .drawer-nav li:nth-child(1) { transition-delay: 0.12s; }
+        .drawer.open .drawer-nav li:nth-child(2) { transition-delay: 0.16s; }
+        .drawer.open .drawer-nav li:nth-child(3) { transition-delay: 0.20s; }
+        .drawer.open .drawer-nav li:nth-child(4) { transition-delay: 0.24s; }
+        .drawer.open .drawer-nav li:nth-child(5) { transition-delay: 0.28s; }
+        .drawer.open .drawer-nav li:nth-child(6) { transition-delay: 0.32s; }
+        .drawer.open .drawer-nav li:nth-child(7) { transition-delay: 0.36s; }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 16px;
+            border-radius: 14px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drawer-link .link-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(99, 102, 241, 0.08);
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            font-size: 0.9rem;
+            transition: all 0.3s var(--ease);
+            flex-shrink: 0;
+        }
+
+        .drawer-link:hover,
+        .drawer-link.active {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary-dark);
+            transform: translateX(4px);
+        }
+
+        .drawer-link:hover .link-icon,
+        .drawer-link.active .link-icon {
+            background: var(--grad-primary);
+            color: white;
+            transform: rotate(-8deg) scale(1.05);
+            box-shadow: 0 8px 18px -6px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Drawer footer */
+        .drawer-footer {
+            padding: 20px;
+            border-top: 1px solid var(--line);
+            position: relative;
+            z-index: 1;
+        }
+
+        .drawer-cta {
+            display: block;
+            text-align: center;
+            padding: 14px;
+            border-radius: 14px;
+            background: var(--grad-primary);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.35s var(--ease);
+            box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.7);
+            margin-bottom: 14px;
+        }
+
+        .drawer-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px -10px rgba(99, 102, 241, 0.9);
+            color: white;
+        }
+
+        .drawer-social {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .drawer-social a {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(99, 102, 241, 0.08);
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.3s var(--ease);
+            font-size: 0.85rem;
+        }
+
+        .drawer-social a:hover {
+            background: var(--grad-primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            border-radius: 14px;
+            padding: 13px 28px;
+            font-size: 0.95rem;
+            transition: all 0.35s var(--ease);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--grad-primary);
+            color: white;
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.7);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 45px -12px rgba(99, 102, 241, 0.85);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary-dark);
+            border: 1.5px solid var(--primary-light);
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--grad-primary);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px -10px rgba(99, 102, 241, 0.7);
+        }
+
+        .btn-outline-light {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline-light:hover {
+            background: white;
+            color: var(--primary-dark);
+            border-color: white;
+            transform: translateY(-3px);
+        }
+
+        .btn-lg {
+            padding: 16px 36px;
+            font-size: 1rem;
+            border-radius: 16px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            position: relative;
+            color: white;
+            padding: 100px 0 100px;
+            text-align: center;
+            overflow: hidden;
+            background: var(--grad-hero);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.25) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+            pointer-events: none;
+        }
+
+        .hero-section .container { position: relative; z-index: 2; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s var(--ease) backwards;
+        }
+
+        .hero-badge .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+
+        .hero-section h1 {
+            font-size: clamp(1.8rem, 5.5vw, 3.8rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.9s var(--ease) 0.1s backwards;
+            line-height: 1.1;
+        }
+
+        .hero-section h1 .gradient-text {
+            background: linear-gradient(135deg, #a5f3fc 0%, #c4b5fd 50%, #fbbf24 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        .feature-card:hover .feature-icon {
-            transform: scale(1.2) rotate(5deg);
-        }
-        
-        .section-title {
-            text-align: center;
-            margin-bottom: 60px;
-            color: var(--dark);
-            position: relative;
-            font-weight: 800;
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .section-title::before {
-            content: attr(data-text);
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            font-size: clamp(3rem, 8vw, 5rem);
-            font-weight: 900;
-            color: rgba(99, 102, 241, 0.05);
-            z-index: -1;
-            white-space: nowrap;
-        }
-        
-        .section-title:after {
-            content: '';
-            display: block;
-            width: 120px;
-            height: 5px;
-            background: var(--gradient-2);
-            margin: 25px auto;
-            border-radius: 3px;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-        
-        /* Notification Section */
-        .notification-section {
-            padding: 60px 0;
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255,255,255,0.5);
         }
 
-        .notification-carousel .carousel-item {
-            transition: transform 0.7s ease-in-out;
+        .hero-section .hero-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            animation: fadeInUp 0.9s var(--ease) 0.2s backwards;
         }
+
+        .hero-section .hero-tags {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            opacity: 0.75;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.9s var(--ease) 0.3s backwards;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.9s var(--ease) 0.4s backwards;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 24px;
+            margin-top: 70px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 0.9s var(--ease) 0.5s backwards;
+        }
+
+        .hero-stat {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 20px 16px;
+            transition: all 0.4s var(--ease);
+        }
+
+        .hero-stat:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .hero-stat .num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .hero-stat .lbl {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== SECTION TITLES ==================== */
+        .section-pad { padding: 90px 0; position: relative; }
+
+        .section-title { text-align: center; margin-bottom: 60px; }
+
+        .section-title .eyebrow {
+            display: inline-block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            padding: 8px 20px;
+            border-radius: 100px;
+            margin-bottom: 18px;
+        }
+
+        .section-title h2 {
+            font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 14px;
+        }
+
+        .section-title p {
+            color: var(--muted);
+            max-width: 620px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+        }
+
+        /* ==================== NOTIFICATION ==================== */
+        .notification-section { padding: 70px 0; }
 
         .notification-card {
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(16px);
-            border-radius: 32px;
-            padding: 40px 45px;
-            box-shadow: 0 20px 45px -12px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.6);
-            margin: 10px;
-            transition: all 0.35s;
-            border-left: 8px solid var(--primary);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: var(--radius-lg);
+            padding: 44px 48px;
+            box-shadow: var(--shadow-md);
+            margin: 12px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s var(--ease);
+        }
+
+        .notification-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 6px; height: 100%;
+            background: var(--grad-primary);
         }
 
         .notification-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 30px 60px -12px rgba(99,102,241,0.25);
-            border-left-width: 12px;
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
         }
+
+        .notification-card:hover::before { width: 10px; }
 
         .notification-priority {
             display: inline-block;
-            padding: 6px 22px;
-            border-radius: 40px;
-            font-size: 0.8rem;
+            padding: 6px 18px;
+            border-radius: 100px;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.08em;
             margin-bottom: 18px;
             color: white;
         }
 
-        .priority-urgent { background: linear-gradient(145deg, #ef4444, #dc2626); }
-        .priority-high { background: linear-gradient(145deg, #f59e0b, #d97706); }
-        .priority-normal { background: linear-gradient(145deg, #6366f1, #4f46e5); }
-        .priority-low { background: linear-gradient(145deg, #6b7280, #4b5563); }
+        .priority-urgent { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .priority-high { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .priority-normal { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .priority-low { background: linear-gradient(135deg, #6b7280, #4b5563); }
 
         .notification-title {
-            font-size: clamp(1.3rem, 4vw, 1.9rem);
+            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
             font-weight: 700;
-            color: var(--dark);
+            color: var(--ink);
             margin-bottom: 12px;
-            font-family: 'Poppins', sans-serif;
         }
 
         .notification-message {
-            font-size: 1.1rem;
-            color: #475569;
+            font-size: 1.02rem;
+            color: var(--muted);
             line-height: 1.7;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .notification-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 18px;
+            gap: 16px;
             align-items: center;
-        }
-
-        .notification-badge {
-            background: #f1f5f9;
-            padding: 6px 18px;
-            border-radius: 40px;
+            color: var(--muted-light);
             font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--primary-dark);
         }
 
         .carousel-control-prev,
         .carousel-control-next {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             background: white;
-            border-radius: 50%;
+            border-radius: 14px;
             top: 50%;
             transform: translateY(-50%);
             opacity: 1;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--line);
+            transition: all 0.3s var(--ease);
         }
 
         .carousel-control-prev:hover,
         .carousel-control-next:hover {
-            background: var(--gradient-2);
+            background: var(--grad-primary);
+            border-color: transparent;
+            transform: translateY(-50%) scale(1.08);
         }
 
         .carousel-control-prev-icon,
         .carousel-control-next-icon {
-            filter: invert(0.5);
+            filter: invert(0.4);
+            width: 18px; height: 18px;
         }
 
         .carousel-control-prev:hover .carousel-control-prev-icon,
-        .carousel-control-next:hover .carousel-control-next-icon {
-            filter: invert(1);
-        }
+        .carousel-control-next:hover .carousel-control-next-icon { filter: invert(1); }
+
+        .carousel-indicators { bottom: -50px; }
 
         .carousel-indicators [data-bs-target] {
-            width: 12px;
-            height: 12px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             background: var(--primary);
-            opacity: 0.3;
+            opacity: 0.25;
             border: none;
+            transition: all 0.3s var(--ease);
         }
 
-        .carousel-indicators .active {
-            opacity: 1;
-            transform: scale(1.2);
-        }
+        .carousel-indicators .active { opacity: 1; width: 28px; border-radius: 6px; }
 
         .notification-empty {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 24px;
             background: rgba(255,255,255,0.7);
-            border-radius: 32px;
+            border-radius: var(--radius-lg);
+            border: 1px dashed var(--line);
         }
-        
-        /* Course Cards */
-        .course-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin: 60px 0;
-        }
-        
-        .course-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            position: relative;
+
+        /* ==================== FEATURE CARDS ==================== */
+        .feature-card {
+            text-align: center;
+            padding: 40px 24px;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            transition: all 0.5s var(--ease);
             height: 100%;
         }
-        
-        .course-card::before {
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            background: white;
+        }
+
+        .feature-icon {
+            width: 76px; height: 76px;
+            margin: 0 auto 22px;
+            border-radius: 22px;
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            color: white;
+            background: var(--grad-primary);
+            box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.6);
+            transition: all 0.5s var(--ease-spring);
+        }
+
+        .feature-card:nth-child(2) .feature-icon { background: var(--grad-accent); box-shadow: 0 15px 30px -10px rgba(6, 182, 212, 0.6); }
+        .feature-card:nth-child(3) .feature-icon { background: var(--grad-warm); box-shadow: 0 15px 30px -10px rgba(245, 158, 11, 0.6); }
+        .feature-card:nth-child(4) .feature-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 15px 30px -10px rgba(16, 185, 129, 0.6); }
+
+        .feature-card:hover .feature-icon { transform: scale(1.12) rotate(-6deg); }
+
+        .feature-card h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--ink);
+        }
+
+        .feature-card p { color: var(--muted); font-size: 0.92rem; margin: 0; }
+
+        /* ==================== ABOUT ==================== */
+        .about-image-wrap {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            aspect-ratio: 3/2;
+        }
+
+        .about-image-wrap::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: var(--gradient-2);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            inset: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(15, 23, 42, 0.5));
+            pointer-events: none;
         }
-        
-        .course-card:hover {
-            transform: translateY(-20px) scale(1.02);
-            box-shadow: 0 30px 80px rgba(99, 102, 241, 0.25);
+
+        .about-image-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s var(--ease);
         }
-        
-        .course-content {
-            padding: 40px 35px;
+
+        .about-image-wrap:hover img { transform: scale(1.06); }
+
+        .stat-tile {
+            text-align: center;
+            padding: 26px 18px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            transition: all 0.4s var(--ease);
+            height: 100%;
+        }
+
+        .stat-tile:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 700;
+            background: var(--grad-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        /* ==================== DIRECTOR ==================== */
+        .director-photo {
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 6px solid white;
+            box-shadow: 0 24px 60px -15px rgba(99, 102, 241, 0.5);
+            position: relative;
+            transition: transform 0.5s var(--ease);
+        }
+
+        .director-photo:hover { transform: scale(1.05) rotate(2deg); }
+
+        .director-ring {
+            display: inline-block;
+            position: relative;
+            padding: 10px;
+        }
+
+        .director-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #6366f1, #06b6d4, #f59e0b, #6366f1);
+            animation: spinRing 8s linear infinite;
+            z-index: 0;
+        }
+
+        .director-ring::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: var(--surface-soft);
+            z-index: 1;
+        }
+
+        .director-ring > * { position: relative; z-index: 2; }
+
+        @keyframes spinRing { to { transform: rotate(360deg); } }
+
+        /* ==================== COURSE CARDS ==================== */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 28px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 36px 30px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--line);
+            transition: all 0.5s var(--ease);
+            position: relative;
+            overflow: hidden;
             height: 100%;
             display: flex;
             flex-direction: column;
         }
-        
-        .course-title {
-            font-size: clamp(1.3rem, 3vw, 1.6rem);
-            margin-bottom: 15px;
-            background: var(--gradient-2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.3;
-            font-weight: 700;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .course-description {
-            color: #64748b;
-            line-height: 1.8;
-            margin-bottom: 30px;
-            flex-grow: 1;
-            font-size: 1.05rem;
-        }
-        
-        .course-duration, .course-fee {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            color: #555;
-            font-size: 1.05rem;
-            font-weight: 500;
-        }
-        
-        .course-duration i, .course-fee i {
-            margin-right: 15px;
-            color: var(--primary);
-            width: 24px;
-            text-align: center;
-            font-size: 1.2rem;
-        }
-        
-        .course-fee {
-            font-weight: 700;
-            color: var(--success);
-            font-size: 1.3rem;
-        }
-        
-        .course-fee i {
-            color: var(--success);
-        }
-        
-        /* Academic Class Cards */
-        .class-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 35px;
-            margin: 60px 0;
-        }
-        
-        .class-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 40px 35px;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            height: 100%;
-        }
-        
-        .class-card::before {
+
+        .course-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: var(--gradient-2);
-            border-radius: 30px 30px 0 0;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--grad-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s var(--ease);
         }
-        
-        .class-card:hover {
-            transform: translateY(-15px) scale(1.02);
-            box-shadow: 0 30px 80px rgba(139, 92, 246, 0.2);
-        }
-        
-        .class-card h3 {
-            background: var(--gradient-2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            font-size: clamp(1.3rem, 3vw, 1.5rem);
-            font-weight: 700;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .class-subjects {
-            color: #64748b;
-            line-height: 1.8;
-            margin-bottom: 25px;
-            font-size: 1.05rem;
-        }
-        
-        .faculty {
-            display: flex;
-            align-items: center;
-            color: #333;
-            font-weight: 600;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid rgba(99, 102, 241, 0.1);
-            font-size: 1.05rem;
-        }
-        
-        .faculty i {
-            margin-right: 15px;
-            color: var(--primary);
-            font-size: 1.3rem;
-        }
-        
-        /* Buttons */
-        .btn-primary {
-            background: var(--gradient-2);
-            border: none;
-            border-radius: 50px;
-            padding: 16px 45px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn-primary:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
-        }
-        
-        .btn-outline-primary {
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            border-radius: 50px;
-            padding: 16px 45px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-outline-primary:hover {
-            background: var(--gradient-2);
-            border-color: transparent;
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-        }
-        
-        /* Dashboard Cards */
-        .dashboard-card {
-            text-align: center;
-            padding: 50px 30px;
-            border-radius: 30px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
-            border: none;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-            height: 100%;
-        }
-        
-        .dashboard-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
-            transition: left 0.5s;
-        }
-        
-        .dashboard-card:hover::before {
-            left: 100%;
-        }
-        
-        .dashboard-card:hover {
-            transform: translateY(-15px) scale(1.03);
-            box-shadow: 0 25px 70px rgba(99, 102, 241, 0.2);
-        }
-        
-        .dashboard-card .icon {
-            font-size: 4rem;
-            margin-bottom: 25px;
-            background: var(--gradient-2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            transition: all 0.3s ease;
-        }
-        
-        .dashboard-card:hover .icon {
-            transform: scale(1.2) rotate(10deg);
-        }
-        
-        /* Form Styling */
-        .form-control {
-            border-radius: 15px;
-            padding: 16px 22px;
-            border: 2px solid rgba(99, 102, 241, 0.2);
-            font-size: 1.05rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.4rem rgba(99, 102, 241, 0.15);
-            background: white;
-            transform: translateY(-2px);
-        }
-        
-        /* Contact Form */
-        .contact-form {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 45px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            height: 100%;
-        }
-        
-        /* About Section */
-        .about-section {
-            padding: 100px 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            position: relative;
-        }
-        
-        .about-image {
-            border-radius: 30px;
-            overflow: hidden;
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
-            height: 100%;
-            min-height: 400px;
-            transition: all 0.5s ease;
-            background-color: #f0f0f0;
-        }
-        
-        .about-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            min-height: 400px;
-            display: block;
-        }
-        
-        .about-image:hover {
-            transform: scale(1.02);
-            box-shadow: 0 30px 90px rgba(99, 102, 241, 0.2);
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            height: 100%;
-        }
-        
-        .stat-item:hover {
+
+        .course-card:hover::before { transform: scaleX(1); }
+
+        .course-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
         }
-        
-        .stat-number {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 800;
-            background: var(--gradient-2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+
+        .course-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--ink);
+        }
+
+        .course-description {
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            flex-grow: 1;
+        }
+
+        .course-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.9rem;
             margin-bottom: 10px;
         }
-        
-        .stat-label {
-            color: #64748b;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-        
-        /* Gallery Section */
-        .gallery-section {
-            padding: 100px 0;
-            background: white;
-        }
-        
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 30px;
-            margin: 50px 0;
-        }
-        
-        .gallery-item {
-            position: relative;
-            border-radius: 25px;
-            overflow: hidden;
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-            aspect-ratio: 1;
-        }
-        
-        .gallery-item:hover {
-            transform: translateY(-15px) scale(1.03);
-            box-shadow: 0 25px 70px rgba(99, 102, 241, 0.3);
-        }
-        
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: block;
-        }
-        
-        .gallery-item:hover img {
-            transform: scale(1.15) rotate(3deg);
-        }
-        
-        .gallery-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
+
+        .course-meta i { color: var(--primary); width: 18px; }
+
+        .course-fee {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--emerald);
+            margin-top: 8px;
+        }
+
+        .faculty-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            padding: 8px 14px;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        /* ==================== GALLERY ==================== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 1;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.5s var(--ease);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+            z-index: 2;
+        }
+
+        .gallery-item img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s var(--ease);
+            display: block;
+        }
+
+        .gallery-item:hover img { transform: scale(1.12); }
+
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
+            display: grid;
+            place-items: center;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.4s var(--ease);
         }
-        
-        .gallery-item:hover .gallery-overlay {
-            opacity: 1;
-        }
-        
+
+        .gallery-item:hover .gallery-overlay { opacity: 1; }
+
         .gallery-overlay i {
             color: white;
-            font-size: 3rem;
+            font-size: 2rem;
+            transform: scale(0.5);
+            transition: transform 0.4s var(--ease-spring);
         }
-        
-        /* Footer */
-        .footer {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+
+        .gallery-item:hover .gallery-overlay i { transform: scale(1); }
+
+        /* ==================== CONTACT ==================== */
+        .contact-form {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--line);
+            height: 100%;
+        }
+
+        .contact-form h4 { font-size: 1.4rem; margin-bottom: 28px; color: var(--ink); }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--ink-soft);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border-radius: 14px;
+            padding: 14px 18px;
+            border: 1.5px solid var(--line);
+            font-size: 0.95rem;
+            background: var(--surface-soft);
+            transition: all 0.3s var(--ease);
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+            outline: none;
+        }
+
+        .contact-info-item {
+            display: flex;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .contact-info-item:last-child { border-bottom: none; }
+
+        .contact-info-icon {
+            width: 46px; height: 46px;
+            border-radius: 14px;
+            background: var(--grad-primary);
             color: white;
-            padding: 80px 0 30px;
-            margin-top: 80px;
-            position: relative;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            font-size: 1rem;
         }
-        
+
+        .contact-info-item h5 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+        .contact-info-item p { color: var(--muted); font-size: 0.9rem; margin: 0; line-height: 1.5; }
+
+        /* ==================== MAP ==================== */
+        .map-wrap {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            height: 480px;
+            border: 1px solid var(--line);
+        }
+
+        .map-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+            color: #cbd5e0;
+            padding: 80px 0 30px;
+            position: relative;
+            margin-top: 60px;
+        }
+
         .footer::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-2);
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--grad-primary);
         }
-        
-        .footer h5 {
-            color: #fff;
+
+        .footer h4, .footer h5 {
+            color: white;
+            margin-bottom: 22px;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 25px;
-            font-family: 'Poppins', sans-serif;
         }
-        
+
+        .footer p { font-size: 0.92rem; line-height: 1.7; }
+
         .footer a {
-            color: #cbd5e0;
+            color: #94a3b8;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s var(--ease);
+            font-size: 0.92rem;
             display: inline-block;
         }
-        
+
         .footer a:hover {
             color: var(--primary-light);
-            transform: translateX(5px);
+            transform: translateX(4px);
         }
-        
+
+        .social-icons { display: flex; gap: 12px; margin-top: 20px; }
+
         .social-icons a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 50%;
-            margin-right: 15px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 44px; height: 44px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            place-items: center;
+            transition: all 0.4s var(--ease);
+            color: white;
         }
-        
+
         .social-icons a:hover {
-            background: var(--gradient-2);
-            transform: translateY(-8px) scale(1.1);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+            background: var(--grad-primary);
+            border-color: transparent;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.7);
         }
-        
-        /* Alert Styling */
-        .alert {
-            border-radius: 20px;
-            border: none;
-            font-weight: 500;
-            backdrop-filter: blur(10px);
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 50px;
+            padding-top: 30px;
+            font-size: 0.88rem;
+            color: #94a3b8;
         }
-        
-        /* Modal Styling */
+
+        /* ==================== SCROLL REVEAL ==================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+            will-change: opacity, transform;
+        }
+
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ==================== MODAL ==================== */
         .modal-content {
-            border-radius: 30px;
+            border-radius: var(--radius-lg);
             border: none;
             overflow: hidden;
-            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
         }
-        
+
         .modal-header {
-            background: var(--gradient-2);
+            background: var(--grad-primary);
             color: white;
             border-bottom: none;
-            padding: 25px 30px;
+            padding: 20px 28px;
         }
-        
-        .modal-body {
-            padding: 0;
-        }
-        
-        .modal-body img {
-            width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
-        }
-        
+
+        .modal-header .modal-title { font-size: 1.1rem; }
+
+        .modal-body { padding: 0; background: #0f172a; }
+        .modal-body img { width: 100%; max-height: 75vh; object-fit: contain; display: block; }
+
         .modal-footer {
             border-top: none;
-            background-color: #f8f9fa;
-            padding: 20px 30px;
+            background: var(--surface-soft);
+            padding: 16px 28px;
         }
-        
-        /* Scroll Animations */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
-        
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Pulse Animation */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .course-cards, .class-cards {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-            
-            .gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            }
-            
-            .stats-container {
-                flex-direction: column;
-                gap: 20px;
-            }
 
-            .notification-card {
-                padding: 30px 25px;
-            }
-            
-            .contact-form {
-                padding: 30px 25px;
+        .spinner-border { color: var(--primary) !important; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 991.98px) {
+            .hero-section { padding: 80px 0 80px; }
+            .section-pad { padding: 70px 0; }
+            .hero-stats { margin-top: 50px; }
+        }
+
+        @media (max-width: 767.98px) {
+            body { padding-top: 68px; }
+            .top-bar { height: 68px; padding: 0 14px; }
+            .top-bar.scrolled { height: 62px; }
+            .top-bar .brand { font-size: 1rem; }
+            .top-bar .brand-mark { width: 36px; height: 36px; font-size: 0.9rem; }
+            .top-bar-right .btn-login { padding: 9px 16px; font-size: 0.82rem; }
+            .top-bar-right .btn-login span { display: none; }
+            .menu-toggle { width: 42px; height: 42px; }
+
+            .hero-section { padding: 70px 0 70px; }
+            .hero-section h1 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+            .section-pad { padding: 60px 0; }
+            .notification-card { padding: 30px 24px; margin: 8px; }
+            .contact-form { padding: 28px 22px; }
+            .about-image-wrap { aspect-ratio: 4/3; }
+            .director-photo { width: 180px; height: 180px; }
+            .map-wrap { height: 360px; }
+            .hero-actions .btn { width: 100%; }
+            .hero-actions { flex-direction: column; }
+            .carousel-control-prev, .carousel-control-next { display: none; }
+            .footer { padding: 60px 0 24px; }
+        }
+
+        @media (max-width: 575.98px) {
+            .course-grid { grid-template-columns: 1fr; gap: 20px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .feature-card { padding: 30px 18px; }
+            .feature-icon { width: 64px; height: 64px; font-size: 1.5rem; }
+            .notification-card { padding: 24px 20px; }
+            .section-title { margin-bottom: 40px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
             }
         }
-        
-        @media (max-width: 480px) {
-            .gallery-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn-primary, .btn-outline-primary {
-                padding: 12px 30px;
-                font-size: 1rem;
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 991.98px) {
+            body { padding-top: 72px; }
+            .hero-section { padding: 90px 0 80px; }
+            .section-pad { padding: 70px 0; }
+            .hero-stats { margin-top: 50px; }
+        }
+
+        @media (max-width: 767.98px) {
+            body { padding-top: 68px; }
+            .top-bar { height: 68px; padding: 0 14px; }
+            .top-bar.scrolled { height: 62px; }
+            .top-bar .brand { font-size: 1rem; }
+            .top-bar .brand-mark { width: 36px; height: 36px; font-size: 0.9rem; }
+            .top-bar-right .btn-login { padding: 9px 16px; font-size: 0.82rem; }
+            .menu-toggle { width: 42px; height: 42px; }
+
+            .hero-section { padding: 70px 0 70px; }
+            .hero-section h1 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+            .section-pad { padding: 60px 0; }
+            .notification-card { padding: 30px 24px; margin: 8px; }
+            .contact-form { padding: 28px 22px; }
+            .about-image-wrap { aspect-ratio: 4/3; }
+            .director-photo { width: 180px; height: 180px; }
+            .map-wrap { height: 360px; }
+            .hero-actions .btn { width: 100%; }
+            .hero-actions { flex-direction: column; }
+            .carousel-control-prev, .carousel-control-next { display: none; }
+            .footer { padding: 60px 0 24px; }
+        }
+
+        @media (max-width: 575.98px) {
+            .course-grid { grid-template-columns: 1fr; gap: 20px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .feature-card { padding: 30px 18px; }
+            .feature-icon { width: 64px; height: 64px; font-size: 1.5rem; }
+            .notification-card { padding: 24px 20px; }
+            .section-title { margin-bottom: 40px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="animated-bg"></div>
+    <!-- Aurora Background -->
+    <div class="aurora-bg"><div class="aurora-blob"></div></div>
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">
-                <i class="fas fa-graduation-cap me-2"></i>AACEM Institute
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#courses-preview">Courses</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#director">Director</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#gallery">Gallery</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                </ul>
-                <div>
-                    <a href="choose-login.html" class="btn btn-outline-primary me-2">Login</a>
+    <!-- ==================== TOP BAR WITH HAMBURGER (LEFT) ==================== -->
+    <header class="top-bar" id="topBar">
+        <div class="top-bar-left">
+            <button class="menu-toggle" id="menuToggle" aria-label="Open Menu" aria-expanded="false">
+                <div class="lines">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
+            </button>
+            <a href="index.html" class="brand">
+                <span class="brand-mark"><i class="fas fa-graduation-cap"></i></span>
+                <span>AACEM<span style="color: var(--primary);">.</span></span>
+            </a>
+        </div>
+        <div class="top-bar-right">
+            <a href="choose-login.html" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i><span>Login</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ==================== SIDE DRAWER ==================== -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <aside class="drawer" id="sideDrawer" aria-hidden="true">
+        <div class="drawer-header">
+            <a href="index.html" class="drawer-brand">
+                <span class="brand-mark"><i class="fas fa-graduation-cap"></i></span>
+                <span class="brand-text">
+                    AACEM<span style="color: var(--primary);">.</span>
+                    <small>Computer Education Mission</small>
+                </span>
+            </a>
+            <button class="drawer-close" id="drawerClose" aria-label="Close Menu">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="drawer-nav">
+            <div class="drawer-nav-label">Main Menu</div>
+            <ul>
+                <li><a href="index.html" class="drawer-link active"><span class="link-icon"><i class="fas fa-home"></i></span>Home</a></li>
+                <li><a href="#about" class="drawer-link"><span class="link-icon"><i class="fas fa-info-circle"></i></span>About</a></li>
+                <li><a href="#courses-preview" class="drawer-link"><span class="link-icon"><i class="fas fa-book"></i></span>Courses</a></li>
+                <li><a href="#director" class="drawer-link"><span class="link-icon"><i class="fas fa-user-tie"></i></span>Director</a></li>
+                <li><a href="#gallery" class="drawer-link"><span class="link-icon"><i class="fas fa-images"></i></span>Gallery</a></li>
+                <li><a href="#features" class="drawer-link"><span class="link-icon"><i class="fas fa-star"></i></span>Features</a></li>
+                <li><a href="#contact" class="drawer-link"><span class="link-icon"><i class="fas fa-envelope"></i></span>Contact</a></li>
+            </ul>
+        </nav>
+
+        <div class="drawer-footer">
+            <a href="choose-login.html" class="drawer-cta">
+                <i class="fas fa-sign-in-alt me-2"></i>Login to Portal
+            </a>
+            <div class="drawer-social">
+                <a href="https://www.youtube.com/@aasthacomputereducationmis7772/featured" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://www.facebook.com/profile.php?id=100077894030395" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
             </div>
         </div>
-    </nav>
+    </aside>
 
-    <!-- Hero Section with Optimized Image -->
+    <!-- ==================== HERO ==================== -->
     <section class="hero-section">
         <div class="container">
-            <h1 class="display-3 fw-bold mb-4">
-                AASTHA COMPUTER EDUCATION MISSION <br>
-                <span class="fs-3 fw-semibold">
-                    Intermediate Coaching Center
-                </span>
+            <div class="hero-badge">
+                <span class="dot"></span>
+                <span>Admissions Open 2025</span>
+            </div>
+            <h1>
+                AASTHA COMPUTER<br>
+                <span class="gradient-text">EDUCATION MISSION</span>
             </h1>
-            <p class="lead mb-4 fs-4">Transforming Education with Technology and Expertise</p>
-            <p class="mb-5 fs-5">Computer Courses • Academic Classes • BSEB & CBSE Coaching</p>
-            <div class="mt-4">
-                <a href="#courses-preview" class="btn btn-primary btn-lg me-3 pulse-animation">Explore Courses</a>
-                <a href="#contact" class="btn btn-outline-light btn-lg">Get Started</a>
+            <p class="hero-subtitle">Intermediate Coaching Center — Transforming Education with Technology & Expertise</p>
+            <p class="hero-tags">Computer Courses • Academic Classes • BSEB & CBSE Coaching</p>
+            <div class="hero-actions">
+                <a href="#courses-preview" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-compass me-2"></i>Explore Courses
+                </a>
+                <a href="#contact" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-right me-2"></i>Get Started
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="num">100+</span>
+                    <span class="lbl">Students Trained</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="num">15+</span>
+                    <span class="lbl">Expert Faculty</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="num">6+</span>
+                    <span class="lbl">Years Experience</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="num">3</span>
+                    <span class="lbl">Branches</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Announcements / Notifications Carousel -->
+    <!-- ==================== NOTIFICATIONS ==================== -->
     <section class="notification-section">
         <div class="container">
-            <h2 class="section-title fade-in" data-text="UPDATES">Latest Announcements</h2>
-            <div id="announcementCarousel" class="carousel slide notification-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="section-title reveal">
+                <span class="eyebrow">Updates</span>
+                <h2>Latest Announcements</h2>
+                <p>Stay updated with the latest news and important notifications from AACEM.</p>
+            </div>
+            <div id="announcementCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-indicators" id="carouselIndicators"></div>
                 <div class="carousel-inner" id="notificationContainer">
-                    <!-- Loader -->
                     <div class="text-center py-5">
-                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                            <span class="visually-hidden">Loading announcements...</span>
+                        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="mt-3 text-muted fs-5">Fetching latest announcements ...</p>
+                        <p class="mt-3 text-muted">Fetching latest announcements...</p>
                     </div>
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#announcementCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
+                    <span class="carousel-control-prev-icon"></span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#announcementCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
+                    <span class="carousel-control-next-icon"></span>
                 </button>
             </div>
         </div>
     </section>
 
-    <!-- Features Overview -->
-    <section class="py-5">
+    <!-- ==================== FEATURES ==================== -->
+    <section class="section-pad">
         <div class="container">
-            <div class="row text-center g-4">
-                <div class="col-md-3 col-sm-6 fade-in feature-card">
-                    <div class="float-animation">
-                        <i class="fas fa-laptop-code feature-icon"></i>
-                    </div>
-                    <h4 class="fw-bold">Computer Courses</h4>
-                    <p class="text-muted">DCA, ADCA, Tally, MS Office and more</p>
-                </div>
-                <div class="col-md-3 col-sm-6 fade-in feature-card">
-                    <div class="float-animation" style="animation-delay: 0.5s;">
-                        <i class="fas fa-book-open feature-icon"></i>
-                    </div>
-                    <h4 class="fw-bold">Academic Classes</h4>
-                    <p class="text-muted">Class 9-12 for BSEB & CBSE boards</p>
-                </div>
-                <div class="col-md-3 col-sm-6 fade-in feature-card">
-                    <div class="float-animation" style="animation-delay: 1s;">
-                        <i class="fas fa-chalkboard-teacher feature-icon"></i>
-                    </div>
-                    <h4 class="fw-bold">Expert Faculty</h4>
-                    <p class="text-muted">Qualified and experienced teachers</p>
-                </div>
-                <div class="col-md-3 col-sm-6 fade-in feature-card">
-                    <div class="float-animation" style="animation-delay: 1.5s;">
-                        <i class="fas fa-chart-line feature-icon"></i>
-                    </div>
-                    <h4 class="fw-bold">Performance Tracking</h4>
-                    <p class="text-muted">Monitor progress with advanced analytics</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- About Section -->
-    <section id="about" class="about-section">
-        <div class="container">
-            <h2 class="section-title fade-in" data-text="ABOUT">About AACEM Institute</h2>
-            <div class="row align-items-center">
-                <div class="col-lg-6 mb-4 mb-lg-0 fade-in">
-                    <div class="about-content">
-                        <h3 class="mb-4 fw-bold" style="color: var(--primary); font-size: 2.2rem;">Our Mission & Vision</h3>
-                        <p class="mb-4 fs-5 fw-light">AACEM Institute is dedicated to providing quality education that empowers students with knowledge, skills, and confidence to succeed in their academic and professional endeavors.</p>
-                        <p class="mb-4">आस्था कम्प्यूटर एजुकेशन मिशन (AACEM) आपका स्वागत करता है। AACEM बिहार राज्य के वैशाली जिले में लखनीपुर रोड़, कारगिल चौक, मौदह, पातेपुर में स्थित है। AACEM विशेष सुविधाओं से वंचित, अल्पविकसित और पिछड़े हुए ग्रामीण क्षेत्रों में कंप्यूटर, माध्यमिक शिक्षा और उच्चतर शिक्षा के क्षेत्र में गुणवत्तापूर्ण शिक्षा प्रदान करता है जहाँ अधिकांश छात्रों को खासकर लड़कियों को परिस्थितिवश अपनी शिक्षा बीच में ही छोड़ देनी पड़ती है जो कि उनका जन्मसिद्ध और अहस्तान्तरणीय अधिकार है।</p>
-                        
-                        <div class="stats-container row g-3 mt-5">
-                            <div class="col-md-4">
-                                <div class="stat-item fade-in">
-                                    <div class="stat-number">100+</div>
-                                    <div class="stat-label">Students Trained</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item fade-in">
-                                    <div class="stat-number">15+</div>
-                                    <div class="stat-label">Expert Faculty</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item fade-in">
-                                    <div class="stat-number">6+</div>
-                                    <div class="stat-label">Years Experience</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-5">
-                            <a href="#contact" class="btn btn-primary btn-lg me-3">Contact Us</a>
-                            <a href="#courses-preview" class="btn btn-outline-primary btn-lg">View Courses</a>
-                        </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 reveal">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-laptop-code"></i></div>
+                        <h4>Computer Courses</h4>
+                        <p>DCA, ADCA, Tally, MS Office and more</p>
                     </div>
                 </div>
-                <div class="col-lg-6 fade-in">
-                    <div class="about-image">
-                        <img src="aacemimage.png" 
-                             alt="AACEM Institute"
-                             width="600"
-                             height="400"
-                             loading="lazy">
+                <div class="col-md-6 col-lg-3 reveal reveal-delay-1">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-book-open"></i></div>
+                        <h4>Academic Classes</h4>
+                        <p>Class 9-12 for BSEB & CBSE boards</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 reveal reveal-delay-2">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <h4>Expert Faculty</h4>
+                        <p>Qualified and experienced teachers</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 reveal reveal-delay-3">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h4>Performance Tracking</h4>
+                        <p>Monitor progress with analytics</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Director's Message -->
-    <section id="director" class="py-5" style="background: white;">
+    <!-- ==================== ABOUT ==================== -->
+    <section id="about" class="section-pad">
         <div class="container">
-            <h2 class="section-title fade-in" data-text="DIRECTOR">Director's Message</h2>
-            <div class="row align-items-center">
-                <div class="col-md-4 text-center mb-4 mb-md-0 fade-in">
-                    <div class="position-relative d-inline-block">
-                        <img src="director_photo.png" 
-                             alt="Director Ajit Kumar Singh" 
-                             class="img-fluid rounded-circle mb-3" 
-                             width="280"
-                             height="280"
-                             style="border: 6px solid var(--primary); box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);"
-                             loading="lazy">
+            <div class="section-title reveal">
+                <span class="eyebrow">About Us</span>
+                <h2>About AACEM Institute</h2>
+            </div>
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 reveal">
+                    <h3 style="font-size: clamp(1.4rem, 3vw, 1.9rem); margin-bottom: 20px; color: var(--ink);">
+                        Our Mission & Vision
+                    </h3>
+                    <p style="font-size: 1.02rem; color: var(--muted); margin-bottom: 18px;">
+                        AACEM Institute is dedicated to providing quality education that empowers students with knowledge, skills, and confidence to succeed in their academic and professional endeavors.
+                    </p>
+                    <p style="color: var(--muted); line-height: 1.8;">
+                        आस्था कम्प्यूटर एजुकेशन मिशन (AACEM) आपका स्वागत करता है। AACEM बिहार राज्य के वैशाली जिले में लखनीपुर रोड़, कारगिल चौक, मौदह, पातेपुर में स्थित है। AACEM विशेष सुविधाओं से वंचित, अल्पविकसित और पिछड़े हुए ग्रामीण क्षेत्रों में कंप्यूटर, माध्यमिक शिक्षा और उच्चतर शिक्षा के क्षेत्र में गुणवत्तापूर्ण शिक्षा प्रदान करता है।
+                    </p>
+                    <div class="row g-3 mt-4">
+                        <div class="col-4">
+                            <div class="stat-tile">
+                                <span class="stat-number" data-count="100">0</span>
+                                <div class="stat-label">Students Trained</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-tile">
+                                <span class="stat-number" data-count="15">0</span>
+                                <div class="stat-label">Expert Faculty</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-tile">
+                                <span class="stat-number" data-count="6">0</span>
+                                <div class="stat-label">Years Experience</div>
+                            </div>
+                        </div>
                     </div>
-                    <h4 class="fw-bold mt-3" style="color: var(--primary); font-size: 1.5rem;">Ajit Kumar Singh</h4>
-                    <p class="text-muted fw-semibold">Director, AACEM Institute</p>
+                    <div class="mt-4 d-flex gap-3 flex-wrap">
+                        <a href="#contact" class="btn btn-primary">Contact Us</a>
+                        <a href="#courses-preview" class="btn btn-outline-primary">View Courses</a>
+                    </div>
                 </div>
-                <div class="col-md-8 fade-in">
+                <div class="col-lg-6 reveal reveal-delay-1">
+                    <div class="about-image-wrap">
+                        <img src="aacemimage.png" alt="AACEM Institute" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== DIRECTOR ==================== -->
+    <section id="director" class="section-pad">
+        <div class="container">
+            <div class="section-title reveal">
+                <span class="eyebrow">Leadership</span>
+                <h2>Director's Message</h2>
+            </div>
+            <div class="row align-items-center g-5">
+                <div class="col-md-4 text-center reveal">
+                    <div class="director-ring">
+                        <img src="director_photo.png" alt="Director Ajit Kumar Singh" class="director-photo" loading="lazy">
+                    </div>
+                    <h4 class="mt-4 mb-1" style="color: var(--ink);">Ajit Kumar Singh</h4>
+                    <p style="color: var(--primary); font-weight: 600; font-size: 0.9rem;">Director, AACEM Institute</p>
+                </div>
+                <div class="col-md-8 reveal reveal-delay-1">
                     <div class="ps-md-4">
-                        <p class="fs-5 fw-light">"Greetings,</p>
-                        <p>I am <strong>Ajit Kumar Singh</strong>, Director of AACEM Institute, extending a warm welcome to all students, parents, and well-wishers.</p>
-                        <p>AACEM is committed to providing quality computer education and academic coaching in the rural areas of Vaishali, Bihar, where many students—especially girls—often face circumstances that force them to discontinue their education.</p>
-                        <p>Our mission is to transform education through technological expertise and experienced faculty, empowering every student to reach new heights. Our dedicated team of specialist teachers is committed to making students more competent and competitive, ensuring they are well-prepared for both academic and professional success.</p>
-                        <p>We believe that education is the most powerful tool for empowerment, and at AACEM, we strive to make it accessible, relevant, and transformative for every learner."</p>
-                        <p class="mt-4 fst-italic fw-semibold">- Ajit Kumar Singh<br>Director, AACEM Institute</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Courses Preview -->
-    <section id="courses-preview" class="py-5" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-        <div class="container">
-            <h2 class="section-title fade-in" data-text="COURSES">Our Courses</h2>
-
-            <!-- Computer Courses -->
-            <div class="row mb-5">
-                <div class="col-12">
-                    <h3 class="text-center mb-5 fade-in fw-bold" style="color: var(--dark); font-size: 2.2rem; font-family: 'Poppins', sans-serif;">
-                        <i class="fas fa-laptop-code me-3" style="color: var(--primary);"></i>Computer Courses
-                    </h3>
-                </div>
-
-                <div id="computer-courses-container" class="course-cards">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                            <span class="visually-hidden">Loading courses...</span>
-                        </div>
-                        <p class="mt-3 text-muted fs-5">Loading computer courses...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Academic Courses -->
-            <div class="row">
-                <div class="col-12">
-                    <h3 class="text-center mb-5 fade-in fw-bold" style="color: var(--dark); font-size: 2.2rem; font-family: 'Poppins', sans-serif;">
-                        <i class="fas fa-book-open me-3" style="color: var(--primary);"></i>Academic Classes
-                    </h3>
-                </div>
-
-                <div id="academic-courses-container" class="class-cards">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                            <span class="visually-hidden">Loading courses...</span>
-                        </div>
-                        <p class="mt-3 text-muted fs-5">Loading academic courses...</p>
+                        <p style="font-size: 1.15rem; color: var(--primary-dark); font-weight: 500; margin-bottom: 20px;">"Greetings,</p>
+                        <p style="color: var(--muted); margin-bottom: 14px;">I am <strong style="color: var(--ink);">Ajit Kumar Singh</strong>, Director of AACEM Institute, extending a warm welcome to all students, parents, and well-wishers.</p>
+                        <p style="color: var(--muted); margin-bottom: 14px;">AACEM is committed to providing quality computer education and academic coaching in the rural areas of Vaishali, Bihar, where many students—especially girls—often face circumstances that force them to discontinue their education.</p>
+                        <p style="color: var(--muted); margin-bottom: 14px;">Our mission is to transform education through technological expertise and experienced faculty, empowering every student to reach new heights. Our dedicated team of specialist teachers is committed to making students more competent and competitive, ensuring they are well-prepared for both academic and professional success.</p>
+                        <p style="color: var(--muted); margin-bottom: 20px;">We believe that education is the most powerful tool for empowerment, and at AACEM, we strive to make it accessible, relevant, and transformative for every learner."</p>
+                        <p style="font-style: italic; font-weight: 600; color: var(--ink);">— Ajit Kumar Singh<br><span style="font-weight: 400; color: var(--muted); font-size: 0.9rem;">Director, AACEM Institute</span></p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Gallery Section -->
-    <section id="gallery" class="gallery-section">
+    <!-- ==================== COURSES ==================== -->
+    <section id="courses-preview" class="section-pad">
         <div class="container">
-            <h2 class="section-title fade-in" data-text="GALLERY">Our Gallery</h2>
-            <p class="text-center mb-5 fs-5 fade-in" style="max-width: 700px; margin: 0 auto;">
-                Explore moments from our institute - classroom activities, events, achievements, and more.
-            </p>
-            
+            <div class="section-title reveal">
+                <span class="eyebrow">Programs</span>
+                <h2>Our Courses</h2>
+                <p>Choose from our wide range of computer and academic courses designed to build your future.</p>
+            </div>
+
+            <div class="mb-5 reveal">
+                <h3 style="text-align: center; font-size: clamp(1.2rem, 3vw, 1.6rem); margin-bottom: 32px;">
+                    <i class="fas fa-laptop-code me-2" style="color: var(--primary);"></i>Computer Courses
+                </h3>
+                <div id="computer-courses-container" class="course-grid">
+                    <div class="text-center py-5" style="grid-column: 1/-1;">
+                        <div class="spinner-border" style="width: 2.5rem; height: 2.5rem;" role="status"></div>
+                        <p class="mt-3 text-muted">Loading computer courses...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reveal">
+                <h3 style="text-align: center; font-size: clamp(1.2rem, 3vw, 1.6rem); margin-bottom: 32px;">
+                    <i class="fas fa-book-open me-2" style="color: var(--primary);"></i>Academic Classes
+                </h3>
+                <div id="academic-courses-container" class="course-grid">
+                    <div class="text-center py-5" style="grid-column: 1/-1;">
+                        <div class="spinner-border" style="width: 2.5rem; height: 2.5rem;" role="status"></div>
+                        <p class="mt-3 text-muted">Loading academic courses...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== GALLERY ==================== -->
+    <section id="gallery" class="section-pad">
+        <div class="container">
+            <div class="section-title reveal">
+                <span class="eyebrow">Moments</span>
+                <h2>Our Gallery</h2>
+                <p>Explore moments from our institute — classroom activities, events, achievements, and more.</p>
+            </div>
             <div class="gallery-grid">
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_1.png">
-                    <img src="image_1.png" alt="Classroom Session" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
+                <div class="gallery-item reveal" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_1.png">
+                    <img src="image_1.png" alt="Classroom Session" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+                <div class="gallery-item reveal reveal-delay-1" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_2.png">
+                    <img src="image_2.png" alt="Computer Lab" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+                <div class="gallery-item reveal reveal-delay-2" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_3.png">
+                    <img src="image_3.png" alt="Students in Library" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+                <div class="gallery-item reveal" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_4.png">
+                    <img src="image_4.png" alt="Teaching Session" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+                <div class="gallery-item reveal reveal-delay-1" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_5.png">
+                    <img src="image_5.png" alt="Group Study" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+                <div class="gallery-item reveal reveal-delay-2" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_6.png">
+                    <img src="image_6.png" alt="Award Ceremony" loading="lazy">
+                    <div class="gallery-overlay"><i class="fas fa-search-plus"></i></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FEATURES ==================== -->
+    <section id="features" class="section-pad">
+        <div class="container">
+            <div class="section-title reveal">
+                <span class="eyebrow">Why Choose Us</span>
+                <h2>Key Features</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 reveal">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-user-graduate"></i></div>
+                        <h4>Student Management</h4>
+                        <p>Complete student lifecycle from admission to certification</p>
                     </div>
                 </div>
-                
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_2.png">
-                    <img src="image_2.png" alt="Computer Lab" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
+                <div class="col-md-4 reveal reveal-delay-1">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: var(--grad-accent);"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <h4>Teacher Management</h4>
+                        <p>Manage teacher profiles, assignments, and performance</p>
                     </div>
                 </div>
-                
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_3.png">
-                    <img src="image_3.png" alt="Students in Library" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
-                    </div>
-                </div>
-                
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_4.png">
-                    <img src="image_4.png" alt="Teaching Session" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
-                    </div>
-                </div>
-                
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_5.png">
-                    <img src="image_5.png" alt="Group Study" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
-                    </div>
-                </div>
-                
-                <div class="gallery-item fade-in" data-bs-toggle="modal" data-bs-target="#galleryModal" data-image="image_6.png">
-                    <img src="image_6.png" alt="Award Ceremony" loading="lazy" width="300" height="300">
-                    <div class="gallery-overlay">
-                        <i class="fas fa-search-plus"></i>
+                <div class="col-md-4 reveal reveal-delay-2">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: var(--grad-warm);"><i class="fas fa-money-bill-wave"></i></div>
+                        <h4>Fee Management</h4>
+                        <p>Track fees with online payment integration</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-5" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+    <!-- ==================== CONTACT ==================== -->
+    <section id="contact" class="section-pad">
         <div class="container">
-            <h2 class="section-title fade-in" data-text="FEATURES">Key Features</h2>
-            <div class="row g-4">
-                <div class="col-md-4 fade-in">
-                    <div class="card dashboard-card">
-                        <div class="icon"><i class="fas fa-user-graduate"></i></div>
-                        <h4 class="fw-bold">Student Management</h4>
-                        <p class="text-muted">Complete student lifecycle from admission to certification</p>
-                    </div>
-                </div>
-                <div class="col-md-4 fade-in">
-                    <div class="card dashboard-card">
-                        <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                        <h4 class="fw-bold">Teacher Management</h4>
-                        <p class="text-muted">Manage teacher profiles, assignments, and performance</p>
-                    </div>
-                </div>
-                <div class="col-md-4 fade-in">
-                    <div class="card dashboard-card">
-                        <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                        <h4 class="fw-bold">Fee Management</h4>
-                        <p class="text-muted">Track fees with online payment integration</p>
-                    </div>
-                </div>
+            <div class="section-title reveal">
+                <span class="eyebrow">Reach Out</span>
+                <h2>Get In Touch</h2>
+                <p>Have questions? We'd love to hear from you.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="py-5" style="background: white;">
-        <div class="container">
-            <h2 class="section-title fade-in" data-text="CONTACT">Get In Touch</h2>
             <div class="row g-4">
-                <div class="col-md-6 fade-in">
+                <div class="col-lg-6 reveal">
                     <div class="contact-form">
-                        <h4 class="mb-4 fw-bold" style="color: var(--primary); font-size: 1.8rem;">Send us a Message</h4>
+                        <h4><i class="fas fa-paper-plane me-2" style="color: var(--primary);"></i>Send us a Message</h4>
                         <form id="contactForm">
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Full Name</label>
+                            <div class="mb-3">
+                                <label class="form-label">Full Name</label>
                                 <input type="text" class="form-control" id="fullName" placeholder="Enter your full name" required>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Email Address</label>
+                            <div class="mb-3">
+                                <label class="form-label">Email Address</label>
                                 <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Phone Number</label>
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
                                 <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" required>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Subject</label>
+                            <div class="mb-3">
+                                <label class="form-label">Subject</label>
                                 <input type="text" class="form-control" id="subject" placeholder="Enter subject" required>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Message</label>
-                                <textarea class="form-control" id="message" rows="5" placeholder="Enter your message" required></textarea>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="4" placeholder="Enter your message" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-paper-plane me-2"></i>Send Message
                             </button>
                         </form>
                         <div id="formMessage" class="mt-3"></div>
                     </div>
                 </div>
-                
-                <div class="col-md-6 fade-in">
-                    <div class="contact-form h-100">
-                        <h4 class="mb-4 fw-bold" style="color: var(--primary); font-size: 1.8rem;">Contact Information</h4>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-map-marker-alt me-3 text-primary"></i>First Branch Address</h5>
-                            <p class="ms-5">Lakhanipur, Bishunpur Teknari Urf Ramauli-843110</p>
-                        </div>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-map-marker-alt me-3 text-primary"></i>Second Branch Address</h5>
-                            <p class="ms-5">Patepur, Vaishali</p>
-                        </div>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-map-marker-alt me-3 text-primary"></i>Third Branch Address</h5>
-                            <p class="ms-5">Katahara, Vaishali</p>
-                        </div>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-phone me-3 text-primary"></i>Phone Number</h5>
-                            <p class="ms-5">+91 86779 31361</p>
-                        </div>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-envelope me-3 text-primary"></i>Email Address</h5>
-                            <p class="ms-5">info@aaceminstitute.com</p>
-                        </div>
-                        <div class="mb-4">
-                            <h5 class="fw-semibold"><i class="fas fa-clock me-3 text-primary"></i>Working Hours</h5>
-                            <p class="ms-5">Monday - Saturday: 6:00 AM - 6:00 PM</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Map Section -->
-    <section id="location" class="py-5" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-        <div class="container">
-            <h2 class="section-title fade-in" data-text="LOCATION">Our Location</h2>
-            <div class="row">
-                <div class="col-12 fade-in">
+                <div class="col-lg-6 reveal reveal-delay-1">
                     <div class="contact-form">
-                        <div class="map-container" style="height: 500px; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
-                            <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d23125.731322485943!2d85.48927854961755!3d25.856509435392702!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ed7118a591c97f%3A0xe43b07952889b0df!2sAastha%20Computer%20Education%20Mission!5e0!3m2!1sen!2sin!4v1761045546714!5m2!1sen!2sin" 
-                                width="100%" 
-                                height="100%" 
-                                style="border:0;" 
-                                allowfullscreen="" 
-                                loading="lazy" 
-                                referrerpolicy="no-referrer-when-downgrade"
-                                title="Aastha Computer Education Mission Location">
-                            </iframe>
+                        <h4><i class="fas fa-address-book me-2" style="color: var(--primary);"></i>Contact Information</h4>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <h5>First Branch</h5>
+                                <p>Lakhanipur, Bishunpur Teknari Urf Ramauli-843110</p>
+                            </div>
                         </div>
-                        <div class="text-center mt-4">
-                            <a href="https://www.google.com/maps/place/Aastha+Computer+Education+Mission/@25.8621457,85.4878735,19z" 
-                               target="_blank" 
-                               class="btn btn-primary btn-lg">
-                                <i class="fas fa-map-marker-alt me-2"></i>Open in Google Maps
-                            </a>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon" style="background: var(--grad-accent);"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <h5>Second Branch</h5>
+                                <p>Patepur, Vaishali</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon" style="background: var(--grad-warm);"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <h5>Third Branch</h5>
+                                <p>Katahara, Vaishali</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <h5>Phone Number</h5>
+                                <p>+91 86779 31361</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);"><i class="fas fa-envelope"></i></div>
+                            <div>
+                                <h5>Email Address</h5>
+                                <p>info@aaceminstitute.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <h5>Working Hours</h5>
+                                <p>Monday - Saturday: 6:00 AM - 6:00 PM</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1433,21 +1895,45 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ==================== MAP ==================== -->
+    <section id="location" class="section-pad">
+        <div class="container">
+            <div class="section-title reveal">
+                <span class="eyebrow">Find Us</span>
+                <h2>Our Location</h2>
+            </div>
+            <div class="reveal">
+                <div class="map-wrap">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d23125.731322485943!2d85.48927854961755!3d25.856509435392702!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ed7118a591c97f%3A0xe43b07952889b0df!2sAastha%20Computer%20Education%20Mission!5e0!3m2!1sen!2sin!4v1761045546714!5m2!1sen!2sin" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="AACEM Location"></iframe>
+                </div>
+                <div class="text-center mt-4">
+                    <a href="https://www.google.com/maps/place/Aastha+Computer+Education+Mission/@25.8621457,85.4878735,19z" target="_blank" rel="noopener" class="btn btn-primary">
+                        <i class="fas fa-directions me-2"></i>Open in Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
     <footer class="footer">
         <div class="container">
             <div class="row g-4">
-                <div class="col-md-4 mb-4 fade-in">
-                    <h4 class="fw-bold">AACEM Institute</h4>
+                <div class="col-lg-4 col-md-6 reveal">
+                    <h4>
+                        <span class="brand-mark d-inline-grid" style="width: 34px; height: 34px; font-size: 0.9rem; vertical-align: middle; margin-right: 8px; background: var(--grad-primary); border-radius: 10px; place-items: center; color: white;">
+                            <i class="fas fa-graduation-cap"></i>
+                        </span>
+                        AACEM Institute
+                    </h4>
                     <p>Providing quality education in computer courses and academic classes since 2019.</p>
-                    <p>
-                        <strong>Address:</strong> Lakhanipur, Bishunpur Teknari Urf Ramauli-843110 <br>
-                        <strong>Phone:</strong> +91 86779 31361 <br>
-                        <strong>Email:</strong> info@aacem.com
+                    <p style="margin-top: 18px;">
+                        <strong style="color: white;">Address:</strong> Lakhanipur, Bishunpur Teknari Urf Ramauli-843110<br>
+                        <strong style="color: white;">Phone:</strong> +91 86779 31361<br>
+                        <strong style="color: white;">Email:</strong> info@aacem.com
                     </p>
                 </div>
-
-                <div class="col-md-2 mb-4 fade-in">
+                <div class="col-lg-2 col-md-6 reveal reveal-delay-1">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="index.html">Home</a></li>
@@ -1458,59 +1944,55 @@
                         <li class="mb-2"><a href="#contact">Contact</a></li>
                     </ul>
                 </div>
-
-                <div class="col-md-3 mb-4 fade-in">
+                <div class="col-lg-3 col-md-6 reveal reveal-delay-2">
                     <h5>Courses</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#">Computer Courses</a></li>
-                        <li class="mb-2"><a href="#">BSEB Classes</a></li>
-                        <li class="mb-2"><a href="#">CBSE Classes</a></li>
-                        <li class="mb-2"><a href="#">Crash Courses</a></li>
+                        <li class="mb-2"><a href="#courses-preview">Computer Courses</a></li>
+                        <li class="mb-2"><a href="#courses-preview">BSEB Classes</a></li>
+                        <li class="mb-2"><a href="#courses-preview">CBSE Classes</a></li>
+                        <li class="mb-2"><a href="#courses-preview">Crash Courses</a></li>
                         <li class="mb-2"><a href="#">Download Prospectus</a></li>
                     </ul>
                 </div>
-
-                <div class="col-md-3 mb-4 fade-in">
+                <div class="col-lg-3 col-md-6 reveal reveal-delay-3">
                     <h5>Get in Touch</h5>
                     <p>Have questions? Contact us directly.</p>
-                    <a href="#contact" class="btn btn-primary mb-3">Contact Us</a>
-
+                    <a href="#contact" class="btn btn-primary btn-sm">Contact Us</a>
                     <div class="social-icons">
                         <a href="https://www.youtube.com/@aasthacomputereducationmis7772/featured" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                         <a href="https://www.facebook.com/profile.php?id=100077894030395" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
             </div>
-
-            <hr class="mt-4 mb-4" style="border-color: #374151;">
-
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start mb-2">
-                    <p>© 2019 AACEM Coaching Institute. All Rights Reserved. | Designed & Developed by Avinash Kumar</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <a href="#" class="text-white me-3">Privacy Policy</a>
-                    <a href="#" class="text-white">Terms & Conditions</a>
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                        <p class="mb-0">© 2019 AACEM Coaching Institute. All Rights Reserved. | Designed & Developed by Avinash Kumar</p>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <a href="#" class="me-3">Privacy Policy</a>
+                        <a href="#">Terms & Conditions</a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Gallery Modal -->
-    <div class="modal fade" id="galleryModal" tabindex="-1" aria-labelledby="galleryModalLabel" aria-hidden="true">
+    <!-- ==================== MODAL ==================== -->
+    <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="galleryModalLabel">Gallery Image</h5>
+                    <h5 class="modal-title fw-bold">Gallery Image</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img id="modalImage" src="" alt="Gallery Image" class="img-fluid" loading="lazy">
+                    <img id="modalImage" src="" alt="Gallery Image" loading="lazy">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -1518,57 +2000,104 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script>
-        // API Configuration
+        // ==================== API CONFIG (UNCHANGED) ====================
         const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
 
-        // Scroll Animations Observer
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+        // ==================== DRAWER LOGIC ====================
+        const menuToggle = document.getElementById('menuToggle');
+        const drawerClose = document.getElementById('drawerClose');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const bodyEl = document.body;
 
+        function openDrawer() {
+            sideDrawer.classList.add('open');
+            drawerOverlay.classList.add('open');
+            sideDrawer.setAttribute('aria-hidden', 'false');
+            menuToggle.setAttribute('aria-expanded', 'true');
+            bodyEl.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('open');
+            drawerOverlay.classList.remove('open');
+            sideDrawer.setAttribute('aria-hidden', 'true');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            bodyEl.style.overflow = '';
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', openDrawer);
+        if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+        if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
+        // Close drawer on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sideDrawer.classList.contains('open')) closeDrawer();
+        });
+
+        // Close drawer when clicking a drawer link (smooth scroll handles the rest)
+        document.querySelectorAll('.drawer-link').forEach(link => {
+            link.addEventListener('click', () => {
+                // Mark active
+                document.querySelectorAll('.drawer-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                closeDrawer();
+            });
+        });
+
+        // Close drawer on Login CTA
+        const drawerCta = document.querySelector('.drawer-cta');
+        if (drawerCta) drawerCta.addEventListener('click', () => closeDrawer());
+
+        // ==================== SCROLL REVEAL ====================
+        const observerOptions = { threshold: 0.12, rootMargin: '0px 0px -60px 0px' };
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+        // ==================== NUMBER COUNTER ====================
+        function animateCounter(el) {
+            const target = parseInt(el.getAttribute('data-count'));
+            const duration = 1600;
+            const start = performance.now();
+            function update(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target) + (target >= 100 ? '+' : '+');
+                if (progress < 1) requestAnimationFrame(update);
+                else el.textContent = target + '+';
             }
+            requestAnimationFrame(update);
+        }
+
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        // ==================== TOP BAR SCROLL ====================
+        window.addEventListener('scroll', () => {
+            const topBar = document.querySelector('.top-bar');
+            topBar.classList.toggle('scrolled', window.scrollY > 40);
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Observe all fade-in elements
-            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-            
-            // Load courses
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            document.querySelectorAll('.stat-number[data-count]').forEach(el => counterObserver.observe(el));
+
             loadCourses();
-            
-            // Load announcements
             loadAnnouncements();
 
-            // Auto close navbar on mobile
-            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-            const navbarToggler = document.querySelector('.navbar-toggler');
-            const navbarCollapse = document.querySelector('.navbar-collapse');
-            
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (navbarCollapse.classList.contains('show')) {
-                        navbarToggler.click();
-                    }
-                });
-            });
-            
-            // Contact form handling
+            // Contact form
             const contactForm = document.getElementById('contactForm');
             if (contactForm) {
                 contactForm.addEventListener('submit', function(e) {
@@ -1577,33 +2106,31 @@
                 });
             }
 
-            // Gallery modal functionality
+            // Gallery modal
             const galleryModal = document.getElementById('galleryModal');
             if (galleryModal) {
                 galleryModal.addEventListener('show.bs.modal', function(event) {
                     const button = event.relatedTarget;
                     const imageUrl = button.getAttribute('data-image');
-                    const modalImage = document.getElementById('modalImage');
-                    modalImage.src = imageUrl;
+                    document.getElementById('modalImage').src = imageUrl;
                 });
             }
 
             // Smooth scrolling
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href === '#') return;
                     e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
+                    const target = document.querySelector(href);
                     if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 });
             });
         });
 
-        // Load announcements from API
+        // ==================== ANNOUNCEMENTS (unchanged) ====================
         async function loadAnnouncements() {
             try {
                 const response = await fetch(`${API_BASE_URL}/announcements/all?is_active=true`);
@@ -1634,6 +2161,7 @@
 
                 itemsHtml += `<div class="carousel-item ${active}">
                     <div class="notification-card">
+                        <span class="notification-priority ${priorityClass}">${priority}</span>
                         <h3 class="notification-title">${ann.title}</h3>
                         <p class="notification-message">${ann.message}</p>
                         <div class="notification-meta">
@@ -1653,22 +2181,22 @@
             const container = document.getElementById('notificationContainer');
             container.innerHTML = `<div class="carousel-item active">
                 <div class="notification-empty">
-                    <i class="fas fa-bullhorn fa-4x text-muted mb-3"></i>
-                    <h4 class="fw-normal text-muted">${msg}</h4>
-                    <p class="text-secondary">Check back later for important updates.</p>
+                    <i class="fas fa-bullhorn" style="font-size: 2.5rem; color: var(--muted-light); margin-bottom: 14px; display: block;"></i>
+                    <h5 style="color: var(--muted); font-weight: 600;">${msg}</h5>
+                    <p style="color: var(--muted-light); margin: 0;">Check back later for important updates.</p>
                 </div>
             </div>`;
         }
 
-        // Load courses from API
+        // ==================== COURSES (unchanged) ====================
         async function loadCourses() {
             try {
                 const response = await fetch(`${API_BASE_URL}/courses`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (result.success && result.courses && Array.isArray(result.courses)) {
-                    const computerCourses = result.courses.filter(course => course.category === 'computer' && course.is_active !== false);
-                    const academicCourses = result.courses.filter(course => course.category === 'academic' && course.is_active !== false);
+                    const computerCourses = result.courses.filter(c => c.category === 'computer' && c.is_active !== false);
+                    const academicCourses = result.courses.filter(c => c.category === 'academic' && c.is_active !== false);
                     renderComputerCourses(computerCourses);
                     renderAcademicCourses(academicCourses);
                 } else {
@@ -1683,71 +2211,52 @@
         function renderComputerCourses(courses) {
             const container = document.getElementById('computer-courses-container');
             if (!courses || courses.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-laptop-code fa-4x text-muted mb-3"></i><h5 class="text-muted">No computer courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fas fa-laptop-code" style="font-size: 2.5rem; color: var(--muted-light); margin-bottom: 14px;"></i><h5 style="color: var(--muted);">No computer courses available</h5></div>`;
                 return;
             }
             let html = '';
-            courses.forEach((course, index) => {
+            courses.forEach((course) => {
                 const durationText = getDurationText(course.duration);
                 const feeAmount = parseFloat(course.fee_amount || 0);
-                html += `<div class="course-card fade-in" style="animation-delay: ${index * 0.1}s">
-                            <div class="course-content">
-                                <h3 class="course-title">${course.course_name}</h3>
-                                <p class="course-description">${course.description || 'Comprehensive course covering essential topics and practical skills.'}</p>
-                                <div class="mt-auto">
-                                    <div class="course-duration">
-                                        <i class="far fa-clock"></i>
-                                        <span>Duration: ${durationText}</span>
-                                    </div>
-                                    <div class="course-fee">
-                                        <i class="fas fa-rupee-sign"></i>
-                                        <span>₹${feeAmount.toLocaleString('en-IN')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
+                html += `<div class="course-card reveal">
+                    <h3 class="course-title">${course.course_name}</h3>
+                    <p class="course-description">${course.description || 'Comprehensive course covering essential topics and practical skills.'}</p>
+                    <div class="course-meta"><i class="far fa-clock"></i><span>Duration: ${durationText}</span></div>
+                    <div class="course-fee"><i class="fas fa-rupee-sign"></i><span>${feeAmount.toLocaleString('en-IN')}</span></div>
+                </div>`;
             });
             container.innerHTML = html;
-            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+            container.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         }
 
         function renderAcademicCourses(courses) {
             const container = document.getElementById('academic-courses-container');
             if (!courses || courses.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-book-open fa-4x text-muted mb-3"></i><h5 class="text-muted">No academic courses available</h5><p class="text-muted">Check back later for new courses</p></div>`;
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fas fa-book-open" style="font-size: 2.5rem; color: var(--muted-light); margin-bottom: 14px;"></i><h5 style="color: var(--muted);">No academic courses available</h5></div>`;
                 return;
             }
             let html = '';
-            courses.forEach((course, index) => {
+            courses.forEach((course) => {
                 const durationText = getDurationText(course.duration);
                 const feeAmount = parseFloat(course.fee_amount || 0);
                 const facultyInfo = getFacultyInfo(course.course_name);
-                html += `<div class="class-card fade-in" style="animation-delay: ${index * 0.1}s">
-                            <h3>${course.course_name}</h3>
-                            <p class="class-subjects">${course.description || 'Comprehensive academic program designed for excellent results.'}</p>
-                            <div class="course-duration">
-                                <i class="far fa-clock"></i>
-                                <span>Duration: ${durationText}</span>
-                            </div>
-                            <div class="course-fee">
-                                <i class="fas fa-rupee-sign"></i>
-                                <span>₹${feeAmount.toLocaleString('en-IN')}</span>
-                            </div>
-                            <div class="faculty">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                <span>${facultyInfo}</span>
-                            </div>
-                        </div>`;
+                html += `<div class="course-card reveal">
+                    <h3 class="course-title">${course.course_name}</h3>
+                    <p class="course-description">${course.description || 'Comprehensive academic program designed for excellent results.'}</p>
+                    <div class="course-meta"><i class="far fa-clock"></i><span>Duration: ${durationText}</span></div>
+                    <div class="course-fee"><i class="fas fa-rupee-sign"></i><span>${feeAmount.toLocaleString('en-IN')}</span></div>
+                    <div class="faculty-badge"><i class="fas fa-chalkboard-teacher"></i><span>${facultyInfo}</span></div>
+                </div>`;
             });
             container.innerHTML = html;
-            container.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+            container.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         }
 
-        // Submit contact form
+        // ==================== CONTACT FORM (unchanged) ====================
         async function submitContactForm() {
             const form = document.getElementById('contactForm');
             const submitBtn = form.querySelector('button[type="submit"]');
-            
+
             const formData = {
                 full_name: document.getElementById('fullName').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -1755,36 +2264,31 @@
                 subject: document.getElementById('subject').value.trim(),
                 message: document.getElementById('message').value.trim()
             };
-            
+
             if (!formData.full_name || !formData.email || !formData.phone || !formData.subject || !formData.message) {
                 showFormMessage('Please fill in all fields.', 'danger');
                 return;
             }
-            
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.email)) {
                 showFormMessage('Please enter a valid email address.', 'danger');
                 return;
             }
-            
             const phoneRegex = /^[0-9]{10}$/;
             if (!phoneRegex.test(formData.phone.replace(/\D/g, ''))) {
                 showFormMessage('Please enter a valid 10-digit phone number.', 'danger');
                 return;
             }
-            
+
             try {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
-                
                 const response = await fetch(`${API_BASE_URL}/contact`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
                 const result = await response.json();
-                
                 if (result.success) {
                     showFormMessage('Thank you for your message! We will get back to you soon.', 'success');
                     form.reset();
@@ -1801,19 +2305,17 @@
         }
 
         function showFormMessage(message, type) {
-            const formMessage = document.getElementById('formMessage');
-            formMessage.innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show">
+            document.getElementById('formMessage').innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" style="border-radius: 14px; border: none;">
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
+                </div>`;
         }
 
         function showCourseError(message) {
             const computerContainer = document.getElementById('computer-courses-container');
             const academicContainer = document.getElementById('academic-courses-container');
-            const errorHtml = `<div class="col-12 text-center py-5"><div class="alert alert-danger mx-auto" style="max-width: 500px;"><i class="fas fa-exclamation-triangle me-2"></i>${message}</div><button class="btn btn-primary mt-3" onclick="loadCourses()"><i class="fas fa-redo me-2"></i>Try Again</button></div>`;
+            const errorHtml = `<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><div class="alert alert-danger d-inline-block" style="border-radius: 14px;"><i class="fas fa-exclamation-triangle me-2"></i>${message}</div><br><button class="btn btn-primary mt-3" onclick="loadCourses()"><i class="fas fa-redo me-2"></i>Try Again</button></div>`;
             if (computerContainer) computerContainer.innerHTML = errorHtml;
             if (academicContainer) academicContainer.innerHTML = errorHtml;
         }
