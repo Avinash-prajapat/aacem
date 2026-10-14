@@ -4,250 +4,741 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Login - AACEM Coaching Institute</title>
-  <!-- Bootstrap CSS -->
+  <meta name="description" content="Student login portal for AACEM Institute - Access your dashboard, courses, and results.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="logo.png" type="image/png">
+
   <style>
+    /* ==================== DESIGN TOKENS ==================== */
     :root {
-      --primary: #0d6efd;
-      --secondary: #8a8d93;
-      --light: #f7f7f7;
-      --dark: #1c1e21;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a5b4fc;
+      --violet: #8b5cf6;
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+
+      --ink: #0f172a;
+      --ink-soft: #1e293b;
+      --muted: #64748b;
+      --muted-light: #94a3b8;
+      --line: rgba(15, 23, 42, 0.08);
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+
+      --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      --grad-accent: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      --grad-student: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
+      --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.12);
+
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--surface-soft);
+      line-height: 1.6;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* --- Navbar --- */
-    .navbar {
-      background-color: var(--primary);
-      padding: 15px 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    h1, h2, h3, h4, h5 {
+      font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
 
-    .navbar .navbar-brand {
-      color: #fff;
-      font-weight: 600;
-      font-size: 1.4rem;
+    /* ==================== AURORA BACKGROUND ==================== */
+    .aurora-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    .aurora-bg::before, .aurora-bg::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: auroraFloat 20s ease-in-out infinite;
+    }
+    .aurora-bg::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #a5b4fc 0%, transparent 70%);
+      top: -200px; left: -150px;
+    }
+    .aurora-bg::after {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, #67e8f9 0%, transparent 70%);
+      bottom: -250px; right: -200px;
+      animation-delay: -10s;
+    }
+    .aurora-blob {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      background: radial-gradient(circle, #c4b5fd 0%, transparent 70%);
+      top: 40%; left: 30%;
+      animation: auroraFloat 25s ease-in-out infinite reverse;
+    }
+    @keyframes auroraFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(80px, -60px) scale(1.1); }
+      66% { transform: translate(-60px, 80px) scale(0.95); }
     }
 
-    .navbar .navbar-brand:hover {
-      color: #ffc107;
+    /* ==================== TOP BAR ==================== */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
     }
 
-    /* --- Login Box --- */
-    .login-container {
-      width: 100%;
-      max-width: 420px;
-      margin: 50px auto;
-      padding: 2rem;
+    .top-bar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
       background: white;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.35s var(--ease);
     }
 
-    .student-header {
-      background: linear-gradient(45deg, #0d6efd, #6610f2);
+    .back-btn:hover {
+      background: var(--grad-primary);
       color: white;
-      padding: 1.2rem;
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
+      border-color: transparent;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px -8px rgba(99, 102, 241, 0.6);
     }
 
-    .form-control:focus {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--grad-primary);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1rem;
+      box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.6);
+    }
+
+    /* ==================== MAIN ==================== */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 16px 80px;
+      position: relative;
+    }
+
+    /* ==================== LOGIN CARD ==================== */
+    .login-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: fadeInUp 0.8s var(--ease) backwards;
+      position: relative;
+    }
+
+    /* Header with gradient */
+    .login-header {
+      background: var(--grad-student);
+      color: white;
+      padding: 40px 32px 34px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .login-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      pointer-events: none;
+    }
+
+    .login-header > * { position: relative; z-index: 1; }
+
+    .login-avatar {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 18px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(10px);
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      color: white;
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3);
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3); }
+      50% { box-shadow: 0 15px 45px -8px rgba(255, 255, 255, 0.35); }
+    }
+
+    .login-header h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .login-header p {
+      font-size: 0.92rem;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    /* Form body */
+    .login-body {
+      padding: 36px 32px 32px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+
+    .input-group {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid var(--line);
+      background: var(--surface-soft);
+      transition: all 0.3s var(--ease);
+    }
+
+    .input-group:focus-within {
       border-color: var(--primary);
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+      transform: translateY(-1px);
     }
 
-    .btn-primary {
-      background-color: var(--primary);
-      border-color: var(--primary);
-      font-weight: 500;
-    }
-
-    .btn-primary:hover {
-      background-color: #084298;
-      border-color: #084298;
-    }
-
-    .password-toggle {
-      cursor: pointer;
+    .input-group-text {
       background: transparent;
       border: none;
-      color: #6c757d;
-    }
-
-    .password-toggle:hover {
       color: var(--primary);
+      padding: 0 4px 0 16px;
+      font-size: 0.95rem;
     }
 
-    /* --- Footer --- */
-    footer {
-      background-color: #1c1e21;
+    .form-control {
+      border: none;
+      background: transparent;
+      padding: 14px 16px 14px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      box-shadow: none !important;
+    }
+
+    .form-control::placeholder { color: var(--muted-light); }
+
+    .password-toggle {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 0 16px;
+      cursor: pointer;
+      transition: color 0.3s var(--ease);
+      display: grid;
+      place-items: center;
+    }
+
+    .password-toggle:hover { color: var(--primary); }
+
+    .form-text {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+      margin-left: 4px;
+    }
+
+    /* Submit button */
+    .btn-login {
+      background: var(--grad-student);
       color: white;
-      padding: 40px 0 20px 0;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 24px;
+      font-weight: 600;
+      font-size: 1rem;
+      width: 100%;
+      transition: all 0.4s var(--ease);
+      box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.7);
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+    }
+
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 45px -12px rgba(99, 102, 241, 0.85);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
+
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .btn-login:hover::after { opacity: 1; }
+
+    /* Forgot link */
+    .login-links {
+      text-align: center;
+      margin-top: 22px;
+    }
+
+    .login-links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .login-links a:hover {
+      color: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Alert */
+    .alert {
+      border-radius: 14px;
+      border: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 14px 18px;
+      margin-top: 20px;
+      display: none;
+      animation: fadeInUp 0.4s var(--ease);
+    }
+
+    .alert-danger {
+      background: rgba(244, 63, 94, 0.1);
+      color: #be123c;
+      border-left: 4px solid var(--rose);
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #047857;
+      border-left: 4px solid var(--emerald);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: var(--muted-light);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* Role switcher */
+    .role-switch {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .role-switch a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 100px;
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.3s var(--ease);
+    }
+
+    .role-switch a:hover {
+      background: var(--grad-primary);
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5);
+    }
+
+    .role-switch a.active {
+      background: var(--grad-student);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.6);
+    }
+
+    /* ==================== FOOTER ==================== */
+    .footer {
+      background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+      color: #cbd5e0;
+      padding: 60px 0 24px;
+      position: relative;
       margin-top: auto;
     }
 
-    footer a {
-      text-decoration: none;
-      transition: color 0.3s;
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--grad-primary);
     }
 
-    footer a:hover {
-      color: #ffc107;
+    .footer h4, .footer h5 {
+      color: white;
+      margin-bottom: 18px;
+      font-size: 1.02rem;
+      font-weight: 700;
+    }
+
+    .footer p { font-size: 0.9rem; line-height: 1.7; }
+
+    .footer a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: all 0.3s var(--ease);
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+
+    .footer a:hover {
+      color: var(--primary-light);
+      transform: translateX(4px);
+    }
+
+    .footer ul li { margin-bottom: 8px; }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 40px;
+      padding-top: 22px;
+      font-size: 0.86rem;
+      color: #94a3b8;
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
     }
 
     .social-icons a {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: grid;
+      place-items: center;
+      transition: all 0.4s var(--ease);
       color: white;
-      font-size: 18px;
-      margin-right: 15px;
-      transition: color 0.3s;
     }
 
     .social-icons a:hover {
-      color: #ffc107;
+      background: var(--grad-primary);
+      border-color: transparent;
+      transform: translateY(-4px) scale(1.05);
+      color: white;
+      box-shadow: 0 12px 28px -8px rgba(99, 102, 241, 0.7);
     }
 
-    .alert {
-      border-radius: 10px;
-      border: none;
+    /* ==================== ANIMATIONS ==================== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .login-links {
-      text-align: center;
-      margin-top: 1.5rem;
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 767.98px) {
+      .top-bar { padding: 10px 0; }
+      .brand { font-size: 1rem; }
+      .brand-mark { width: 36px; height: 36px; font-size: 0.9rem; }
+      .back-btn { padding: 8px 14px; font-size: 0.82rem; }
+      .back-btn span { display: none; }
+
+      main { padding: 40px 14px 60px; }
+      .login-header { padding: 32px 24px 28px; }
+      .login-header h3 { font-size: 1.3rem; }
+      .login-avatar { width: 72px; height: 72px; font-size: 1.7rem; border-radius: 20px; }
+      .login-body { padding: 28px 22px 24px; }
+      .form-control { padding: 13px 12px; font-size: 0.92rem; }
+      .btn-login { padding: 14px 20px; font-size: 0.95rem; }
+      .role-switch a { font-size: 0.78rem; padding: 8px 14px; }
+    }
+
+    @media (max-width: 400px) {
+      .role-switch { flex-direction: column; }
+      .role-switch a { width: 100%; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header/Navbar -->
-  <nav class="navbar navbar-expand-lg">
+  <!-- Aurora Background -->
+  <div class="aurora-bg"><div class="aurora-blob"></div></div>
+
+  <!-- ==================== TOP BAR ==================== -->
+  <header class="top-bar">
     <div class="container">
-      <a class="navbar-brand" href="index.html">
-        <i class="fas fa-graduation-cap me-2"></i>AACEM Institute
+      <a href="choose-login.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
+      </a>
+      <a href="index.html" class="brand">
+        <span class="brand-mark"><i class="fas fa-graduation-cap"></i></span>
+        <span>AACEM<span style="color: var(--primary);">.</span></span>
       </a>
     </div>
-  </nav>
+  </header>
 
-  <!-- Login Box -->
-  <div class="login-container">
-    <div class="student-header text-center">
-      <i class="fas fa-user-graduate fa-3x mb-2"></i>
-      <h3>Student Login</h3>
-      <p class="mb-0">Access your student dashboard</p>
-    </div>
-
-    <!-- Login Form -->
-    <form id="studentLoginForm">
-      <div class="mb-3">
-        <label for="studentId" class="form-label">Student ID</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-          <input type="text" class="form-control" placeholder="Enter your Student ID" id="studentId" name="student_id" required>
-        </div>
-        <div class="form-text">Enter your registered Student ID</div>
+  <!-- ==================== MAIN ==================== -->
+  <main>
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="login-avatar"><i class="fas fa-user-graduate"></i></div>
+        <h3>Student Login</h3>
+        <p>Access your student dashboard</p>
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          <input type="password" class="form-control" placeholder="Enter your password" id="password" name="password" required>
-          <button type="button" class="btn password-toggle" id="togglePassword">
-            <i class="fas fa-eye"></i>
+      <!-- Body -->
+      <div class="login-body">
+        <form id="studentLoginForm" novalidate>
+          <div class="mb-3">
+            <label for="studentId" class="form-label">Student ID</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+              <input type="text" class="form-control" placeholder="Enter your Student ID" id="studentId" name="student_id" autocomplete="username" required>
+            </div>
+            <div class="form-text">Enter your registered Student ID</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input type="password" class="form-control" placeholder="Enter your password" id="password" name="password" autocomplete="current-password" required>
+              <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="form-text">Enter your password</div>
+          </div>
+
+          <button type="submit" class="btn-login">
+            <span class="button-text"><i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard</span>
           </button>
+        </form>
+
+        <!-- Forgot password -->
+        <div class="login-links">
+          <a href="forgot-password.html">
+            <i class="fas fa-key"></i>Forgot Password?
+          </a>
         </div>
-        <div class="form-text">Enter your password</div>
+
+        <!-- Divider -->
+        <div class="divider">Or Login As</div>
+
+        <!-- Role switcher -->
+        <div class="role-switch">
+          <a href="student-login.html" class="active"><i class="fas fa-user-graduate"></i>Student</a>
+          <a href="teacher-login.html"><i class="fas fa-chalkboard-teacher"></i>Teacher</a>
+          <a href="admin-login.html"><i class="fas fa-user-shield"></i>Admin</a>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertMessage" class="alert"></div>
       </div>
-
-      <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
-        <span class="button-text">Login to Dashboard</span>
-      </button>
-    </form>
-
-    <!-- Links -->
-    <div class="login-links">
-      <a href="forgot-password.html" class="d-block mb-2">Forgot Password?</a>
-      
     </div>
+  </main>
 
-    <!-- Alert Message -->
-    <div id="alertMessage" class="alert alert-danger mt-3" style="display: none;"></div>
-  </div>
-
-  <!-- Footer -->
+  <!-- ==================== FOOTER ==================== -->
   <footer class="footer">
     <div class="container">
-      <div class="row">
-        <!-- About Section -->
-        <div class="col-md-4 mb-4">
-          <h4>AACEM Institute</h4>
-          <p>Providing quality education in computer courses and academic classes since 2010.</p>
-          <p>
-            <strong>Address:</strong> XYZ Road, Patna, Bihar - 800001 <br>
-            <strong>Phone:</strong> +91 9876543210 <br>
-            <strong>Email:</strong> info@aacem.com
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <h4>
+            <span class="brand-mark d-inline-grid" style="width: 32px; height: 32px; font-size: 0.85rem; vertical-align: middle; margin-right: 8px; background: var(--grad-primary); border-radius: 10px; place-items: center; color: white;">
+              <i class="fas fa-graduation-cap"></i>
+            </span>
+            AACEM Institute
+          </h4>
+          <p>Providing quality education in computer courses and academic classes since 2019.</p>
+          <p style="margin-top: 14px;">
+            <strong style="color: white;">Address:</strong> Lakhanipur, Bishunpur Teknari Urf Ramauli-843110<br>
+            <strong style="color: white;">Phone:</strong> +91 86779 31361<br>
+            <strong style="color: white;">Email:</strong> info@aacem.com
           </p>
         </div>
 
-        <!-- Quick Links -->
-        <div class="col-md-2 mb-4">
+        <div class="col-lg-2 col-md-6">
           <h5>Quick Links</h5>
           <ul class="list-unstyled">
-            <li><a href="index.html" class="text-white">Home</a></li>
-            <li><a href="courses.html" class="text-white">Courses</a></li>
-            <li><a href="index.html#admissions" class="text-white">Admissions</a></li>
-            <li><a href="index.html#features" class="text-white">Features</a></li>
-            <li><a href="index.html#contact" class="text-white">Contact</a></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#courses-preview">Courses</a></li>
+            <li><a href="index.html#features">Features</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
           </ul>
         </div>
 
-        <!-- Courses -->
-        <div class="col-md-3 mb-4">
+        <div class="col-lg-3 col-md-6">
           <h5>Courses</h5>
           <ul class="list-unstyled">
-            <li><a href="#" class="text-white">Computer Courses</a></li>
-            <li><a href="#" class="text-white">BSEB Classes</a></li>
-            <li><a href="#" class="text-white">CBSE Classes</a></li>
-            <li><a href="#" class="text-white">Crash Courses</a></li>
-            <li><a href="#" class="text-white">Download Prospectus</a></li>
+            <li><a href="index.html#courses-preview">Computer Courses</a></li>
+            <li><a href="index.html#courses-preview">BSEB Classes</a></li>
+            <li><a href="index.html#courses-preview">CBSE Classes</a></li>
+            <li><a href="index.html#courses-preview">Crash Courses</a></li>
           </ul>
         </div>
 
-        <!-- Contact -->
-        <div class="col-md-3 mb-4">
+        <div class="col-lg-3 col-md-6">
           <h5>Get in Touch</h5>
           <p>Have questions? Contact us directly.</p>
-          <a href="contact.html" class="btn btn-primary">Contact Us</a>
+          <a href="index.html#contact" class="btn btn-primary" style="background: var(--grad-primary); border: none; border-radius: 12px; padding: 10px 22px; font-weight: 600; font-size: 0.9rem;">Contact Us</a>
 
-          <!-- Social Media -->
-          <div class="social-icons mt-3">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#"><i class="fab fa-youtube"></i></a>
+          <div class="social-icons">
+            <a href="https://www.youtube.com/@aasthacomputereducationmis7772/featured" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=100077894030395" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
           </div>
         </div>
       </div>
 
-      <hr class="mt-4 mb-4">
-
-      <!-- Legal Links -->
-      <div class="row">
-        <div class="col-md-6 text-center text-md-start mb-2">
-          <p>© <span id="year"></span> AACEM Coaching Institute. All Rights Reserved.</p>
-        </div>
-        <div class="col-md-6 text-center text-md-end">
-          <a href="#" class="text-white me-3">Privacy Policy</a>
-          <a href="#" class="text-white">Terms & Conditions</a>
+      <div class="footer-bottom">
+        <div class="row align-items-center">
+          <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+            <p class="mb-0">© <span id="year"></span> AACEM Coaching Institute. All Rights Reserved. | Designed & Developed by Avinash Kumar</p>
+          </div>
+          <div class="col-md-6 text-center text-md-end">
+            <a href="#" class="me-3">Privacy Policy</a>
+            <a href="#">Terms & Conditions</a>
+          </div>
         </div>
       </div>
     </div>
@@ -255,14 +746,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // API Configuration
+    // ==================== API CONFIG (UNCHANGED) ====================
     const API_BASE_URL = 'https://aacem-backend.onrender.com/api';
 
-    // Password toggle functionality
+    // ==================== PASSWORD TOGGLE ====================
     document.getElementById('togglePassword').addEventListener('click', function() {
       const passwordInput = document.getElementById('password');
       const icon = this.querySelector('i');
-      
+
       if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         icon.className = 'fas fa-eye-slash';
@@ -272,14 +763,13 @@
       }
     });
 
-    // Show alert message
+    // ==================== ALERT HELPERS ====================
     function showAlert(message, type = 'danger') {
       const alertDiv = document.getElementById('alertMessage');
       alertDiv.className = `alert alert-${type}`;
       alertDiv.textContent = message;
       alertDiv.style.display = 'block';
-      
-      // Auto hide success messages after 3 seconds
+
       if (type === 'success') {
         setTimeout(() => {
           alertDiv.style.display = 'none';
@@ -287,15 +777,15 @@
       }
     }
 
-    // Hide alert message
     function hideAlert() {
       document.getElementById('alertMessage').style.display = 'none';
     }
 
-    // Student Login Form
+    // ==================== STUDENT LOGIN (LOGIC UNCHANGED) ====================
     document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
+      hideAlert();
+
       const studentId = document.getElementById('studentId').value.trim().toUpperCase();
       const password = document.getElementById('password').value;
       const submitBtn = this.querySelector('button[type="submit"]');
@@ -320,7 +810,7 @@
         const response = await fetch(`${API_BASE_URL}/student-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             student_id: studentId,
             password: password
           })
@@ -330,36 +820,32 @@
 
         if (result.success) {
           showAlert('✅ Login successful! Redirecting...', 'success');
-          
-          // Store student data in localStorage
+
+          // Store student data
           sessionStorage.setItem('studentToken', result.token || 'student-auth');
           sessionStorage.setItem('studentData', JSON.stringify(result.student));
           sessionStorage.setItem('loginTime', new Date().getTime().toString());
-          
-          
-          // Redirect to dashboard after short delay
+
+          // Redirect to dashboard
           setTimeout(() => {
             window.location.href = 'dashboard-student.html';
           }, 1000);
-          
+
         } else {
           showAlert(`❌ ${result.message || 'Invalid Student ID or Password'}`);
           submitBtn.disabled = false;
-          buttonText.textContent = 'Login to Dashboard';
+          buttonText.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard';
         }
       } catch (error) {
         console.error('Login error:', error);
         showAlert('⚠️ Network error. Please check your connection and try again.');
         submitBtn.disabled = false;
-        buttonText.textContent = 'Login to Dashboard';
+        buttonText.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard';
       }
     });
 
-    // Set current year in footer
+    // Set current year
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
-
 </html>
-
-
